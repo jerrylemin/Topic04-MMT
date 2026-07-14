@@ -1,10 +1,6 @@
 # Feature progress
 
-- Complete: vulnerable and secure email demonstrations.
-- Complete: CSRF/Origin protection for secure mutations, logout, and reset.
-- Complete: runtime inspectors, 16-step traces, audit filters, and redaction.
-- Complete: named evidence export, 12-check live smoke test, 87-test suite.
-- Complete: evidence-driven 24-page DOCX/PDF report and cleanup script.
-- Known boundary: SameSite and SOP browser behavior is documented as expected
-  behavior; no browser automation is used to claim runtime proof.
-
+- Thêm `screenshot_manifest.py`, `HUONG_DAN_CHUP_ANH.md` và checker với `--list-required` cho 7 ảnh.
+- Report DOCX/PDF rút gọn còn 9 mục và 5 trang A4; 7 placeholder nằm đúng phần.
+- Full pytest: 90 passed; compileall thành công.
+- Source vulnerable/secure, trace, audit, inspector và database không thay đổi.

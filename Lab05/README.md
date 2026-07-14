@@ -255,18 +255,18 @@ Output:
 - `report/21127645_LeMinh_Lab05_SQLInjection.docx`
 - `report/21127645_LeMinh_Lab05_SQLInjection.pdf`
 
-Generator đọc trace/request/response/query/audit/log/source thật, tạo 30 chương,
-trace table, code comparison, sequence/data-flow diagram dạng vector Word, rồi
-chuyển PDF bằng LibreOffice. Thiếu evidence/log/PDF converter sẽ trả lỗi rõ;
-không tạo placeholder ảnh hoặc kết quả test/coverage giả.
+Generator tạo báo cáo 9 mục bám sát đề bài. Mỗi ảnh nằm ngay sau kịch bản liên
+quan; PNG hợp lệ được chèn tự động, ảnh thiếu được giữ bằng placeholder chi tiết
+trong cả DOCX và PDF. Kết quả pytest/coverage chỉ được đọc từ log thật.
 
 ## Ảnh thủ công
 
 Không tự động chụp ảnh. Đọc [HUONG_DAN_CHUP_ANH.md](HUONG_DAN_CHUP_ANH.md), lưu
-đúng 36 PNG vào `evidence/screenshots/`, rồi chạy:
+đúng 8 PNG vào `evidence/screenshots/`, rồi chạy:
 
 ```powershell
 python scripts/check_screenshots.py
+python scripts/check_screenshots.py --list-required
 ```
 
 Checker chỉ kiểm tra tên, PNG, file rỗng/hỏng, kích thước, thiếu/thừa và hash

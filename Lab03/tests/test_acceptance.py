@@ -118,10 +118,13 @@ def test_no_real_payment_or_email_integration():
 
 def test_screenshot_guide_lists_every_required_image():
     guide = (ROOT / "HUONG_DAN_CHUP_ANH.md").read_text(encoding="utf-8")
-    assert len(SCREENSHOTS) == 41
+    assert len(SCREENSHOTS) == 8
     assert all(item["filename"] in guide for item in SCREENSHOTS)
-    for field in ["Tài khoản", "URL", "Dữ liệu cần sửa", "Panel cần mở", "Bước timeline", "Caption báo cáo"]:
+    for field in ["Tên file", "Mục đích", "Trạng thái ban đầu", "URL hoặc lệnh", "Dữ liệu cần nhập",
+                  "Nút cần bấm", "Tab DevTools hoặc inspector cần mở", "Nội dung bắt buộc phải xuất hiện",
+                  "Kết quả đúng", "Caption dùng trong báo cáo"]:
         assert field in guide
+    assert all(f"Bước {number}." in guide for number in range(1, 7))
 
 
 def test_screenshot_checker_runs_without_ocr_or_generation():
@@ -131,7 +134,10 @@ def test_screenshot_checker_runs_without_ocr_or_generation():
     result = subprocess.run([sys.executable, "scripts/check_screenshots.py"], cwd=ROOT, text=True,
                             encoding="utf-8", errors="replace", capture_output=True, env=env)
     assert result.returncode in (0, 1)
-    assert "OK: 41 valid screenshots" in result.stdout or "MISSING:" in result.stdout
+    assert "OK: 8 valid screenshots" in result.stdout or "MISSING:" in result.stdout
+    listed = subprocess.run([sys.executable, "scripts/check_screenshots.py", "--list-required"], cwd=ROOT,
+                            text=True, encoding="utf-8", capture_output=True, check=True)
+    assert [item["filename"] for item in SCREENSHOTS] == [line.split(" - ", 1)[0][4:] for line in listed.stdout.splitlines()]
 
 
 def test_report_artifacts_exist_and_open():
@@ -146,17 +152,21 @@ def test_report_artifacts_exist_and_open():
 def test_report_has_all_chapters_questions_and_placeholders():
     doc = Document(ROOT / "report/21127645_LeMinh_Lab03_ParameterTampering.docx")
     text = "\n".join(paragraph.text for paragraph in doc.paragraphs)
-    assert all(f"Chương {number}." in text for number in range(1, 20))
-    for answer in ["Parameter Tampering đổi giá trị request", "Hidden field không phải cơ chế bảo mật",
-                   "IDOR thuộc Broken Access Control", "Trước khi trả invoice", "Không truyền giá như nguồn quyết định"]:
+    assert all(heading in text for heading in ["1. Mục tiêu và môi trường thực hành", "2. Kịch bản và các bước thực hiện",
+                                               "3. Nguyên nhân kỹ thuật", "4. Kết quả và bằng chứng", "5. Mức độ ảnh hưởng",
+                                               "6. Bản vá và cách phòng chống", "7. Trả lời các câu hỏi báo cáo",
+                                               "8. Kết quả kiểm thử", "9. Kết luận"])
+    for answer in ["Parameter Tampering sửa giá trị request", "Hidden field không phải cơ chế bảo mật",
+                   "IDOR thuộc Broken Access Control", "Trước khi trả invoice", "Không nên truyền giá sản phẩm từ client"]:
         assert answer in text
-    assert len(doc.tables) >= 44
+    assert len(doc.tables) >= 10
+    assert sum("Chèn ảnh tại vị trí này." in cell.text for table in doc.tables for row in table.rows for cell in row.cells) == 8
 
 
 def test_report_generator_mentions_real_log_and_missing_images():
     source = (ROOT / "scripts/generate_report.py").read_text(encoding="utf-8")
     assert "evidence\" / \"logs\" / \"pytest.txt" in source
-    assert "ẢNH CẦN BỔ SUNG" in source and "image_size" in source
+    assert "Chèn ảnh tại vị trí này." in source and "image_size" in source
     assert "missing.append" in source
 
 

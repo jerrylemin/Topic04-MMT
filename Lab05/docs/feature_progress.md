@@ -6,6 +6,6 @@
 - Complete: UI inspectors, trace timeline, code comparison and Presentation Mode.
 - Complete: evidence export with linked request, response, query, trace and audit.
 - Complete: 230 tests, 99% core coverage and 12/12 runtime smoke checks.
-- Complete: evidence-driven 22-page DOCX/PDF report and full-page visual QA.
+- Complete: compact 9-section DOCX/PDF generator with in-place screenshot placeholders.
 - Complete: Compose syntax validation and submission cleanup.
-- Manual: capture the 36 required screenshots and run the screenshot checker.
+- Manual: capture the 8 required screenshots and run the screenshot checker.

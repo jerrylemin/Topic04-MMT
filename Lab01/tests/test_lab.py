@@ -83,23 +83,36 @@ def test_no_external_request_or_secret():
 def test_no_browser_automation_dependency():
     sources=[p for p in ROOT.rglob("*") if p.is_file() and ".venv" not in p.parts and "tests" not in p.parts and p.suffix in {".py",".txt",".md"}]
     hits=[str(p) for p in sources if re.search(r"\b(playwright|selenium)\b",p.read_text(encoding="utf-8",errors="ignore"),re.I)]
-    assert set(hits)=={str(ROOT/"HUONG_DAN_CHUP_ANH.md"),str(ROOT/"README.md")}  # only explicit prohibition/documentation
+    assert not hits
     assert "playwright" not in (ROOT/"requirements.txt").read_text(encoding="utf-8").lower()
 
-def test_manual_guide_has_all_28_names():
+def test_manual_guide_has_all_required_names():
     guide=(ROOT/"HUONG_DAN_CHUP_ANH.md").read_text(encoding="utf-8")
     from screenshot_manifest import SCREENSHOTS
-    assert len(SCREENSHOTS)==28 and all(name in guide for name,*_ in SCREENSHOTS)
+    assert len(SCREENSHOTS)==10
+    assert all(item["filename"] in guide for item in SCREENSHOTS)
+    assert guide.count("**Tên file:**") == 10
+    assert guide.count("**Caption dùng trong báo cáo:**") == 10
 
 def test_screenshot_checker_lists_missing():
     result=subprocess.run([sys.executable,"scripts/check_screenshots.py"],cwd=ROOT,text=True,capture_output=True,encoding="utf-8",env={**os.environ,"PYTHONIOENCODING":"utf-8"})
-    assert result.returncode==1 and "Ảnh hợp lệ theo tên: 0/28" in result.stdout and "01_home_overview.png" in result.stdout
+    assert result.returncode==1 and "Đúng tên: 0/10" in result.stdout and "01_reflected_vulnerable.png" in result.stdout
+
+def test_screenshot_checker_lists_required_in_order():
+    result=subprocess.run([sys.executable,"scripts/check_screenshots.py","--list-required"],cwd=ROOT,text=True,capture_output=True,encoding="utf-8",env={**os.environ,"PYTHONIOENCODING":"utf-8"})
+    assert result.returncode==0
+    assert result.stdout.index("01_reflected_vulnerable.png") < result.stdout.index("10_tests_reports.png")
 
 def test_reports_generate_with_placeholders():
     result=subprocess.run([sys.executable,"scripts/generate_report.py"],cwd=ROOT,text=True,capture_output=True,encoding="utf-8",env={**os.environ,"PYTHONIOENCODING":"utf-8"})
-    assert result.returncode==0 and "Ảnh còn thiếu (28)" in result.stdout
+    assert result.returncode==0 and "Ảnh còn thiếu (10)" in result.stdout
     assert (ROOT/"report/21127645_LeMinh_Lab01_XSS.docx").stat().st_size>10_000
     assert (ROOT/"report/21127645_LeMinh_Lab01_XSS.pdf").stat().st_size>10_000
     from docx import Document
     doc=Document(ROOT/"report/21127645_LeMinh_Lab01_XSS.docx")
-    assert "ẢNH CẦN BỔ SUNG: 01_home_overview.png" in "\n".join(cell.text for table in doc.tables for row in table.rows for cell in row.cells)
+    text="\n".join(p.text for p in doc.paragraphs)
+    cells="\n".join(cell.text for table in doc.tables for row in table.rows for cell in row.cells)
+    assert "1. Mục tiêu và môi trường thực hành" in text
+    assert "9. Kết luận" in text
+    assert "ẢNH 01/10" in cells and "01_reflected_vulnerable.png" in cells
+    assert cells.count("Chèn ảnh tại vị trí này.") == 10

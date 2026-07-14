@@ -1,51 +1,21 @@
-from __future__ import annotations
+from pathlib import Path
+from docx import Document
+from scripts import generate_report as report
 
-import pytest
+def test_compact_report_contract():
+    assert len(report.REPORT_SECTIONS)==9
+    assert len(report.QA_ANSWERS)==5
+    assert len(report.SCREENSHOTS)==9
 
-from scripts.generate_report import (
-    CHAPTER_TITLES,
-    FLOW_SPECS,
-    QA_ANSWERS,
-    ReportInputError,
-    parse_coverage_log,
-    parse_pytest_log,
-    parse_smoke_log,
-)
+def test_docx_has_all_sections_and_placeholders(tmp_path:Path,monkeypatch):
+    monkeypatch.setattr(report,"SHOTS",tmp_path/"screenshots")
+    out=tmp_path/"report.docx";missing=report.build_docx(out);doc=Document(out)
+    headings=[p.text for p in doc.paragraphs if p.style and p.style.name=="Heading 1"]
+    assert headings==list(report.REPORT_SECTIONS)
+    text="\n".join(c.text for t in doc.tables for row in t.rows for c in row.cells)
+    assert len(missing)==9 and all(name in text for name in report.EXPECTED_FILES)
+    assert "ẢNH 01/09" in text and "ẢNH 09/09" in text
 
-
-def test_report_has_required_structural_content():
-    assert len(CHAPTER_TITLES) == 35
-    assert len(FLOW_SPECS) == 15
-    assert len(QA_ANSWERS) == 22
-
-
-def test_report_input_parsers_fail_closed(tmp_path):
-    with pytest.raises(ReportInputError):
-        parse_pytest_log(tmp_path / "missing-pytest.txt")
-    failed_smoke = tmp_path / "smoke.txt"
-    failed_smoke.write_text("runtime smoke: failed\n", encoding="utf-8")
-    with pytest.raises(ReportInputError):
-        parse_smoke_log(failed_smoke)
-
-
-def test_report_input_parsers_accept_truthful_success_logs(tmp_path):
-    pytest_log = tmp_path / "pytest.txt"
-    pytest_log.write_text("173 passed in 1.00s\n", encoding="utf-8")
-    smoke_log = tmp_path / "smoke.txt"
-    smoke_log.write_text("20/20 checks passed\nSMOKE_TEST_PASSED\n", encoding="utf-8")
-
-    assert parse_pytest_log(pytest_log).passed == 173
-    assert parse_smoke_log(smoke_log).status == "passed"
-
-
-def test_coverage_parser_accepts_real_module_row_format(tmp_path):
-    from scripts.generate_report import CORE_MODULES
-
-    coverage_log = tmp_path / "coverage.txt"
-    rows = [f"{name:<30} 10      0   100%" for name in CORE_MODULES]
-    rows.append(f"{'TOTAL':<30} 100      0   100%")
-    coverage_log.write_text("\n".join(rows), encoding="utf-8")
-
-    summary = parse_coverage_log(coverage_log)
-    assert summary.total == 100
-    assert all(summary.modules[name] == 100 for name in CORE_MODULES)
+def test_missing_pytest_log_is_truthful(tmp_path:Path,monkeypatch):
+    monkeypatch.setattr(report,"ROOT",tmp_path)
+    assert "không tuyên bố" in report._pytest_summary()

@@ -1,417 +1,251 @@
-"""Build the Lab04 DOCX/PDF report from verified source and evidence files."""
+"""Sinh báo cáo Lab04 ngắn gọn, có placeholder ảnh đúng vị trí."""
 
-import ast
-import json
-import re
+from __future__ import annotations
+
 import shutil
 import subprocess
 import sys
-from html import escape
 from pathlib import Path
 
 from docx import Document
-from docx.enum.section import WD_ORIENT, WD_SECTION
-from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from docx.shared import Inches, Pt, RGBColor
-
+from docx.shared import Cm, Inches, Pt, RGBColor
+from PIL import Image as PILImage
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from screenshot_manifest import SCREENSHOTS  # noqa: E402
+
 REPORT = ROOT / "report"
+SHOTS = ROOT / "evidence" / "screenshots"
 DOCX = REPORT / "21127645_LeMinh_Lab04_CSRF.docx"
 PDF = REPORT / "21127645_LeMinh_Lab04_CSRF.pdf"
-FLOW_FILES = [
-    ("Login", "login_victim.json"),
-    ("Vulnerable email", "vulnerable_email_change.json"),
-    ("Secure missing token", "secure_email_missing_token.json"),
-    ("Secure invalid token", "secure_email_invalid_token.json"),
-    ("Secure origin denied", "secure_email_origin_denied.json"),
-    ("Secure success", "secure_email_success.json"),
-    ("Logout denied", "logout_csrf_denied.json"),
-    ("Logout success", "logout_success.json"),
-    ("Reset denied", "reset_csrf_denied.json"),
-    ("Reset success", "reset_success.json"),
-]
-BLUE = RGBColor(0x2E, 0x74, 0xB5)
-DARK_BLUE = RGBColor(0x1F, 0x4D, 0x78)
-MUTED = RGBColor(0x55, 0x55, 0x55)
+PYTEST_LOG = ROOT / "evidence" / "logs" / "pytest.txt"
+COVERAGE_LOG = ROOT / "evidence" / "logs" / "coverage.txt"
 
 
-def _required() -> dict:
-    paths = {
-        "audit": ROOT / "evidence/audit/audit_logs.json",
-        "state": ROOT / "evidence/state/state_transitions.json",
-        "pytest": ROOT / "evidence/logs/pytest.txt",
-        "coverage": ROOT / "evidence/logs/coverage.txt",
-        "smoke": ROOT / "evidence/logs/runtime_smoke_test.txt",
-    }
-    paths.update({f"trace:{name}": ROOT / "evidence/traces" / filename for name, filename in FLOW_FILES})
-    missing = [str(path.relative_to(ROOT)) for path in paths.values() if not path.exists()]
-    if missing:
-        raise FileNotFoundError("Missing real evidence: " + ", ".join(missing))
-    return paths
+def _fill(cell, color: str) -> None:
+    tc_pr = cell._tc.get_or_add_tcPr()
+    shd = tc_pr.find(qn("w:shd")) or OxmlElement("w:shd")
+    if shd.getparent() is None:
+        tc_pr.append(shd)
+    shd.set(qn("w:fill"), color)
 
 
-def _read_json(path: Path):
-    return json.loads(path.read_text(encoding="utf-8"))
+def _border(cell, color="2E74B5", size="14") -> None:
+    tc_pr = cell._tc.get_or_add_tcPr()
+    borders = tc_pr.first_child_found_in("w:tcBorders")
+    if borders is None:
+        borders = OxmlElement("w:tcBorders")
+        tc_pr.append(borders)
+    for edge in ("top", "left", "bottom", "right"):
+        node = OxmlElement(f"w:{edge}")
+        node.set(qn("w:val"), "single")
+        node.set(qn("w:sz"), size)
+        node.set(qn("w:color"), color)
+        borders.append(node)
 
 
-def _font(run, size=10.5, bold=None, color=None, name="Calibri"):
-    run.font.name = name
-    run._element.get_or_add_rPr().rFonts.set(qn("w:ascii"), name)
-    run._element.get_or_add_rPr().rFonts.set(qn("w:hAnsi"), name)
-    run.font.size = Pt(size)
-    if bold is not None:
-        run.bold = bold
-    if color:
-        run.font.color.rgb = color
-
-
-def _configure(doc: Document) -> None:
+def _style(doc: Document) -> None:
     section = doc.sections[0]
-    section.page_width, section.page_height = Inches(8.5), Inches(11)
-    section.top_margin = section.bottom_margin = Inches(1)
-    section.left_margin = section.right_margin = Inches(1)
-    section.header_distance = section.footer_distance = Inches(0.492)
+    section.page_width, section.page_height = Cm(21), Cm(29.7)
+    section.top_margin = section.bottom_margin = Cm(1.7)
+    section.left_margin = section.right_margin = Cm(1.8)
     normal = doc.styles["Normal"]
-    normal.font.name, normal.font.size = "Calibri", Pt(10.5)
-    normal.paragraph_format.space_after = Pt(6)
-    normal.paragraph_format.line_spacing = 1.1
-    for name, size, color, before, after in (
-        ("Heading 1", 16, BLUE, 16, 8),
-        ("Heading 2", 13, BLUE, 12, 6),
-        ("Heading 3", 12, DARK_BLUE, 8, 4),
-    ):
-        style = doc.styles[name]
-        style.font.name, style.font.size, style.font.color.rgb = "Calibri", Pt(size), color
-        style.paragraph_format.space_before, style.paragraph_format.space_after = Pt(before), Pt(after)
-    doc.core_properties.title = "Lab04 - Cross-Site Request Forgery (CSRF)"
-    doc.core_properties.subject = "Báo cáo thực hành bảo mật ứng dụng web"
-    doc.core_properties.author = "21127645 - Lê Minh"
-    doc.core_properties.keywords = "CSRF, Flask, Synchronizer Token, Origin, Referer, SQLite"
-    header = section.header.paragraphs[0]
-    header.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    _font(header.add_run("LAB04 · CSRF · 21127645"), 8.5, color=MUTED)
+    normal.font.name, normal.font.size = "Arial", Pt(10.5)
+    normal.paragraph_format.space_after = Pt(5)
+    normal.paragraph_format.line_spacing = 1.08
+    for name, size, color in (("Heading 1", 16, "1F4E79"), ("Heading 2", 12.5, "2E74B5"), ("Heading 3", 11, "1F4E79")):
+        st = doc.styles[name]
+        st.font.name, st.font.size, st.font.bold = "Arial", Pt(size), True
+        st.font.color.rgb = RGBColor.from_string(color)
+        st.paragraph_format.space_before, st.paragraph_format.space_after = Pt(9), Pt(4)
     footer = section.footer.paragraphs[0]
     footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    _font(footer.add_run("Trang "), 8.5, color=MUTED)
-    field = OxmlElement("w:fldSimple")
-    field.set(qn("w:instr"), "PAGE")
-    footer._p.append(field)
+    footer.add_run("Lab04 - CSRF | 21127645 - Lê Minh")
 
 
-def _shade(cell, fill="F2F4F7"):
-    props = cell._tc.get_or_add_tcPr()
-    shading = props.find(qn("w:shd")) or OxmlElement("w:shd")
-    shading.set(qn("w:fill"), fill)
-    if shading.getparent() is None:
-        props.append(shading)
+def _valid_png(path: Path) -> bool:
+    if not path.is_file() or path.stat().st_size == 0:
+        return False
+    try:
+        with PILImage.open(path) as image:
+            image.verify()
+        with PILImage.open(path) as image:
+            return image.format == "PNG" and image.width >= 800 and image.height >= 450
+    except OSError:
+        return False
 
 
-def _table(doc, headers, rows, widths, font_size=8):
-    table = doc.add_table(rows=1, cols=len(headers))
-    table.alignment = WD_TABLE_ALIGNMENT.CENTER
-    table.autofit = False
-    table.style = "Table Grid"
-    table_width = sum(widths)
-    tbl_pr = table._tbl.tblPr
-    tbl_w = tbl_pr.find(qn("w:tblW"))
-    tbl_w = tbl_w if tbl_w is not None else OxmlElement("w:tblW")
-    tbl_w.set(qn("w:type"), "dxa")
-    tbl_w.set(qn("w:w"), str(int(table_width * 1440)))
-    if tbl_w.getparent() is None:
-        tbl_pr.append(tbl_w)
-    tbl_ind = OxmlElement("w:tblInd")
-    tbl_ind.set(qn("w:w"), "120")
-    tbl_ind.set(qn("w:type"), "dxa")
-    tbl_pr.append(tbl_ind)
-    for index, (text, width) in enumerate(zip(headers, widths)):
-        cell = table.rows[0].cells[index]
-        cell.width = Inches(width)
-        cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
-        _shade(cell)
-        paragraph = cell.paragraphs[0]
-        paragraph.paragraph_format.space_after = Pt(0)
-        _font(paragraph.add_run(str(text)), font_size, bold=True)
-    for values in rows:
-        cells = table.add_row().cells
-        for index, (value, width) in enumerate(zip(values, widths)):
-            cells[index].width = Inches(width)
-            cells[index].vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
-            paragraph = cells[index].paragraphs[0]
-            paragraph.paragraph_format.space_after = Pt(0)
-            paragraph.paragraph_format.line_spacing = 1.0
-            _font(paragraph.add_run(str(value)), font_size)
-    return table
+def image_size(path: Path, max_width=6.35, max_height=6.3):
+    with PILImage.open(path) as image:
+        width, height = image.size
+    scale = min(max_width / width, max_height / height)
+    return width * scale, height * scale
 
 
-def _title(doc, kicker, title, subtitle=""):
-    p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p.paragraph_format.space_before = Pt(115)
-    p.paragraph_format.space_after = Pt(14)
-    _font(p.add_run(kicker.upper()), 11, bold=True, color=BLUE)
-    p = doc.add_paragraph()
-    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    p.paragraph_format.space_after = Pt(10)
-    _font(p.add_run(title), 28, bold=True, color=DARK_BLUE)
-    if subtitle:
+def _evidence(doc: Document, index: int, item: dict, missing: list[str]) -> None:
+    path = SHOTS / item["filename"]
+    if _valid_png(path):
+        width, height = image_size(path)
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.paragraph_format.space_after = Pt(70)
-        _font(p.add_run(subtitle), 14, color=MUTED)
+        p.add_run().add_picture(str(path), width=Inches(width), height=Inches(height))
+    else:
+        missing.append(item["filename"])
+        table = doc.add_table(rows=1, cols=1)
+        table.autofit = False
+        cant_split = OxmlElement("w:cantSplit")
+        table.rows[0]._tr.get_or_add_trPr().append(cant_split)
+        cell = table.cell(0, 0)
+        cell.width = Cm(16.8)
+        cell.vertical_alignment = WD_CELL_VERTICAL_ALIGNMENT.CENTER
+        _fill(cell, "EAF3F8")
+        _border(cell)
+        details = [
+            f"ẢNH {index:02d}/{len(SCREENSHOTS):02d}", f"Tên file: {item['filename']}",
+            f"Tiêu đề ảnh: {item['purpose']}", "Chèn ảnh tại vị trí này.",
+            f"URL hoặc lệnh: {item['url_command']}", f"Thao tác: {item['input_data']} | {item['button']}",
+            f"Panel hoặc DevTools tab: {item['panel']}", f"Nội dung bắt buộc phải thấy: {item['required']}",
+            f"Kết quả mong đợi: {item['expected']}", f"Caption: {item['caption']}",
+        ]
+        for line_no, line in enumerate(details):
+            p = cell.paragraphs[0] if line_no == 0 else cell.add_paragraph()
+            p.paragraph_format.space_after = Pt(2)
+            run = p.add_run(line)
+            run.font.name, run.font.size = "Arial", Pt(12 if line_no == 0 else 10)
+            run.bold = line_no in (0, 1, 3)
+    caption = doc.add_paragraph(f"Hình {index}. {item['caption']}")
+    caption.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    for run in caption.runs:
+        run.italic, run.font.size = True, Pt(9)
 
 
-def _page(doc, title, paragraphs=(), bullets=(), table=None):
-    doc.add_heading(title, level=1)
-    for text in paragraphs:
-        doc.add_paragraph(text)
-    for text in bullets:
-        doc.add_paragraph(text, style="List Bullet")
-    if table:
-        _table(doc, *table)
-    doc.add_page_break()
+def _code(doc: Document, source: str) -> None:
+    table = doc.add_table(rows=1, cols=1)
+    table.style = "Table Grid"
+    cell = table.cell(0, 0)
+    _fill(cell, "F3F5F7")
+    run = cell.paragraphs[0].add_run(source)
+    run.font.name, run.font.size = "Consolas", Pt(8.5)
 
 
-def _source_function(filename, function):
-    path = ROOT / filename
-    source = path.read_text(encoding="utf-8")
-    node = next(item for item in ast.walk(ast.parse(source)) if isinstance(item, ast.FunctionDef) and item.name == function)
-    return node.lineno, node.end_lineno, "\n".join(source.splitlines()[node.lineno - 1:node.end_lineno])
+def _log_summary(path: Path, limit=1000) -> str | None:
+    if not path.is_file() or path.stat().st_size == 0:
+        return None
+    data = path.read_bytes()
+    encoding = "utf-16" if data.startswith((b"\xff\xfe", b"\xfe\xff")) else "utf-8"
+    text = data.decode(encoding, errors="replace")
+    return " ".join(text.split())[-limit:]
 
 
-def _compact(value, limit=55):
-    text = json.dumps(value, ensure_ascii=False, separators=(",", ":")) if isinstance(value, (dict, list)) else str(value)
-    text = re.sub(r"[\x00-\x08\x0B\x0C\x0E-\x1F]", "", text)
-    return text if len(text) <= limit else text[:limit - 1] + "…"
-
-
-def build_docx() -> Path:
-    paths = _required()
-    traces = [(name, _read_json(paths[f"trace:{name}"])) for name, _filename in FLOW_FILES]
-    audits = _read_json(paths["audit"])
-    states = _read_json(paths["state"])
-    pytest_log = paths["pytest"].read_text(encoding="utf-8", errors="replace")
-    coverage_log = paths["coverage"].read_text(encoding="utf-8", errors="replace")
-    smoke_log = paths["smoke"].read_text(encoding="utf-8", errors="replace")
-
+def build_docx(missing: list[str] | None = None) -> Path:
+    missing = missing if missing is not None else []
     doc = Document()
-    _configure(doc)
-    _title(doc, "Báo cáo thực hành bảo mật ứng dụng web", "LAB04 · CROSS-SITE REQUEST FORGERY", "Synchronizer Token · Origin/Referer · Audit & Trace")
-    for line in ("Sinh viên: Lê Minh", "MSSV: 21127645", "Môi trường: Flask + SQLite, chỉ chạy loopback", "Ngày hoàn thiện: 15/07/2026"):
-        p = doc.add_paragraph(); p.alignment = WD_ALIGN_PARAGRAPH.CENTER; _font(p.add_run(line), 11, bold="MSSV" in line)
+    _style(doc)
+    title = doc.add_paragraph()
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title.paragraph_format.space_before = Pt(100)
+    run = title.add_run("BÁO CÁO THỰC HÀNH\nLAB04 - CROSS-SITE REQUEST FORGERY")
+    run.bold, run.font.name, run.font.size = True, "Arial", Pt(23)
+    run.font.color.rgb = RGBColor(31, 78, 121)
+    for line in ("Môn: Mạng máy tính", "Sinh viên: Lê Minh", "MSSV: 21127645", "Môi trường: localhost - dữ liệu giả lập"):
+        p = doc.add_paragraph(line)
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_page_break()
 
-    toc = [(i + 1, title) for i, title in enumerate([
-        "Thông tin, mục tiêu và phạm vi", "Kiến trúc, database, session và cookie", "Nền tảng CSRF",
-        "Luồng vulnerable và secure", "Token, Origin và Referer", "SOP, SameSite và CORS",
-        "POST-only, logout và reset", "Audit, trace và inspectors", "Security Controls và Code Comparison",
-        "Kết quả kiểm thử, coverage và smoke test", "Ảnh hưởng, phòng chống, giới hạn và kết luận",
-        "Câu hỏi báo cáo và phụ lục evidence", "Phụ lục 10 bảng trace chi tiết",
-    ])]
-    doc.add_heading("Mục lục", level=1)
-    _table(doc, ["STT", "Nội dung"], toc, [0.6, 5.9], 9)
-    doc.add_heading("Danh mục bảng", level=2)
-    doc.add_paragraph("Bảng kiến trúc và schema; Origin Matrix; audit event; state transition; security control; code comparison; kết quả test; 10 bảng trace theo từng flow.")
-    doc.add_page_break()
+    doc.add_heading("1. Mục tiêu và môi trường thực hành", 1)
+    doc.add_paragraph("Mục tiêu là giải thích vì sao browser tự gửi session cookie, tái hiện đổi email thiếu CSRF token và kiểm chứng synchronizer token kết hợp exact Origin/Referer validation.")
+    doc.add_paragraph("Victim Application chạy tại http://127.0.0.1:5004; Demo Page cố định tại http://127.0.0.1:9004. Tài khoản victim dùng dữ liệu SQLite giả lập. Không có website, email hay tài khoản thật.")
 
-    _page(doc, "1. Thông tin, mục tiêu và phạm vi", [
-        "Lab04 là ứng dụng học tập local gồm Victim Application tại 127.0.0.1:5004 và Cross-Origin Form Demo tại 127.0.0.1:9004 hoặc localhost:9004. Mục tiêu là chỉ ra vì sao request giả mạo có thể mang theo session cookie, sau đó so sánh luồng thiếu token với luồng được bảo vệ bằng Synchronizer Token Pattern.",
-        "Phạm vi an toàn được cố định trong mã nguồn: không nhận host, URL, port hay route tùy ý; không kết nối Internet; không dùng browser automation; không dùng fetch, XMLHttpRequest, iframe hoặc document.cookie; không auto-submit. Form minh họa chỉ gửi khi người dùng chủ động bấm và xác nhận.",
-        "Báo cáo này được tạo lại từ trace JSON, request/response TXT, audit log, state transition, pytest, coverage, runtime smoke test và source code thật. Không có ảnh giả, placeholder ảnh hoặc chương ảnh trống.",
-    ], ["Tài khoản demo victim / Victim123! chỉ dùng cho dữ liệu local.", "Mật khẩu lưu dưới dạng hash Werkzeug; token và cookie luôn được che trong evidence.", "Hai ứng dụng bind loopback và không bật CORS wildcard."])
+    doc.add_heading("2. Kịch bản và các bước thực hiện", 1)
+    doc.add_heading("2.1 Request hợp lệ ban đầu", 2)
+    doc.add_paragraph("Đăng nhập victim và gửi request đổi email cùng origin để xác nhận session và trạng thái ban đầu.")
+    _evidence(doc, 1, SCREENSHOTS[0], missing)
+    doc.add_heading("2.2 Form giả lập và vulnerable CSRF", 2)
+    doc.add_paragraph("Demo Page chứa form POST local cố định đến /vulnerable/change-email, không biết password hoặc token của victim.")
+    _evidence(doc, 2, SCREENSHOTS[1], missing)
+    doc.add_paragraph("Khi victim còn đăng nhập và chủ động bấm gửi form demo, route vulnerable chỉ dựa vào session cookie nên email bị đổi.")
+    _evidence(doc, 3, SCREENSHOTS[2], missing)
+    doc.add_heading("2.3 Kiểm chứng bản secure", 2)
+    doc.add_paragraph("Request thiếu hoặc sai token trả 403 và database không đổi.")
+    _evidence(doc, 4, SCREENSHOTS[3], missing)
+    doc.add_paragraph("Request từ Demo Page còn bị exact Origin/Referer validation từ chối trước mutation.")
+    _evidence(doc, 5, SCREENSHOTS[4], missing)
+    doc.add_paragraph("Request cùng origin có token hợp lệ cập nhật email; token được rotate sau thành công.")
+    _evidence(doc, 6, SCREENSHOTS[5], missing)
 
-    _page(doc, "2. Kiến trúc, database, session và cookie", [
-        "Victim Application xử lý login, session, validation, SQLite mutation, audit và trace. Demo Page chỉ render ba form email cố định: vulnerable, secure thiếu token và secure token giả. Hai ứng dụng không chia sẻ secret, session hay database.",
-        "SQLite có users, demo_transfers, audit_logs, state_history và trace_records. Mọi SQL mutation dùng placeholder và transaction. State Inspector liên kết state_history với trace_id, vì vậy email trước/sau và quyết định update được kiểm tra từ dữ liệu database thật.",
-        "Flask session cookie được cấu hình HttpOnly, SameSite=Lax, path=/ và Secure=False cho HTTP loopback. HttpOnly hạn chế JavaScript đọc cookie nhưng không ngăn browser tự gắn cookie vào request; SameSite là lớp bổ sung và không thay thế token.",
-        "Data flow: Browser → Flask Router → Session Authentication → Origin/Referer → CSRF → Input Validation → SQLite → Audit/Trace → HTTP Response.",
-    ], table=(["Thành phần", "Nguồn dữ liệu", "Vai trò"], [["Victim", "victim_app.py", "Validation và mutation"], ["Demo Page", "attacker_app.py", "Form local cố định"], ["SQLite", "lab04.sqlite3", "State, audit, trace"]], [1.2, 2.0, 3.3]))
+    doc.add_heading("3. Nguyên nhân kỹ thuật", 1)
+    doc.add_paragraph("Browser quản lý cookie và tự gắn cookie khi policy cho phép. Route vulnerable coi cookie xác thực là đủ bằng chứng về ý định, không yêu cầu token hoặc kiểm tra nguồn request. SOP thường ngăn trang khác đọc response nhưng không ngăn form HTML gửi request.")
+    _code(doc, "# Vulnerable: chỉ dựa vào session\n@login_required\ndef vulnerable_change_email():\n    update_email(session['user_id'], request.form['email'])")
 
-    _page(doc, "3. Nền tảng CSRF", [
-        "CSRF là việc lợi dụng browser của người dùng đã đăng nhập để gửi request thay đổi trạng thái mà ứng dụng nhầm là chủ ý của người dùng. Người tạo form không cần biết mật khẩu: browser quản lý cookie và tự đính kèm cookie khi chính sách cho phép.",
-        "Điều kiện điển hình gồm session còn hiệu lực, route thay đổi trạng thái, dữ liệu request có thể đoán hoặc cố định, và server không yêu cầu bằng chứng không thể giả mạo như token gắn với session. SOP có thể ngăn script đọc response nhưng không ngăn HTML form gửi request, nên không đọc được response không đồng nghĩa state không đổi.",
-        "CSRF khác XSS: CSRF ép browser gửi hành động bằng credential sẵn có, còn XSS chạy script trong trusted origin. XSS nghiêm trọng hơn đối với cơ chế CSRF vì script cùng origin có thể đọc token trong DOM và gửi request hợp lệ. Do đó CSP, escaping và phòng XSS vẫn là lớp bảo vệ thiết yếu.",
-    ], ["Không dùng GET cho state change vì link, prefetch, cache và crawler có thể kích hoạt.", "Token phải kiểm tra ở server vì client không phải trust boundary.", "Token không đặt trong URL để tránh history, log và Referer leak."])
+    doc.add_heading("4. Kết quả và bằng chứng", 1)
+    doc.add_paragraph("Luồng vulnerable đổi state mà không có token. Luồng secure từ chối token thiếu/sai và Origin khác; chỉ request có session, Origin/Referer hợp lệ và token đúng mới cập nhật. Audit/trace ghi decision nhưng không lưu token/cookie đầy đủ.")
+    _evidence(doc, 7, SCREENSHOTS[6], missing)
 
-    _page(doc, "4. Luồng vulnerable và secure", [
-        "POST /vulnerable/change-email yêu cầu session và validate email nhưng cố ý không kiểm tra Origin/Referer hoặc CSRF token. Khi form local khác origin gửi email demo_changed@lab.local và cookie hiện diện, SQLite được cập nhật, audit vulnerable_email_changed được ghi và trace mô tả nguyên nhân session-cookie-only.",
-        "POST /secure/change-email kiểm tra theo thứ tự: session, Origin hoặc Referer exact match, token hiện diện, hmac.compare_digest, email hợp lệ, rồi mới UPDATE. Sau thành công token được rotate, audit secure_email_changed/csrf_token_valid/csrf_token_rotated được ghi và response gắn với trace.",
-        "Token thiếu hoặc sai trả 403 và không đổi email. Origin sai được từ chối trước token. Các denial vẫn tạo audit và trace để cho thấy database update bị skip. Đây là khác biệt quan sát được giữa hai flow với cùng loại dữ liệu đầu vào.",
-    ], table=(["Flow", "Origin", "Token", "Kết quả"], [["Vulnerable", "Không kiểm tra", "Không yêu cầu", "Email có thể đổi"], ["Secure", "Exact match", "Session-bound", "Chỉ đổi khi mọi check đạt"]], [1.2, 1.7, 1.5, 2.1]))
+    doc.add_heading("5. Mức độ ảnh hưởng", 1)
+    doc.add_paragraph("CSRF có thể làm sai tính toàn vẹn dữ liệu bằng quyền của victim. Đổi email trong hệ thống thật có thể hỗ trợ chiếm quyền; logout gây gián đoạn; thao tác tài chính có thể nghiêm trọng. Lab chỉ đổi dữ liệu giả lập local.")
 
-    _page(doc, "5. Token, Origin và Referer", [
-        "Token được sinh bằng secrets.token_urlsafe(32), lưu cùng session, khác giữa hai session, tạo mới sau login và rotate sau secure state change. validate_csrf_token trả cấu trúc present, valid, status và reason; so sánh dùng hmac.compare_digest. Inspector chỉ nhận token đã mask ở server.",
-        "Origin parser dùng urllib.parse.urlsplit và chuẩn hóa scheme, hostname, effective port. Allowlist chỉ gồm http://127.0.0.1:5004 và http://localhost:5004. Không dùng substring, startswith hoặc endswith. Nếu Origin có mặt, Origin luôn thắng; Referer chỉ là fallback khi Origin vắng; cả hai thiếu thì từ chối.",
-        "Origin và Referer là lớp bổ sung vì header có thể bị thiếu bởi chính sách trình duyệt hoặc proxy. Token vẫn là lớp chính vì nó chứng minh request biết giá trị ngẫu nhiên gắn với session.",
-    ], table=(["Nguồn", "Parsed", "Exact match", "Decision"], [["127.0.0.1:5004", "http / 127.0.0.1 / 5004", "Có", "Allowed"], ["127.0.0.1:9004", "http / 127.0.0.1 / 9004", "Không", "Denied"], ["Missing", "-", "Không", "Denied"]], [1.5, 2.4, 1.1, 1.5]))
+    doc.add_heading("6. Bản vá và cách phòng chống", 1)
+    doc.add_paragraph("Dùng token ngẫu nhiên duy nhất theo session, kiểm tra ở server trước mutation và rotate sau thành công. Kèm SameSite=Lax/Strict phù hợp, exact Origin/Referer, POST-only và re-authentication cho thao tác nhạy cảm. CAPTCHA và CORS không phải biện pháp chính.")
+    _code(doc, "# Secure: kiểm tra trước UPDATE\nvalidate_origin_or_referer(request)\nvalidate_csrf_token(session['csrf_token'], request.form['csrf_token'])\nupdate_email(session['user_id'], validated_email)\nrotate_csrf_token(session)")
 
-    _page(doc, "6. SOP, SameSite và CORS", [
-        "127.0.0.1:9004 → 127.0.0.1:5004 là cross-origin do khác port nhưng same-site do cùng scheme và host. localhost:9004 → 127.0.0.1:5004 vừa cross-origin vừa cross-site. Báo cáo phân biệt Expected theo policy, Observed từ request thật và Not observed khi chưa dùng browser DevTools.",
-        "Same-Origin Policy kiểm soát script đọc dữ liệu cross-origin; nó không cấm form HTML gửi request. Demo chỉ giải thích lý thuyết, không dùng iframe/contentDocument và không tuyên bố tự động chứng minh SOP.",
-        "CORS điều khiển quyền script đọc response/API; form POST chuẩn không cần CORS. Vì vậy tắt CORS hoặc không bật wildcard không phải bản vá CSRF chính. SameSite phụ thuộc browser, scheme, host, method và navigation context; token server-side vẫn là lớp chính.",
-    ], table=(["Nguồn → Victim", "Origin", "Site", "Nhãn"], [["127.0.0.1:9004", "Khác", "Cùng", "Expected; browser chưa tự động xác minh"], ["localhost:9004", "Khác", "Khác", "Expected; browser chưa tự động xác minh"]], [1.8, 1.0, 1.0, 2.7]))
+    doc.add_heading("7. Trả lời các câu hỏi báo cáo trong BaiTapTopic04.docx", 1)
+    answers = [
+        "Browser tự gửi cookie vì cookie jar và matching policy do browser quản lý; ứng dụng không cần tự thêm cookie vào từng form.",
+        "CSRF không cần biết mật khẩu vì victim đã có session được xác thực; request lợi dụng credential đó.",
+        "Trang tạo request cross-origin thường không đọc được response do SOP, nhưng request vẫn có thể thay đổi state.",
+        "CSRF ép browser thực hiện hành động bằng credential sẵn có; XSS chạy script trong trusted origin và có thể đọc token trong DOM.",
+        "Không dùng GET cho state change vì link, prefetch, cache hoặc crawler có thể kích hoạt ngoài ý muốn; thao tác phải dùng POST và kiểm tra token.",
+    ]
+    for i, answer in enumerate(answers, 1):
+        doc.add_paragraph(f"{i}. {answer}")
 
-    _page(doc, "7. POST-only, logout và reset", [
-        "Mọi secure state change dùng POST, session hợp lệ, Origin/Referer exact validation, CSRF token, input validation, audit và trace trước mutation. GET /secure/change-email chỉ render form và không đổi database. Route state-changing GET cũ đã bị loại bỏ.",
-        "POST /logout từ chối token thiếu/sai hoặc Origin không hợp lệ với HTTP 403 và giữ session. Thành công ghi logout_success trước khi session.clear. POST /reset-lab cũng từ chối trước mutation; thành công reset user/balance, giữ audit/trace/state evidence và sau đó logout.",
-        "Logout cần CSRF protection vì forced logout gây mất phiên và phá workflow. Reset cần bảo vệ mạnh hơn vì thay đổi toàn bộ trạng thái lab. HttpOnly không giúp trong hai trường hợp này vì browser vẫn có thể gửi cookie.",
-    ], table=(["Route", "Denied event", "Success event", "State rule"], [["/logout", "logout_csrf_denied", "logout_success", "Giữ session khi denied"], ["/reset-lab", "lab_reset_csrf_denied", "lab_reset", "Giữ DB khi denied"]], [1.2, 1.8, 1.5, 2.0]))
+    doc.add_heading("8. Kết quả kiểm thử", 1)
+    pytest_summary = _log_summary(PYTEST_LOG)
+    coverage_summary = _log_summary(COVERAGE_LOG)
+    if pytest_summary:
+        doc.add_paragraph("Pytest summary đọc từ evidence/logs/pytest.txt:")
+        _code(doc, pytest_summary)
+    else:
+        doc.add_paragraph("Chưa có evidence/logs/pytest.txt; generator không tự ghi PASS.")
+    if coverage_summary:
+        doc.add_paragraph("Coverage summary đọc từ evidence/logs/coverage.txt:")
+        _code(doc, coverage_summary)
 
-    _page(doc, "8. Audit, trace và inspectors", [
-        "Audit log lưu timestamp, user_id, username, action, route, mode, Origin, Referer, CSRF status, cookie presence, decision, reason, state before/after và trace_id. Password, full cookie, full token và secret key không được ghi. Trang audit hỗ trợ filter theo action, decision, mode, username và trace ID.",
-        "Mỗi trace có request metadata thật và 16 bước: Browser UI, HTTP Request, Flask Router, Session Authentication, Origin Validation, CSRF Validation, Input Validation, SQLite Read/Write, Audit Logging, HTTP Response và Final Result. Mỗi step hiển thị timestamp, layer, title, technique, input, output, code reference, security meaning và status.",
-        "Request Inspector đọc URL, query, content metadata và form đã redaction; Cookie Inspector đọc app.config và request.cookies; Token Inspector mask ở server; Origin Inspector dùng validation result; State Inspector đọc state_history; Presentation Mode chỉ trình bày trace đã có và không gửi request.",
-    ], table=(["Evidence", "Số bản ghi", "Nguồn"], [["Audit", len(audits), "SQLite audit_logs"], ["State", len(states), "SQLite state_history"], ["Trace flow", len(traces), "SQLite trace_records / JSON export"]], [1.4, 1.1, 4.0]))
-
-    snippets = []
-    for filename, function in (("victim_app.py", "vulnerable_change_email"), ("victim_app.py", "secure_change_email"), ("csrf_service.py", "validate_csrf_token"), ("origin_service.py", "validate_origin_or_referer"), ("victim_app.py", "logout"), ("victim_app.py", "reset_lab")):
-        start, end, code = _source_function(filename, function)
-        snippets.append([filename, function, start, end, _compact(code, 110)])
-    _page(doc, "9. Security Controls và Code Comparison", [
-        "Security Control Panel phản ánh runtime config và code: session authentication, token, rotation, Origin, Referer fallback, SameSite, HttpOnly, Secure cookie, POST-only, input validation, parameterized SQL, audit, CSP, CORS policy và request size limit. Mỗi control nêu nguồn, route, rủi ro giảm được và giới hạn.",
-        "Code Comparison dùng AST đọc source đang chạy để lấy tên file, function, line start/end và snippet. Bảng dưới đây được tạo lúc chạy generator; không phải pseudocode ghi cứng. Điều này bảo đảm nội dung báo cáo khớp với implementation cuối.",
-    ], table=(["File", "Function", "Start", "End", "Source excerpt"], snippets, [1.1, 1.35, 0.55, 0.55, 2.95], 6.5))
-
-    _page(doc, "10. Kết quả kiểm thử, coverage và runtime smoke", [
-        "Pytest log và coverage log dưới đây được đọc từ evidence cuối. Generator không tự tuyên bố test đạt khi log chưa tồn tại. Bộ test bao phủ route, authentication, session, CSRF, rotation, Origin/Referer, vulnerable/secure flow, logout/reset, SQLite, audit, trace, inspectors, controls, code extraction, headers, CORS, presentation, evidence, report, runtime restriction và cleanup.",
-        "Runtime smoke test khởi động hai ứng dụng loopback và chạy healthcheck, login, vulnerable email, reset hợp lệ, secure missing/invalid/origin-denied/success, logout missing và logout success. Script không kiểm tra SameSite/SOP của browser.",
-        "Pytest summary: " + _compact(pytest_log.replace("\n", " "), 420),
-        "Coverage summary: " + _compact(coverage_log.replace("\n", " "), 420),
-        "Smoke summary: " + _compact(smoke_log.replace("\n", " "), 420),
-    ])
-
-    _page(doc, "11. Ảnh hưởng, phòng chống, giới hạn và kết luận", [
-        "CSRF có thể thay đổi dữ liệu bằng quyền của nạn nhân, làm sai lệch tài khoản và gây mất tính toàn vẹn. Mức ảnh hưởng phụ thuộc route: đổi email có thể hỗ trợ chiếm quyền ở hệ thống thật; logout gây gián đoạn; reset phá trạng thái. Lab chỉ dùng dữ liệu giả lập và không cung cấp công cụ mục tiêu tùy ý.",
-        "Biện pháp chính là token ngẫu nhiên gắn session, validate ở server trước mutation và rotate sau thành công. Các lớp bổ sung gồm exact Origin/Referer, SameSite phù hợp, POST-only, input validation, re-authentication cho password/transfer, CSP, audit và trace. XSS phải được phòng riêng vì có thể làm suy yếu token.",
-        "Giới hạn: requests/test client không mô phỏng quyết định SameSite hay khả năng đọc response của browser; phần này chỉ được gắn nhãn Expected hoặc lý thuyết. Cookie Secure tắt do lab dùng HTTP loopback. Không có ảnh chụp thủ công theo phạm vi nhiệm vụ.",
-        "Kết luận: vulnerable flow chứng minh thiếu token là nguyên nhân cốt lõi; secure flow bảo vệ state bằng token + Origin/Referer + validation trước SQL. Evidence, tests, coverage và smoke test tạo chuỗi chứng minh có thể tái lập.",
-    ])
-
-    _page(doc, "12. Câu hỏi báo cáo và phụ lục evidence", [
-        "Browser tự gửi cookie vì cookie jar và matching policy thuộc browser. CSRF không cần biết mật khẩu vì session đã xác thực. Phía tạo form cross-origin thường không đọc được response do SOP, nhưng request vẫn có thể đổi state.",
-        "Token phải kiểm tra server-side; URL không phù hợp vì leak qua history/log/Referer. SameSite không thay token do còn same-site cross-origin và khác biệt context. HttpOnly chỉ chặn JavaScript đọc cookie, không chặn cookie được gửi.",
-        "SameSite phân loại site; SOP kiểm soát script đọc theo origin. CORS không phải bản vá chính vì form submit không cần CORS. Origin/Referer là lớp bổ sung vì có thể thiếu. Logout/reset cần token vì đều thay đổi trạng thái. XSS có thể đọc token cùng origin, nên phòng XSS là bắt buộc.",
-        "Evidence appendix gồm 10 trace JSON, 7 request TXT, 7 response TXT, audit_logs.json, state_transitions.json, pytest.txt, coverage.txt, runtime_smoke_test.txt, security_review.txt và submission_cleanup.txt. Tất cả nằm dưới evidence/ và không chứa secret đầy đủ.",
-    ])
-
-    section = doc.add_section(WD_SECTION.NEW_PAGE)
-    section.orientation = WD_ORIENT.LANDSCAPE
-    section.page_width, section.page_height = Inches(11), Inches(8.5)
-    section.top_margin = section.bottom_margin = Inches(0.55)
-    section.left_margin = section.right_margin = Inches(0.5)
-    section.header_distance = section.footer_distance = Inches(0.3)
-    for flow_index, (name, trace) in enumerate(traces):
-        doc.add_heading(f"Phụ lục Trace {flow_index + 1}: {name}", level=1)
-        doc.add_paragraph(f"Trace ID: {trace['trace_id']} · HTTP {trace['http_status']} · Decision: {trace['final_result']} · Origin: {trace['origin_decision']} · CSRF: {trace['csrf_token_status']}")
-        rows = []
-        for step in trace["steps"]:
-            ref = step.get("code_reference") or {}
-            reference = f"{ref.get('file','-')}:{ref.get('function','-')}:{ref.get('line','-')}" if isinstance(ref, dict) else str(ref)
-            rows.append([
-                step["step_number"], _compact(step["layer"], 20), _compact(step["title"], 28),
-                _compact(step.get("technique", ""), 34), _compact(step.get("input_data", {}), 42),
-                _compact(step.get("output_data", {}), 42), _compact(reference, 35), step.get("status", ""),
-                _compact(step.get("security_meaning", ""), 48),
-            ])
-        _table(doc, ["STT", "Layer", "Action", "Technique", "Input", "Output", "Code reference", "Status", "Security meaning"], rows,
-               [0.35, 0.85, 1.1, 1.35, 1.25, 1.25, 1.15, 0.65, 1.5], 5.5)
-        if flow_index < len(traces) - 1:
-            doc.add_page_break()
+    doc.add_heading("9. Kết luận", 1)
+    doc.add_paragraph("CSRF tồn tại khi server nhầm credential tự động gửi với ý định của người dùng. Token server-side là lớp chính; Origin/Referer, SameSite, POST-only, re-authentication và audit là các lớp bổ sung.")
 
     REPORT.mkdir(parents=True, exist_ok=True)
     doc.save(DOCX)
-    if not DOCX.exists() or DOCX.stat().st_size < 20_000:
-        raise RuntimeError("DOCX generation failed or output is unexpectedly small.")
     return DOCX
 
 
-def build_pdf() -> Path:
+def build_pdf() -> Path | None:
     if PDF.exists():
         PDF.unlink()
-    soffice = shutil.which("soffice") or r"C:\Program Files\LibreOffice\program\soffice.exe"
-    if not Path(soffice).exists():
-        return _build_pdf_fallback()
+    soffice = shutil.which("soffice")
+    candidate = Path(r"C:\Program Files\LibreOffice\program\soffice.exe")
+    if not soffice and candidate.exists():
+        soffice = str(candidate)
+    if not soffice:
+        return None
     result = subprocess.run([soffice, "--headless", "--convert-to", "pdf", "--outdir", str(REPORT), str(DOCX)], capture_output=True, text=True, timeout=180)
-    if result.returncode or not PDF.exists() or PDF.stat().st_size < 10_000:
-        raise RuntimeError(f"PDF conversion failed: {result.stderr or result.stdout}")
-    return PDF
-
-
-def _build_pdf_fallback() -> Path:
-    """Create a readable, evidence-backed PDF when LibreOffice is unavailable."""
-    try:
-        from reportlab.lib.enums import TA_CENTER
-        from reportlab.lib.pagesizes import letter
-        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-        from reportlab.pdfbase import pdfmetrics
-        from reportlab.pdfbase.ttfonts import TTFont
-        from reportlab.lib.units import inch
-        from reportlab.platypus import PageBreak, Paragraph, SimpleDocTemplate, Spacer
-    except ImportError as exc:
-        raise RuntimeError(
-            "PDF generation needs LibreOffice or the already-supported ReportLab fallback."
-        ) from exc
-
-    source = Document(DOCX)
-    styles = getSampleStyleSheet()
-    font_candidates = [
-        Path(r"C:\Windows\Fonts\arial.ttf"),
-        Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
-    ]
-    font_path = next((path for path in font_candidates if path.exists()), None)
-    if font_path:
-        pdfmetrics.registerFont(TTFont("ReportUnicode", str(font_path)))
-        for style in styles.byName.values():
-            style.fontName = "ReportUnicode"
-    styles.add(ParagraphStyle(name="ReportTitle", parent=styles["Title"], alignment=TA_CENTER))
-    story = []
-
-    # Read both paragraphs and tables in document order.  Table rows become
-    # textual evidence lines so the fallback never substitutes placeholders.
-    for child in source.element.body.iterchildren():
-        tag = child.tag.rsplit("}", 1)[-1]
-        text_content = " ".join(
-            text.strip() for text in child.itertext() if text and text.strip()
-        )
-        if not text_content:
-            continue
-        style = styles["BodyText"]
-        if tag == "p":
-            paragraph_style = child.xpath("./w:pPr/w:pStyle/@w:val")
-            if paragraph_style and str(paragraph_style[0]).startswith("Heading"):
-                level = str(paragraph_style[0]).replace("Heading", "") or "1"
-                style = styles.get(f"Heading{min(int(level), 3)}", styles["Heading1"])
-        else:
-            style = styles["Code"]
-        for offset in range(0, len(text_content), 1800):
-            story.append(Paragraph(escape(text_content[offset : offset + 1800]), style))
-            story.append(Spacer(1, 0.08 * inch))
-        if tag == "sectPr":
-            story.append(PageBreak())
-
-    SimpleDocTemplate(
-        str(PDF),
-        pagesize=letter,
-        rightMargin=0.55 * inch,
-        leftMargin=0.55 * inch,
-        topMargin=0.55 * inch,
-        bottomMargin=0.55 * inch,
-        title="Lab04 - CSRF",
-        author="21127645 - Lê Minh",
-    ).build(story)
-    if not PDF.exists() or PDF.stat().st_size < 10_000:
-        raise RuntimeError("ReportLab fallback did not produce a complete PDF.")
+    if result.returncode or not PDF.is_file():
+        raise RuntimeError(result.stderr or result.stdout or "Không thể chuyển DOCX sang PDF.")
     return PDF
 
 
 def main() -> int:
-    build_docx()
-    build_pdf()
+    missing: list[str] = []
+    build_docx(missing)
+    pdf = build_pdf()
     print(f"DOCX: {DOCX}")
-    print(f"PDF: {PDF}")
+    print(f"PDF: {pdf if pdf else 'chưa sinh - thiếu LibreOffice'}")
+    print(f"Missing screenshots ({len(missing)}): {', '.join(missing) if missing else 'none'}")
     return 0
 
 

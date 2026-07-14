@@ -1,27 +1,65 @@
+from argparse import ArgumentParser
 from hashlib import sha256
 from pathlib import Path
 import sys
 
-sys.path.insert(0, str(Path(__file__).parents[1]))
-from screenshot_manifest import SCREENSHOTS
+from PIL import Image, UnidentifiedImageError
 
-ROOT = Path(__file__).parents[1]
-folder = ROOT / "evidence/screenshots"
-folder.mkdir(parents=True, exist_ok=True)
-expected = {name for name, *_ in SCREENSHOTS}
-actual = {path.name for path in folder.iterdir() if path.is_file()}
-missing, extra = sorted(expected - actual), sorted(actual - expected)
-invalid, small, hashes = [], [], {}
-for path in folder.iterdir():
-    if not path.is_file(): continue
-    if path.suffix.lower() != ".png" or path.stat().st_size == 0: invalid.append(path.name)
-    if 0 < path.stat().st_size < 10_000: small.append(path.name)
-    digest = sha256(path.read_bytes()).hexdigest(); hashes.setdefault(digest, []).append(path.name)
-duplicates = [names for names in hashes.values() if len(names) > 1]
-print(f"Ảnh hợp lệ theo tên: {len(actual & expected)}/28")
-print("Thiếu:", ", ".join(missing) or "không")
-print("Thừa:", ", ".join(extra) or "không")
-print("Sai định dạng/rỗng:", ", ".join(invalid) or "không")
-print("Quá nhỏ (<10 KB):", ", ".join(small) or "không")
-print("Trùng hash:", duplicates or "không")
-raise SystemExit(1 if missing or extra or invalid or small or duplicates else 0)
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from screenshot_manifest import SCREENSHOTS, REQUIRED_FILENAMES
+
+
+def inspect(folder: Path) -> dict[str, object]:
+    folder.mkdir(parents=True, exist_ok=True)
+    files = sorted(path for path in folder.iterdir() if path.is_file())
+    expected, actual = set(REQUIRED_FILENAMES), {path.name for path in files}
+    invalid: list[str] = []
+    too_small: list[str] = []
+    hashes: dict[str, list[str]] = {}
+    for path in files:
+        if path.suffix.lower() != ".png" or path.stat().st_size == 0:
+            invalid.append(path.name)
+            continue
+        try:
+            with Image.open(path) as image:
+                if image.format != "PNG":
+                    invalid.append(path.name)
+                width, height = image.size
+                if width < 1024 or height < 600:
+                    too_small.append(f"{path.name} ({width}x{height})")
+                image.verify()
+        except (OSError, UnidentifiedImageError):
+            invalid.append(path.name)
+            continue
+        hashes.setdefault(sha256(path.read_bytes()).hexdigest(), []).append(path.name)
+    return {
+        "missing": sorted(expected - actual),
+        "extra": sorted(actual - expected),
+        "invalid": sorted(set(invalid)),
+        "too_small": sorted(too_small),
+        "duplicates": sorted(sorted(names) for names in hashes.values() if len(names) > 1),
+        "valid_names": len(expected & actual),
+    }
+
+
+def main() -> int:
+    parser = ArgumentParser(description="Kiểm tra tên/PNG/kích thước/hash; không OCR nội dung.")
+    parser.add_argument("--directory", type=Path, default=ROOT / "evidence" / "screenshots")
+    parser.add_argument("--list-required", action="store_true", help="In danh sách ảnh bắt buộc theo thứ tự.")
+    args = parser.parse_args()
+    if args.list_required:
+        for index, item in enumerate(SCREENSHOTS, 1):
+            print(f"{index:02d}. {item['filename']} - {item['purpose']}")
+        return 0
+    result = inspect(args.directory.resolve())
+    print(f"Đúng tên: {result['valid_names']}/{len(REQUIRED_FILENAMES)}")
+    for key, label in (("missing", "Thiếu"), ("extra", "Thừa"), ("invalid", "Sai PNG/rỗng/hỏng"),
+                       ("too_small", "Kích thước dưới 1024x600"), ("duplicates", "Trùng SHA-256")):
+        values = result[key]
+        print(f"{label}: {', '.join(map(str, values)) if values else 'không'}")
+    return int(any(result[key] for key in ("missing", "extra", "invalid", "too_small", "duplicates")))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,99 +1,50 @@
-# LAB04 - CROSS-SITE REQUEST FORGERY (CSRF)
+# Lab04 - Cross-Site Request Forgery (CSRF)
 
-Sinh viên: **21127645 - Lê Minh**.
-
-Lab04 là hai ứng dụng Flask local minh họa đúng một hành vi vulnerable (đổi email thiếu CSRF token) và bản secure dùng Synchronizer Token Pattern, exact Origin/Referer validation, audit và trace từ SQLite thật.
+Hai ứng dụng Flask local minh họa đổi email thiếu CSRF token và bản secure dùng synchronizer token, exact Origin/Referer validation, audit và trace thật.
 
 ## Phạm vi an toàn
 
 - Victim Application: `http://127.0.0.1:5004`.
-- Demo Page: `http://127.0.0.1:9004` hoặc `http://localhost:9004`.
-- Chỉ bind loopback; runtime không gọi Internet và không nhận URL/host/port/route tùy ý.
-- Demo Page chỉ có form local cố định; form chỉ gửi khi người dùng bấm và xác nhận.
-- Không auto-submit, fetch/XHR cross-origin, iframe, `document.cookie`, browser automation hoặc ảnh giả.
-- Đổi mật khẩu và chuyển số dư chỉ tồn tại dưới dạng chức năng phòng thủ trong Victim Application.
+- Demo Page cố định: `http://127.0.0.1:9004`.
+- Chỉ bind loopback; không Internet, target tùy ý, auto-submit, browser automation hoặc ảnh giả.
 
-## Kiến trúc và cấu trúc
-
-```text
-Browser
-├─ Victim Application :5004
-│  └─ Flask session → Origin/Referer → CSRF → validation → SQLite → audit/trace
-└─ Demo Page :9004
-   └─ fixed HTML forms → Victim email routes
-```
-
-- `victim_app.py`, `attacker_app.py`, `run_both.py`: entry points.
-- `auth.py`, `csrf_service.py`, `origin_service.py`, `security_utils.py`: kiểm soát bảo mật.
-- `database.py`, `schema.sql`, `seed.py`: SQLite và dữ liệu demo.
-- `audit_service.py`, `trace_models.py`, `trace_service.py`: audit/trace có redaction.
-- `victim_templates/`, `attacker_templates/`, `static/`: UI, inspectors, timeline, Presentation Mode.
-- `scripts/`: evidence, smoke test, report và cleanup.
-- `tests/`: kiểm thử hành vi và acceptance.
-- `evidence/`: trace/request/response/audit/state/log thật.
-- `report/`: DOCX/PDF hoàn chỉnh không phụ thuộc ảnh.
-
-## Tài khoản demo
-
-| Username | Password | Email ban đầu | Balance |
-|---|---|---|---:|
-| `victim` | `Victim123!` | `victim_old@lab.local` | 1,000,000 |
-| `receiver` | `Receiver123!` | `receiver@lab.local` | 500,000 |
-
-Password được hash bằng Werkzeug; token, cookie và password không được ghi đầy đủ vào audit/evidence.
-
-## Cài đặt và chạy
+## Chạy ứng dụng
 
 ```powershell
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
-python seed.py
+python scripts/reset_database.py
 python run_both.py
 ```
 
-Reset từ command line: `python scripts/reset_database.py`. Trên UI, login rồi bấm Reset; route yêu cầu Origin/Referer và CSRF token.
+Tài khoản: `victim / Victim123!` và `receiver / Receiver123!`.
 
-## Chạy các flow
+Route chính: `/login`, `/dashboard`, `/vulnerable/change-email`, `/secure/change-email`, `/audit-logs`; Demo Page có `/attack/vulnerable-email`, `/attack/secure-email`, `/attack/bad-token`.
 
-1. Mở `/login`, dùng tài khoản `victim`.
-2. Vulnerable: mở Demo Page `/attack/vulnerable-email`, bấm gửi và xác nhận. Form POST cố định gửi `demo_changed@lab.local`; route không token/Origin check.
-3. Secure missing token: `/attack/secure-email`; server trả 403 và state không đổi.
-4. Secure invalid token: `/attack/bad-token`; server trả 403.
-5. Secure success: mở Victim `/secure/change-email`; hidden token hợp lệ, Origin/Referer hợp lệ, token rotate sau UPDATE.
-6. Logout/reset: chỉ thành công khi form chứa token hợp lệ; denial giữ session/database và tạo audit + trace.
+## Evidence và báo cáo
 
-## Đọc timeline, inspectors và audit
-
-- Timeline hiển thị từng bước với timestamp, layer, technique, input/output, code reference, security meaning và status.
-- Request Inspector lấy URL/header/form đã che từ request trace.
-- Cookie Inspector lấy flags từ `app.config` và host/cookie presence từ request.
-- Token Inspector mask ở server; Origin Inspector dùng exact validation result.
-- State Inspector đọc `state_history`; Code Comparison trích source thật bằng AST.
-- Presentation Mode chỉ trình bày trace đã có; Auto Play không gửi request hay đổi database.
-- `/audit-logs` lọc theo action, decision, mode, username và trace ID.
-
-## SameSite, SOP và CORS
-
-- `127.0.0.1:9004 → 127.0.0.1:5004`: cross-origin, same-site.
-- `localhost:9004 → 127.0.0.1:5004`: cross-origin, cross-site.
-- `Expected` là suy luận từ policy; `Observed` phải lấy từ request/browser thật; `Not observed` nghĩa là chưa xác minh bằng browser.
-- SOP kiểm soát script đọc response, không ngăn form gửi. Phần này chỉ giải thích lý thuyết; dự án không tự động điều khiển browser.
-- SameSite là lớp bổ sung; token server-side vẫn là lớp chính. CORS không phải bản vá CSRF vì HTML form không cần CORS để submit.
-
-## Kiểm thử, evidence, report và cleanup
+Lab04 yêu cầu **7 ảnh** theo [HUONG_DAN_CHUP_ANH.md](HUONG_DAN_CHUP_ANH.md).
 
 ```powershell
-python -m pytest -q
-python -m pytest -q --cov=csrf_service --cov=origin_service --cov=audit_service --cov=trace_service --cov=database --cov=auth --cov-report=term-missing
+python scripts/check_screenshots.py --list-required
+python scripts/check_screenshots.py
 python scripts/export_evidence.py
-python scripts/run_runtime_smoke_test.py
 python scripts/generate_report.py
-python scripts/clean_submission.py
 ```
 
-`run_runtime_smoke_test.py` chỉ gọi hai endpoint loopback cố định và không tuyên bố kiểm tra SameSite/SOP của browser. `generate_report.py` đọc evidence/source thật và tạo lại cùng một nội dung dưới DOCX/PDF. `clean_submission.py` xóa cache/file tạm nhưng giữ source, database demo, evidence, tests, README và report.
+Report:
 
-## Quyết định tối giản
+- `report/21127645_LeMinh_Lab04_CSRF.docx`
+- `report/21127645_LeMinh_Lab04_CSRF.pdf`
 
-Lab dùng Flask session, Python stdlib (`secrets`, `hmac`, `urllib.parse`, `ast`) và SQLite trực tiếp. Không thêm framework frontend, CSRF framework, browser driver hay dịch vụ ngoài.
+Khi thiếu ảnh, DOCX/PDF vẫn có placeholder chi tiết đúng vị trí. Đặt PNG hợp lệ đúng tên vào `evidence/screenshots/`, rồi chạy lại generator để tự thay bằng ảnh thật.
+
+## Kiểm thử
+
+```powershell
+python -m compileall .
+python -m pytest -q
+```
+
+Không xóa source vulnerable/secure, trace, audit, inspector, database demo hoặc Docker configuration.

@@ -174,9 +174,10 @@ Chạy một trace, bấm **Presentation Mode**, dùng Previous/Next hoặc Auto
 
 ## Chụp và kiểm tra ảnh
 
-Làm đúng 28 kịch bản trong [HUONG_DAN_CHUP_ANH.md](HUONG_DAN_CHUP_ANH.md), lưu PNG thủ công vào `evidence/screenshots/`, rồi chạy:
+Làm đúng **9 ảnh** trong [HUONG_DAN_CHUP_ANH.md](HUONG_DAN_CHUP_ANH.md), lưu PNG thủ công vào `evidence/screenshots/`, rồi chạy:
 
 ```bash
+python scripts/check_screenshots.py --list-required
 python scripts/check_screenshots.py
 ```
 
@@ -193,7 +194,7 @@ Kết quả:
 - `report/21127645_LeMinh_Lab02_BufferOverflow.docx`
 - `report/21127645_LeMinh_Lab02_BufferOverflow.pdf`
 
-Script dùng python-docx và ReportLab, có bìa editorial, mục lục, số trang, 17 chương, phụ lục, caption hình/bảng. Ảnh thật được giữ tỷ lệ; ảnh chưa có trở thành placeholder chi tiết gồm tên, URL/lệnh, thao tác và nội dung bắt buộc. Chạy lại sẽ tự thay placeholder bằng ảnh thật. Script chỉ đọc bằng chứng hiện có và ghi rõ phần chưa thu thập, không tạo log/GDB/ASan giả.
+Script dùng python-docx và ReportLab, tạo báo cáo 9 mục bám đề bài. Ảnh thật được giữ tỷ lệ; ảnh chưa có trở thành placeholder chi tiết ngay sau kịch bản tương ứng. Chạy lại sẽ tự thay placeholder bằng ảnh thật. Script chỉ đọc bằng chứng hiện có và ghi rõ phần chưa thu thập, không tạo log/GDB/ASan giả. Danh sách ảnh cũ được lưu tại [LEGACY_SCREENSHOTS.md](LEGACY_SCREENSHOTS.md) và không còn bắt buộc.
 
 ## Chạy pytest
 

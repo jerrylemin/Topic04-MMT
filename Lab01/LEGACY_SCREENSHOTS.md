@@ -1,0 +1,5 @@
+# Ảnh cũ không còn bắt buộc
+
+Manifest trước đây yêu cầu 28 ảnh. Các PNG cũ của người dùng không bị xóa, nhưng checker/report mới chỉ dùng 10 tên trong `screenshot_manifest.py`.
+
+`01_home_overview.png`, `02_reflected_input_step.png`, `03_reflected_request_step.png`, `04_reflected_server_step.png`, `05_reflected_template_step.png`, `06_reflected_browser_parse_step.png`, `07_reflected_payload_executed.png`, `08_reflected_secure_encoding.png`, `09_reflected_comparison.png`, `10_stored_post_request.png`, `11_stored_database_insert.png`, `12_stored_database_record.png`, `13_stored_template_render.png`, `14_stored_payload_reload.png`, `15_stored_secure_escape.png`, `16_stored_secure_sanitize.png`, `17_stored_comparison.png`, `18_dom_hash_source.png`, `19_dom_javascript_read.png`, `20_dom_innerhtml_sink.png`, `21_dom_element_created.png`, `22_dom_payload_executed.png`, `23_dom_textcontent_fix.png`, `24_dom_comparison.png`, `25_csp_headers.png`, `26_cookie_security.png`, `27_presentation_mode.png`, `28_pytest_passed.png`.

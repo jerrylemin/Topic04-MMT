@@ -1,0 +1,5 @@
+# Ảnh cũ không còn bắt buộc
+
+Manifest trước đây yêu cầu 28 ảnh. Không xóa PNG cũ của người dùng; checker/report mới chỉ dùng 9 tên trong `screenshot_manifest.py`.
+
+`01_home_overview.png`, `02_normal_input_before_submit.png`, `03_normal_http_request.png`, `04_normal_native_process.png`, `05_normal_memory_visualizer.png`, `06_overflow_32_input.png`, `07_overflow_32_memory_boundary.png`, `08_overflow_64_request.png`, `09_overflow_64_strcpy_step.png`, `10_overflow_64_memory_visualizer.png`, `11_asan_detected.png`, `12_asan_stack_trace.png`, `13_native_crash_result.png`, `14_final_vulnerable_verdict.png`, `15_length_test_table.png`, `16_gdb_breakpoint.png`, `17_gdb_local_buffer.png`, `18_gdb_overflow_stop.png`, `19_secure_length_reject.png`, `20_secure_length_timeline.png`, `21_secure_snprintf_reject.png`, `22_code_comparison.png`, `23_hardening_comparison.png`, `24_stack_canary_explanation.png`, `25_asan_vs_hardening.png`, `26_presentation_mode.png`, `27_pytest_passed.png`, `28_report_files.png`.

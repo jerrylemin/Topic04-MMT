@@ -311,16 +311,19 @@ python scripts/generate_report.py
 - `report/21127645_LeMinh_Lab06_CookiePoisoning.docx`
 - `report/21127645_LeMinh_Lab06_CookiePoisoning.pdf`
 
-Script phải báo lỗi rõ nếu không tạo được PDF; không được báo hoàn thành giả. Báo cáo không phụ thuộc ảnh thủ công, không có placeholder ảnh hoặc phụ lục ảnh trống. Số trang chỉ được công bố sau khi render và đo thực tế.
+Generator tạo báo cáo 9 mục bám sát đề bài. Mỗi ảnh nằm ngay sau kịch bản liên
+quan; PNG hợp lệ được chèn tự động, ảnh thiếu được giữ bằng placeholder chi tiết
+trong cả DOCX và PDF. Kết quả pytest chỉ được đọc từ log thật.
 
 ## Chụp ảnh thủ công
 
-Đọc [HUONG_DAN_CHUP_ANH.md](HUONG_DAN_CHUP_ANH.md). Người học tự chụp 48 ảnh bằng browser/DevTools. Không dùng automation. Ảnh không phải completion gate của Codex.
+Đọc [HUONG_DAN_CHUP_ANH.md](HUONG_DAN_CHUP_ANH.md). Người học tự chụp đúng 9 ảnh bằng browser/DevTools. Không dùng automation và không tạo ảnh giả.
 
 Kiểm tra file ảnh sau khi người học đã chụp:
 
 ```powershell
 python scripts/check_screenshots.py
+python scripts/check_screenshots.py --list-required
 ```
 
 Script chỉ kiểm tên, PNG, kích thước, file rỗng/thiếu/thừa và hash trùng; không OCR và không tạo ảnh.
