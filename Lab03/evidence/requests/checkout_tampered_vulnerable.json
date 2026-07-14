@@ -1,0 +1,10 @@
+{
+  "method": "POST",
+  "route": "/vulnerable/checkout",
+  "parameters": {
+    "product_id": 5,
+    "quantity": 1,
+    "price": 1
+  },
+  "trace_id": "1d15c939731f463ca71be9d381b4d8ac"
+}

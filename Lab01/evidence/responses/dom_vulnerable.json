@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "headers": {
+    "Content-Type": "text/html; charset=utf-8",
+    "Content-Length": "16964",
+    "X-Lab-Mode": "vulnerable"
+  },
+  "summary": {
+    "after_escape": "",
+    "before_escape": "",
+    "content_type": "text/html; charset=utf-8",
+    "headers": {
+      "Content-Security-Policy": "(không áp dụng)",
+      "X-Lab-Mode": "vulnerable"
+    },
+    "html_snippet": "button type=\"submit\">Thay fragment không reload</button></form><section id=\"dom-result\"></section><div id=\"dom-inspector\" class=\"inspector-box\"></div><a class=\"btn\" href=\"/secure/dom-search\">So sánh bản vá</a></section><section class=\"trace-shell\" data-trace-id=\"26aaf8cd84374bdf9db020c459554d54\">\n  <div class=\"trace-head\">\n    <div><span class=\"eyebrow\">PHÂN TÍCH LUỒNG HOẠT ĐỘNG</span><h2>Trace DO",
+    "length": 15547,
+    "status": 200
+  }
+}

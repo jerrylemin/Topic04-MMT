@@ -1,0 +1,28 @@
+{% set t = trace|default({}, true) %}
+{% set comparison = t.get('code_comparison', {}) %}
+{% set source_map = sources|default({}, true) %}
+{% set vulnerable_source = source_map.get('vulnerable', source_map.get('vulnerable_processor.c', comparison.get('vulnerable', 'char name[32];\nstrcpy(name, user_input);'))) %}
+{% set length_source = source_map.get('secure_length', source_map.get('secure_length_processor.c', comparison.get('secure_length', comparison.get('secure', 'Kiểm tra độ dài theo byte.\nTừ chối trên 31 byte.\nCopy có kiểm soát và thêm null.')))) %}
+{% set snprintf_source = source_map.get('secure_snprintf', source_map.get('secure_snprintf_processor.c', comparison.get('secure_snprintf', 'snprintf(name, sizeof(name), "%s", user_input);\nKiểm tra return value.\nTừ chối khi bị truncate.'))) %}
+<div class="inspector-heading">
+  <h3>Code Comparison</h3>
+  <p>Chuỗi C cần một byte null terminator. Với <code>name[32]</code>, dữ liệu hợp lệ tối đa là 31 byte.</p>
+</div>
+<div class="code-comparison">
+  <article class="code-column code-danger">
+    <h4>Vulnerable</h4>
+    <pre><code>{{ vulnerable_source }}</code></pre>
+    <p><code>strcpy</code> không biết kích thước buffer đích.</p>
+  </article>
+  <article class="code-column code-safe">
+    <h4>Secure length check</h4>
+    <pre><code>{{ length_source }}</code></pre>
+    <p>Kiểm tra byte trước copy và luôn kết thúc bằng null.</p>
+  </article>
+  <article class="code-column code-safe">
+    <h4>Secure snprintf</h4>
+    <pre><code>{{ snprintf_source }}</code></pre>
+    <p>Giới hạn ghi và kiểm tra return value để không chấp nhận truncate âm thầm.</p>
+  </article>
+</div>
+{% if comparison.get('explanation') %}<p class="inline-note">{{ comparison.get('explanation') }}</p>{% endif %}

@@ -1,0 +1,32 @@
+{% set default_controls = [
+  {'name':'Server-side price lookup','enabled':true,'file':'services.py','route':'/secure/checkout','risk':'Client price tampering','limit':'Không thay thế quantity validation'},
+  {'name':'Session-based identity','enabled':true,'file':'auth.py','route':'secure routes','risk':'Forged user_id','limit':'Cần bảo vệ session key'},
+  {'name':'Object-level authorization','enabled':true,'file':'authorization.py','route':'/secure/invoice','risk':'IDOR','limit':'Phải chạy trên từng object'},
+  {'name':'Field allowlist','enabled':true,'file':'services.py','route':'/secure/profile/update','risk':'Mass assignment','limit':'Không cấp quyền admin'},
+  {'name':'Parameterized SQL','enabled':true,'file':'database.py','route':'all database routes','risk':'SQL Injection','limit':'Không tự sửa business logic'},
+  {'name':'Audit logging','enabled':true,'file':'audit_service.py','route':'secure routes','risk':'Thiếu dấu vết tampering','limit':'Không phải control ngăn chặn'},
+  {'name':'CSRF protection','enabled':false,'file':'not configured','route':'state-changing forms','risk':'Cross-site requests','limit':'Không phải bản vá Parameter Tampering'}
+] %}
+{% if security_controls is defined %}
+  {% set control_items = security_controls %}
+{% elif controls is defined %}
+  {% set control_items = controls %}
+{% elif trace is defined and trace.security_controls is defined %}
+  {% set control_items = trace.security_controls %}
+{% else %}
+  {% set control_items = default_controls %}
+{% endif %}
+<section class="control-matrix" aria-label="Security controls">
+  {% for control in control_items %}
+    {% set enabled = control.enabled|default(true) if control is not string else true %}
+    <article class="control {{ 'control-on' if enabled else 'control-off' }}">
+      <header><span>{{ 'BẬT' if enabled else 'TẮT' }}</span><h2>{{ control if control is string else control.name }}</h2></header>
+      <dl>
+        <dt>File</dt><dd><code>{{ 'app.py / services.py' if control is string else control.file }}</code></dd>
+        <dt>Route</dt><dd>{{ 'route liên quan' if control is string else control.route }}</dd>
+        <dt>Giảm rủi ro</dt><dd>{{ 'Parameter tampering hoặc lớp bảo vệ liên quan' if control is string else control.risk }}</dd>
+        <dt>Giới hạn</dt><dd>{{ 'Không thay thế authorization trên từng object' if control is string else control.limit }}</dd>
+      </dl>
+    </article>
+  {% endfor %}
+</section>

@@ -1,0 +1,18 @@
+{
+  "cookie": "(không có)",
+  "flask_route": "/vulnerable/post/1/comments",
+  "form_body": {
+    "author": "Kiểm thử",
+    "body": "<img src=x onerror=alert(1)>"
+  },
+  "headers": {
+    "Content-Type": "application/x-www-form-urlencoded",
+    "Host": "localhost",
+    "User-Agent": "Werkzeug/3.1.8"
+  },
+  "method": "POST",
+  "path": "/vulnerable/post/1/comments",
+  "query_string": "",
+  "sent_at": "2026-07-13T19:56:38.141+00:00",
+  "url": "http://localhost/vulnerable/post/1/comments"
+}

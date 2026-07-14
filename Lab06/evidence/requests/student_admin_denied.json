@@ -1,0 +1,13 @@
+{
+  "content_length": 0,
+  "content_type": null,
+  "form_field_names": [],
+  "form_values": {},
+  "host": "127.0.0.1:5006",
+  "method": "GET",
+  "observed_at": "2026-07-14T20:23:02.658561+00:00",
+  "path": "/secure/session/admin",
+  "query_string": "",
+  "scheme": "http",
+  "trace_id": "40f58cf768a51ed2ac0cabd2"
+}

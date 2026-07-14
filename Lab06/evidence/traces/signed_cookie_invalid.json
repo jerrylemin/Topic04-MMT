@@ -1,0 +1,58 @@
+{
+  "decision": "invalid",
+  "inspectors": {
+    "signature": {
+      "confidentiality": false,
+      "integrity": true,
+      "payload_used": false,
+      "reason": "signature_rejected",
+      "signature_status": "invalid"
+    }
+  },
+  "mode": "signed",
+  "route": "/secure/signed/profile",
+  "status": "completed",
+  "steps": [
+    {
+      "code_reference": "app.py:request_boundary",
+      "description": "Flask reads only the cookies attached to this local request.",
+      "input_data": {
+        "cookie_names": [
+          "lab06_signed_profile"
+        ]
+      },
+      "layer": "HTTP Request",
+      "output_data": {
+        "mode": "signed",
+        "route": "/secure/signed/profile"
+      },
+      "security_meaning": "Cookie input crosses the browser-to-server trust boundary.",
+      "status": "observed",
+      "step_number": 1,
+      "technique": "request.cookies",
+      "timestamp": "2026-07-14T20:23:02.062061+00:00",
+      "title": "Receive fixed Lab06 cookie input"
+    },
+    {
+      "code_reference": "signed_cookie_service.py:verify_signed_profile",
+      "description": "Observed the fixed signed flow at /secure/signed/profile.",
+      "input_data": {
+        "cookie_name": "lab06_signed_profile",
+        "cookie_present": true
+      },
+      "layer": "Authentication/Authorization",
+      "output_data": {
+        "decision": "invalid",
+        "mode": "signed"
+      },
+      "security_meaning": "Integrity is verified before payload use; authorization still uses server state.",
+      "status": "invalid",
+      "step_number": 2,
+      "technique": "signature verification plus database role lookup",
+      "timestamp": "2026-07-14T20:23:02.062061+00:00",
+      "title": "Verify then authorize"
+    }
+  ],
+  "timestamp": "2026-07-14T20:23:02.062061+00:00",
+  "trace_id": "636fa7a587223f83be5994f7"
+}

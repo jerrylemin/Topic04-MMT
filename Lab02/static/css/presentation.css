@@ -1,0 +1,56 @@
+body.presentation {
+  overflow: hidden;
+}
+
+body.presentation .site-header,
+body.presentation .site-footer,
+body.presentation main > :not(.trace-shell),
+body.presentation .inspector-tabs,
+body.presentation .final-verdict {
+  display: none;
+}
+
+body.presentation main {
+  min-height: 100dvh;
+}
+
+body.presentation .trace-shell {
+  display: flex;
+  width: min(calc(100% - 2rem), 1500px);
+  min-height: 100dvh;
+  flex-direction: column;
+  padding: 1rem 0;
+  border-top: 0;
+}
+
+body.presentation .trace-header {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  grid-template-columns: minmax(220px, 0.55fr) minmax(0, 1.45fr);
+  padding: 0.8rem;
+  border: 1px solid var(--line);
+  border-top: 5px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+body.presentation .trace-header h2 { font-size: clamp(1.25rem, 2.5vw, 2rem); }
+body.presentation .presentation-shortcuts { display: flex; }
+body.presentation .tab-panel { display: none; }
+body.presentation .tab-panel[data-panel="timeline"] { display: flex; flex: 1; align-items: center; }
+body.presentation .timeline { width: 100%; }
+body.presentation .trace-step { display: none; font-size: clamp(1.1rem, 2.2vw, 1.75rem); }
+body.presentation .trace-step.current { display: block; }
+body.presentation .trace-step summary { min-height: 92px; }
+body.presentation .step-number { width: 54px; height: 54px; flex-basis: 54px; }
+body.presentation .step-detail { display: block; padding: 0 1.5rem 1.5rem 5.8rem; }
+body.presentation .step-detail .inspector-list { font-size: clamp(1rem, 1.8vw, 1.4rem); }
+body.presentation .trace-progress-row { position: sticky; top: 0; z-index: 6; }
+
+@media (max-width: 800px) {
+  body.presentation .trace-shell { width: calc(100% - 1rem); }
+  body.presentation .trace-header { position: static; grid-template-columns: 1fr; }
+  body.presentation .trace-actions { max-height: 150px; overflow: auto; }
+  body.presentation .step-detail { padding-left: 1rem; }
+}

@@ -1,0 +1,70 @@
+{
+  "decision": "allow",
+  "inspectors": {
+    "authorization": {
+      "authentication_source": "verified signed cookie",
+      "database_role": "admin",
+      "decision": "allow",
+      "policy": "current database role must equal admin",
+      "reason": "Role is read from SQLite after signature verification.",
+      "requested_action": "view_admin",
+      "requested_resource": "/secure/signed/admin",
+      "subject": "admin_lab",
+      "submitted_role": "admin"
+    },
+    "signature": {
+      "confidentiality": false,
+      "integrity": true,
+      "payload_used": true,
+      "reason": "signature_verified",
+      "signature_status": "valid",
+      "signed_role": "admin"
+    }
+  },
+  "mode": "signed",
+  "route": "/secure/signed/admin",
+  "status": "completed",
+  "steps": [
+    {
+      "code_reference": "app.py:request_boundary",
+      "description": "Flask reads only the cookies attached to this local request.",
+      "input_data": {
+        "cookie_names": [
+          "lab06_signed_profile"
+        ]
+      },
+      "layer": "HTTP Request",
+      "output_data": {
+        "mode": "signed",
+        "route": "/secure/signed/admin"
+      },
+      "security_meaning": "Cookie input crosses the browser-to-server trust boundary.",
+      "status": "observed",
+      "step_number": 1,
+      "technique": "request.cookies",
+      "timestamp": "2026-07-14T20:23:02.045423+00:00",
+      "title": "Receive fixed Lab06 cookie input"
+    },
+    {
+      "code_reference": "signed_cookie_service.py:verify_signed_profile",
+      "description": "Observed the fixed signed flow at /secure/signed/admin.",
+      "input_data": {
+        "cookie_name": "lab06_signed_profile",
+        "cookie_present": true
+      },
+      "layer": "Authentication/Authorization",
+      "output_data": {
+        "decision": "allow",
+        "mode": "signed"
+      },
+      "security_meaning": "Integrity is verified before payload use; authorization still uses server state.",
+      "status": "allow",
+      "step_number": 2,
+      "technique": "signature verification plus database role lookup",
+      "timestamp": "2026-07-14T20:23:02.045423+00:00",
+      "title": "Verify then authorize"
+    }
+  ],
+  "timestamp": "2026-07-14T20:23:02.045423+00:00",
+  "trace_id": "78365904d428593a977fb9ad"
+}

@@ -1,0 +1,8 @@
+HTTP status: 200
+Content-Type: text/html; charset=utf-8
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; connect-src 'self'
+Trace ID: f6613e961ae548cebe4cc7e5f3f5f346
+Decision: query_error
+Result count: 0
+Error category: sql_syntax_error
+Prepared statement: false

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#0b2942">
+  <title>{% block title %}LAB 5 · SQL Injection{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/presentation.css') }}">
+  <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/trace-ui.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/query-visualizer.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/parameter-diff.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/presentation.js') }}" defer></script>
+</head>
+<body data-mode="{{ mode|default('overview', true)|e }}">
+  <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Trang chủ LAB 5"><span>LAB 5</span><strong>SQL Injection</strong></a>
+    <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <nav id="primary-nav" class="primary-nav" aria-label="Điều hướng chính">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/vulnerable/login">Đăng nhập yếu</a>
+      <a href="/secure/login">Đăng nhập an toàn</a>
+      <a href="/vulnerable/search">Tìm kiếm</a>
+      <a href="/comparison">So sánh mã</a>
+      <a href="/security-controls">Kiểm soát</a>
+      <a href="/audit-logs">Audit</a>
+    </nav>
+    <div class="session-area">
+      {% if session is defined and session.get('user_id') %}
+        <span class="session-chip"><span>{{ session.get('username', 'demo')|e }}</span><b>{{ session.get('role', 'user')|e }}</b></span>
+        <form method="post" action="/logout"><button class="button button-quiet button-small" type="submit">Đăng xuất</button></form>
+      {% else %}
+        <span class="local-chip">127.0.0.1:5005</span>
+      {% endif %}
+    </div>
+  </header>
+  <main id="main-content" tabindex="-1">
+    {% with messages = get_flashed_messages(with_categories=true) if get_flashed_messages is defined else [] %}
+      {% if messages %}<section class="flash-stack" aria-label="Thông báo">{% for category, message in messages %}<p class="flash flash-{{ category|e }}" role="status">{{ message }}</p>{% endfor %}</section>{% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer"><span>21127645 · Lê Minh</span><span>LAB 5, SQL INJECTION</span><span>Dữ liệu giả lập · SELECT-only · local</span></footer>
+</body>
+</html>

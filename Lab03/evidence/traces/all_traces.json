@@ -1,0 +1,1128 @@
+[
+  {
+    "trace_id": "530c78c61f214e328468bd9feffb67a3",
+    "scenario": "checkout",
+    "mode": "vulnerable",
+    "current_user": {
+      "user_id": 12,
+      "username": "user_a",
+      "role": "user"
+    },
+    "request_inspector": {
+      "method": "POST",
+      "url": "http://localhost/vulnerable/checkout",
+      "path": "/vulnerable/checkout",
+      "query_string": "",
+      "content_type": "application/x-www-form-urlencoded",
+      "form_body": {
+        "product_id": "5",
+        "quantity": "1",
+        "price": "100000"
+      },
+      "parameters": {
+        "product_id": "5",
+        "quantity": "1",
+        "price": "100000"
+      },
+      "cookie": "session=***",
+      "route_handler": "checkout_vulnerable",
+      "session": {
+        "authenticated_user_id": 12,
+        "username": "user_a",
+        "role": "user",
+        "source": "Flask signed session",
+        "cookie": "session=***"
+      }
+    },
+    "steps": [
+      {
+        "step_number": 1,
+        "layer": "HTTP Request",
+        "title": "Đọc giá client",
+        "description": "Flask đọc price từ request.form.",
+        "technique": "client-controlled hidden field",
+        "input_data": "100000",
+        "output_data": 100000,
+        "code_reference": "request.form[\"price\"]",
+        "security_meaning": "",
+        "status": "warning",
+        "timestamp": "2026-07-13T20:29:21.330+00:00"
+      },
+      {
+        "step_number": 2,
+        "layer": "Business Logic",
+        "title": "Tin giá đã gửi",
+        "description": "Server không đối chiếu lại giá database.",
+        "technique": "",
+        "input_data": 100000,
+        "output_data": 100000,
+        "code_reference": "total = submitted_price * quantity",
+        "security_meaning": "Parameter Tampering",
+        "status": "danger",
+        "timestamp": "2026-07-13T20:29:21.330+00:00"
+      },
+      {
+        "step_number": 3,
+        "layer": "Database Write",
+        "title": "Tạo invoice",
+        "description": "SQLite lưu unit_price do client gửi.",
+        "technique": "",
+        "input_data": 100000,
+        "output_data": 1004,
+        "code_reference": "_create_invoice(...) ",
+        "security_meaning": "",
+        "status": "normal",
+        "timestamp": "2026-07-13T20:29:21.330+00:00"
+      },
+      {
+        "step_number": 4,
+        "layer": "Final Result",
+        "title": "Kết luận",
+        "description": "Hóa đơn dùng giá client.",
+        "technique": "",
+        "input_data": "",
+        "output_data": "",
+        "code_reference": "",
+        "security_meaning": "",
+        "status": "danger",
+        "timestamp": "2026-07-13T20:29:21.330+00:00"
+      }
+    ],
+    "database_inspector": {
+      "product_id": 5,
+      "database_price": 100000,
+      "submitted_price": 100000,
+      "stored_unit_price": 100000,
+      "quantity": 1,
+      "stored_total": 100000
+    },
+    "authorization_inspector": {},
+    "parameter_diff": [
+      {
+        "parameter": "price",
+        "original_value": 100000,
+        "submitted_value": 100000,
+        "trusted_source": "database",
+        "status": "unchanged"
+      }
+    ],
+    "final_verdict": {
+      "tampering_type": "checkout price",
+      "success": false,
+      "database_changed": true,
+      "trusted_value": "products.price_vnd",
+      "missing_check": "server-side price lookup",
+      "audit_event": "vulnerable_action_completed",
+      "impact": "Hóa đơn dùng giá client."
+    },
+    "created_at": "2026-07-13T20:29:21.330+00:00",
+    "product_id": 5,
+    "quantity": 1,
+    "database_price": 100000,
+    "submitted_price": 100000,
+    "calculated_total": 100000,
+    "stored_total": 100000,
+    "price_mismatch": false,
+    "decision": "accepted",
+    "audit_event": "vulnerable_action_completed"
+  },
+  {
+    "trace_id": "1d15c939731f463ca71be9d381b4d8ac",
+    "scenario": "checkout",
+    "mode": "vulnerable",
+    "current_user": {
+      "user_id": 12,
+      "username": "user_a",
+      "role": "user"
+    },
+    "request_inspector": {
+      "method": "POST",
+      "url": "http://localhost/vulnerable/checkout",
+      "path": "/vulnerable/checkout",
+      "query_string": "",
+      "content_type": "application/x-www-form-urlencoded",
+      "form_body": {
+        "product_id": "5",
+        "quantity": "1",
+        "price": "1"
+      },
+      "parameters": {
+        "product_id": "5",
+        "quantity": "1",
+        "price": "1"
+      },
+      "cookie": "session=***",
+      "route_handler": "checkout_vulnerable",
+      "session": {
+        "authenticated_user_id": 12,
+        "username": "user_a",
+        "role": "user",
+        "source": "Flask signed session",
+        "cookie": "session=***"
+      }
+    },
+    "steps": [
+      {
+        "step_number": 1,
+        "layer": "HTTP Request",
+        "title": "Đọc giá client",
+        "description": "Flask đọc price từ request.form.",
+        "technique": "client-controlled hidden field",
+        "input_data": "1",
+        "output_data": 1,
+        "code_reference": "request.form[\"price\"]",
+        "security_meaning": "",
+        "status": "warning",
+        "timestamp": "2026-07-13T20:29:21.393+00:00"
+      },
+      {
+        "step_number": 2,
+        "layer": "Business Logic",
+        "title": "Tin giá đã gửi",
+        "description": "Server không đối chiếu lại giá database.",
+        "technique": "",
+        "input_data": 1,
+        "output_data": 1,
+        "code_reference": "total = submitted_price * quantity",
+        "security_meaning": "Parameter Tampering",
+        "status": "danger",
+        "timestamp": "2026-07-13T20:29:21.393+00:00"
+      },
+      {
+        "step_number": 3,
+        "layer": "Database Write",
+        "title": "Tạo invoice",
+        "description": "SQLite lưu unit_price do client gửi.",
+        "technique": "",
+        "input_data": 1,
+        "output_data": 1005,
+        "code_reference": "_create_invoice(...) ",
+        "security_meaning": "",
+        "status": "danger",
+        "timestamp": "2026-07-13T20:29:21.393+00:00"
+      },
+      {
+        "step_number": 4,
+        "layer": "Final Result",
+        "title": "Kết luận",
+        "description": "Hóa đơn giả lập lưu sai giá.",
+        "technique": "",
+        "input_data": "",
+        "output_data": "",
+        "code_reference": "",
+        "security_meaning": "",
+        "status": "danger",
+        "timestamp": "2026-07-13T20:29:21.393+00:00"
+      }
+    ],
+    "database_inspector": {
+      "product_id": 5,
+      "database_price": 100000,
+      "submitted_price": 1,
+      "stored_unit_price": 1,
+      "quantity": 1,
+      "stored_total": 1
+    },
+    "authorization_inspector": {},
+    "parameter_diff": [
+      {
+        "parameter": "price",
+        "original_value": 100000,
+        "submitted_value": 1,
+        "trusted_source": "database",
+        "status": "modified"
+      }
+    ],
+    "final_verdict": {
+      "tampering_type": "checkout price",
+      "success": true,
+      "database_changed": true,
+      "trusted_value": "products.price_vnd",
+      "missing_check": "server-side price lookup",
+      "audit_event": "checkout_price_mismatch",
+      "impact": "Hóa đơn giả lập lưu sai giá."
+    },
+    "created_at": "2026-07-13T20:29:21.393+00:00",
+    "product_id": 5,
+    "quantity": 1,
+    "database_price": 100000,
+    "submitted_price": 1,
+    "calculated_total": 1,
+    "stored_total": 1,
+    "price_mismatch": true,
+    "decision": "accepted",
+    "audit_event": "checkout_price_mismatch"
+  },
+  {
+    "trace_id": "6074d4c1496a4f468bf842d783aae640",
+    "scenario": "checkout",
+    "mode": "secure",
+    "current_user": {
+      "user_id": 12,
+      "username": "user_a",
+      "role": "user"
+    },
+    "request_inspector": {
+      "method": "POST",
+      "url": "http://localhost/secure/checkout",
+      "path": "/secure/checkout",
+      "query_string": "",
+      "content_type": "application/x-www-form-urlencoded",
+      "form_body": {
+        "product_id": "5",
+        "quantity": "1",
+        "price": "1"
+      },
+      "parameters": {
+        "product_id": "5",
+        "quantity": "1",
+        "price": "1"
+      },
+      "cookie": "session=***",
+      "route_handler": "checkout_secure",
+      "session": {
+        "authenticated_user_id": 12,
+        "username": "user_a",
+        "role": "user",
+        "source": "Flask signed session",
+        "cookie": "session=***"
+      }
+    },
+    "steps": [
+      {
+        "step_number": 1,
+        "layer": "Authentication",
+        "title": "Lấy danh tính từ session",
+        "description": "Không nhận user_id từ form.",
+        "technique": "",
+        "input_data": 12,
+        "output_data": 12,
+        "code_reference": "session[\"user_id\"]",
+        "security_meaning": "",
+        "status": "safe",
+        "timestamp": "2026-07-13T20:29:21.542+00:00"
+      },
+      {
+        "step_number": 2,
+        "layer": "Input Validation",
+        "title": "Validate product và quantity",
+        "description": "Quantity nằm trong 1..10 và không vượt stock.",
+        "technique": "",
+        "input_data": {
+          "product_id": "5",
+          "quantity": "1"
+        },
+        "output_data": "valid",
+        "code_reference": "",
+        "security_meaning": "",
+        "status": "safe",
+        "timestamp": "2026-07-13T20:29:21.542+00:00"
+      },
+      {
+        "step_number": 3,
+        "layer": "SQLite Query",
+        "title": "Lấy giá tin cậy",
+        "description": "Server truy vấn products.price_vnd bằng product_id.",
+        "technique": "parameterized SQL",
+        "input_data": 5,
+        "output_data": 100000,
+        "code_reference": "SELECT * FROM products WHERE id = ?",
+        "security_meaning": "",
+        "status": "safe",
+        "timestamp": "2026-07-13T20:29:21.542+00:00"
+      },
+      {
+        "step_number": 4,
+        "layer": "Audit Logging",
+        "title": "Ghi price mismatch",
+        "description": "Giá client bị bỏ qua và sự kiện được ghi log.",
+        "technique": "",
+        "input_data": 1,
+        "output_data": "checkout_price_mismatch",
+        "code_reference": "",
+        "security_meaning": "",
+        "status": "safe",
+        "timestamp": "2026-07-13T20:29:21.548+00:00"
+      },
+      {
+        "step_number": 5,
+        "layer": "Database Write",
+        "title": "Tạo invoice đúng giá",
+        "description": "Transaction lưu giá lấy từ database.",
+        "technique": "",
+        "input_data": 100000,
+        "output_data": 1006,
+        "code_reference": "",
+        "security_meaning": "",
+        "status": "safe",
+        "timestamp": "2026-07-13T20:29:21.548+00:00"
+      },
+      {
+        "step_number": 6,
+        "layer": "Final Result",
+        "title": "Kết luận",
+        "description": "Giá client bị bỏ qua; invoice lưu giá database.",
+        "technique": "",
+        "input_data": "",
+        "output_data": "",
+        "code_reference": "",
+        "security_meaning": "",
+        "status": "safe",
+        "timestamp": "2026-07-13T20:29:21.548+00:00"
+      }
+    ],
+    "database_inspector": {
+      "product_id": 5,
+      "database_price": 100000,
+      "submitted_price": 1,
+      "stored_unit_price": 100000,
+      "quantity": 1,
+      "stored_total": 100000
+    },
+    "authorization_inspector": {},
+    "parameter_diff": [
+      {
+        "parameter": "price",
+        "original_value": 100000,
+        "submitted_value": 1,
+        "trusted_value": 100000,
+        "status": "ignored"
+      }
+    ],
+    "final_verdict": {
+      "tampering_type": "checkout price",
+      "success": false,
+      "database_changed": true,
+      "trusted_value": "products.price_vnd",
+      "control": "server-side price lookup",
+      "audit_event": "checkout_price_mismatch",
+      "impact": "Giá client bị bỏ qua; invoice lưu giá database."
+    },
+    "created_at": "2026-07-13T20:29:21.540+00:00",
+    "product_id": 5,
+    "quantity": 1,
+    "database_price": 100000,
+    "submitted_price": 1,
+    "calculated_total": 100000,
+    "stored_total": 100000,
+    "price_mismatch": true,
+    "decision": "client price ignored",
+    "audit_event": "checkout_price_mismatch"
+  },
+  {
+    "trace_id": "1e9a9759a9f147e9a3810443ba3d8639",
+    "scenario": "invoice",
+    "mode": "vulnerable",
+    "current_user": {
+      "user_id": 12,
+      "username": "user_a",
+      "role": "user"
+    },
+    "request_inspector": {
+      "method": "GET",
+      "url": "http://localhost/vulnerable/invoice?id=1001",
+      "path": "/vulnerable/invoice",
+      "query_string": "id=1001",
+      "content_type": "",
+      "form_body": {},
+      "parameters": {
+        "id": "1001"
+      },
+      "cookie": "session=***",
+      "route_handler": "invoice_vulnerable",
+      "session": {
+        "authenticated_user_id": 12,
+        "username": "user_a",
+        "role": "user",
+        "source": "Flask signed session",
+        "cookie": "session=***"
+      }
+    },
+    "steps": [
+      {
+        "step_number": 1,
+        "layer": "SQLite Query",
+        "title": "Truy vấn chỉ theo ID",
+        "description": "Server không ràng buộc invoice với user trong session.",
+        "technique": "parameterized SQL",
+        "input_data": 1001,
+        "output_data": {
+          "owner_id": 12
+        },
+        "code_reference": "SELECT * FROM invoices WHERE id = ?",
+        "security_meaning": "",
+        "status": "warning",
+        "timestamp": "2026-07-13T20:29:21.569+00:00"
+      },
+      {
+        "step_number": 2,
+        "layer": "HTTP Response",
+        "title": "Trả invoice",
+        "description": "Nội dung được trả trước khi kiểm tra ownership.",
+        "technique": "",
+        "input_data": "",
+        "output_data": {
+          "invoice_id": 1001,
+          "data_returned": true
+        },
+        "code_reference": "",
+        "security_meaning": "",
+        "status": "normal",
+        "timestamp": "2026-07-13T20:29:21.572+00:00"
+      }
+    ],
+    "database_inspector": {
+      "invoice_id": 1001,
+      "owner_id": 12,
+      "current_user_id": 12,
+      "ownership_match": true,
+      "authorization_result": "not checked"
+    },
+    "authorization_inspector": {
+      "subject": "user_id 12",
+      "action": "read invoice",
+      "object": "invoice 1001",
+      "object_owner": 12,
+      "policy": "none",
+      "decision": "not checked",
+      "reason": "Vulnerable route bỏ qua ownership."
+    },
+    "parameter_diff": [],
+    "final_verdict": {
+      "tampering_type": "invoice ID / IDOR",
+      "success": false,
+      "unauthorized_resource_disclosed": false,
+      "database_changed": false,
+      "missing_check": "object-level authorization",
+      "audit_event": "vulnerable_action_completed"
+    },
+    "created_at": "2026-07-13T20:29:21.568+00:00",
+    "current_user_id": 12,
+    "invoice_id": 1001,
+    "invoice_owner_id": 12,
+    "ownership_match": true,
+    "authorization_policy": "none",
+    "decision": "not checked",
+    "http_status": 200,
+    "data_returned": true
+  },
+  {
+    "trace_id": "c287ac584ee64a90ac6545bb89721bf5",
+    "scenario": "invoice",
+    "mode": "vulnerable",
+    "current_user": {
+      "user_id": 12,
+      "username": "user_a",
+      "role": "user"
+    },
+    "request_inspector": {
+      "method": "GET",
+      "url": "http://localhost/vulnerable/invoice?id=1002",
+      "path": "/vulnerable/invoice",
+      "query_string": "id=1002",
+      "content_type": "",
+      "form_body": {},
+      "parameters": {
+        "id": "1002"
+      },
+      "cookie": "session=***",
+      "route_handler": "invoice_vulnerable",
+      "session": {
+        "authenticated_user_id": 12,
+        "username": "user_a",
+        "role": "user",
+        "source": "Flask signed session",
+        "cookie": "session=***"
+      }
+    },
+    "steps": [
+      {
+        "step_number": 1,
+        "layer": "SQLite Query",
+        "title": "Truy vấn chỉ theo ID",
+        "description": "Server không ràng buộc invoice với user trong session.",
+        "technique": "parameterized SQL",
+        "input_data": 1002,
+        "output_data": {
+          "owner_id": 13
+        },
+        "code_reference": "SELECT * FROM invoices WHERE id = ?",
+        "security_meaning": "",
+        "status": "danger",
+        "timestamp": "2026-07-13T20:29:21.582+00:00"
+      },
+      {
+        "step_number": 2,
+        "layer": "HTTP Response",
+        "title": "Trả invoice",
+        "description": "Nội dung được trả trước khi kiểm tra ownership.",
+        "technique": "",
+        "input_data": "",
+        "output_data": {
+          "invoice_id": 1002,
+          "data_returned": true
+        },
+        "code_reference": "",
+        "security_meaning": "",
+        "status": "danger",
+        "timestamp": "2026-07-13T20:29:21.582+00:00"
+      }
+    ],
+    "database_inspector": {
+      "invoice_id": 1002,
+      "owner_id": 13,
+      "current_user_id": 12,
+      "ownership_match": false,
+      "authorization_result": "not checked"
+    },
+    "authorization_inspector": {
+      "subject": "user_id 12",
+      "action": "read invoice",
+      "object": "invoice 1002",
+      "object_owner": 13,
+      "policy": "none",
+      "decision": "not checked",
+      "reason": "Vulnerable route bỏ qua ownership."
+    },
+    "parameter_diff": [],
+    "final_verdict": {
+      "tampering_type": "invoice ID / IDOR",
+      "success": true,
+      "unauthorized_resource_disclosed": true,
+      "database_changed": false,
+      "missing_check": "object-level authorization",
+      "audit_event": "vulnerable_action_completed"
+    },
+    "created_at": "2026-07-13T20:29:21.582+00:00",
+    "current_user_id": 12,
+    "invoice_id": 1002,
+    "invoice_owner_id": 13,
+    "ownership_match": false,
+    "authorization_policy": "none",
+    "decision": "not checked",
+    "http_status": 200,
+    "data_returned": true
+  },
+  {
+    "trace_id": "7c933990a5a049e38d230f0c68837d0a",
+    "scenario": "invoice",
+    "mode": "secure",
+    "current_user": {
+      "user_id": 12,
+      "username": "user_a",
+      "role": "user"
+    },
+    "request_inspector": {
+      "method": "GET",
+      "url": "http://localhost/secure/invoice?id=1002",
+      "path": "/secure/invoice",
+      "query_string": "id=1002",
+      "content_type": "",
+      "form_body": {},
+      "parameters": {
+        "id": "1002"
+      },
+      "cookie": "session=***",
+      "route_handler": "invoice_secure",
+      "session": {
+        "authenticated_user_id": 12,
+        "username": "user_a",
+        "role": "user",
+        "source": "Flask signed session",
+        "cookie": "session=***"
+      }
+    },
+    "steps": [
+      {
+        "step_number": 1,
+        "layer": "Authentication",
+        "title": "Lấy user từ session",
+        "description": "Danh tính không lấy từ query string.",
+        "technique": "",
+        "input_data": 12,
+        "output_data": 12,
+        "code_reference": "",
+        "security_meaning": "",
+        "status": "safe",
+        "timestamp": "2026-07-13T20:29:21.598+00:00"
+      },
+      {
+        "step_number": 2,
+        "layer": "Authorization",
+        "title": "Kiểm tra object-level authorization",
+        "description": "Người dùng hiện tại không sở hữu invoice.",
+        "technique": "",
+        "input_data": {
+          "subject": 12,
+          "owner": 13
+        },
+        "output_data": "deny",
+        "code_reference": "authorize_invoice(...) ",
+        "security_meaning": "",
+        "status": "blocked",
+        "timestamp": "2026-07-13T20:29:21.598+00:00"
+      },
+      {
+        "step_number": 3,
+        "layer": "HTTP Response",
+        "title": "Trả kết quả",
+        "description": "Không trả nội dung invoice khi policy deny.",
+        "technique": "",
+        "input_data": "",
+        "output_data": {
+          "status": 403,
+          "data_returned": false
+        },
+        "code_reference": "",
+        "security_meaning": "",
+        "status": "blocked",
+        "timestamp": "2026-07-13T20:29:21.598+00:00"
+      }
+    ],
+    "database_inspector": {
+      "invoice_id": 1002,
+      "owner_id": 13,
+      "current_user_id": 12,
+      "ownership_match": false,
+      "authorization_result": "deny"
+    },
+    "authorization_inspector": {
+      "subject": "user_id 12",
+      "action": "read invoice",
+      "object": "invoice 1002",
+      "object_owner": 13,
+      "required_permission": "owner or admin",
+      "policy": "owner or admin",
+      "decision": "deny",
+      "reason": "Người dùng hiện tại không sở hữu invoice."
+    },
+    "parameter_diff": [],
+    "final_verdict": {
+      "tampering_type": "invoice ID / IDOR",
+      "success": false,
+      "unauthorized_resource_disclosed": false,
+      "database_changed": false,
+      "control": "object-level authorization",
+      "http_status": 403,
+      "audit_event": "invoice_access_denied"
+    },
+    "created_at": "2026-07-13T20:29:21.598+00:00",
+    "current_user_id": 12,
+    "invoice_id": 1002,
+    "invoice_owner_id": 13,
+    "ownership_match": false,
+    "authorization_policy": "owner or admin",
+    "decision": "deny",
+    "http_status": 403,
+    "data_returned": false
+  },
+  {
+    "trace_id": "715acedeb62747d588c95ba5a3e5f019",
+    "scenario": "profile",
+    "mode": "vulnerable",
+    "current_user": {
+      "user_id": 12,
+      "username": "user_a",
+      "role": "user"
+    },
+    "request_inspector": {
+      "method": "POST",
+      "url": "http://localhost/vulnerable/profile/update",
+      "path": "/vulnerable/profile/update",
+      "query_string": "",
+      "content_type": "application/x-www-form-urlencoded",
+      "form_body": {
+        "user_id": "12",
+        "email": "usera@lab.local",
+        "role": "user"
+      },
+      "parameters": {
+        "user_id": "12",
+        "email": "usera@lab.local",
+        "role": "user"
+      },
+      "cookie": "session=***",
+      "route_handler": "profile_vulnerable_update",
+      "session": {
+        "authenticated_user_id": 12,
+        "username": "user_a",
+        "role": "user",
+        "source": "Flask signed session",
+        "cookie": "session=***"
+      }
+    },
+    "steps": [
+      {
+        "step_number": 1,
+        "layer": "Database Write",
+        "title": "Mass assignment",
+        "description": "Email và role từ form được cập nhật trực tiếp.",
+        "technique": "",
+        "input_data": {
+          "user_id": 12,
+          "role": "user"
+        },
+        "output_data": {
+          "id": 12,
+          "username": "user_a",
+          "email": "usera@lab.local",
+          "role": "user",
+          "created_at": "2026-07-13 20:29:21",
+          "updated_at": "2026-07-13 20:29:21"
+        },
+        "code_reference": "UPDATE users SET email = ?, role = ? WHERE id = ?",
+        "security_meaning": "",
+        "status": "danger",
+        "timestamp": "2026-07-13T20:29:21.625+00:00"
+      },
+      {
+        "step_number": 2,
+        "layer": "Final Result",
+        "title": "Kết luận",
+        "description": "Form client quyết định role.",
+        "technique": "",
+        "input_data": "",
+        "output_data": "",
+        "code_reference": "",
+        "security_meaning": "",
+        "status": "danger",
+        "timestamp": "2026-07-13T20:29:21.625+00:00"
+      }
+    ],
+    "database_inspector": {
+      "target_user_id_from_form": 12,
+      "current_user_id_from_session": 12,
+      "submitted_role": "user",
+      "role_before": "user",
+      "role_after": "user",
+      "accepted_fields": [
+        "user_id",
+        "email",
+        "role"
+      ],
+      "rejected_fields": []
+    },
+    "authorization_inspector": {
+      "subject": "user_id 12",
+      "action": "update role",
+      "object": "user 12",
+      "policy": "none",
+      "decision": "not checked",
+      "reason": "Mass assignment dùng trực tiếp user_id và role từ form."
+    },
+    "parameter_diff": [
+      {
+        "parameter": "user_id",
+        "original_value": 12,
+        "submitted_value": 12,
+        "status": "unchanged"
+      },
+      {
+        "parameter": "role",
+        "original_value": "user",
+        "submitted_value": "user",
+        "status": "unchanged"
+      }
+    ],
+    "final_verdict": {
+      "tampering_type": "role / mass assignment",
+      "success": false,
+      "privilege_escalated": false,
+      "database_changed": true,
+      "missing_check": "field allowlist and admin authorization",
+      "audit_event": "vulnerable_action_completed"
+    },
+    "created_at": "2026-07-13T20:29:21.619+00:00",
+    "current_user_id": 12,
+    "submitted_user_id": 12,
+    "submitted_role": "user",
+    "accepted_fields": [
+      "user_id",
+      "email",
+      "role"
+    ],
+    "rejected_fields": [],
+    "role_before": "user",
+    "role_after": "user",
+    "decision": "not checked",
+    "audit_event": "vulnerable_action_completed"
+  },
+  {
+    "trace_id": "2734cc871175404bb6cb1e9715e35ffd",
+    "scenario": "profile",
+    "mode": "vulnerable",
+    "current_user": {
+      "user_id": 12,
+      "username": "user_a",
+      "role": "user"
+    },
+    "request_inspector": {
+      "method": "POST",
+      "url": "http://localhost/vulnerable/profile/update",
+      "path": "/vulnerable/profile/update",
+      "query_string": "",
+      "content_type": "application/x-www-form-urlencoded",
+      "form_body": {
+        "user_id": "12",
+        "email": "usera@lab.local",
+        "role": "admin"
+      },
+      "parameters": {
+        "user_id": "12",
+        "email": "usera@lab.local",
+        "role": "admin"
+      },
+      "cookie": "session=***",
+      "route_handler": "profile_vulnerable_update",
+      "session": {
+        "authenticated_user_id": 12,
+        "username": "user_a",
+        "role": "user",
+        "source": "Flask signed session",
+        "cookie": "session=***"
+      }
+    },
+    "steps": [
+      {
+        "step_number": 1,
+        "layer": "Database Write",
+        "title": "Mass assignment",
+        "description": "Email và role từ form được cập nhật trực tiếp.",
+        "technique": "",
+        "input_data": {
+          "user_id": 12,
+          "role": "admin"
+        },
+        "output_data": {
+          "id": 12,
+          "username": "user_a",
+          "email": "usera@lab.local",
+          "role": "admin",
+          "created_at": "2026-07-13 20:29:21",
+          "updated_at": "2026-07-13 20:29:21"
+        },
+        "code_reference": "UPDATE users SET email = ?, role = ? WHERE id = ?",
+        "security_meaning": "",
+        "status": "danger",
+        "timestamp": "2026-07-13T20:29:21.644+00:00"
+      },
+      {
+        "step_number": 2,
+        "layer": "Final Result",
+        "title": "Kết luận",
+        "description": "Role đã bị nâng trong phiên bản vulnerable.",
+        "technique": "",
+        "input_data": "",
+        "output_data": "",
+        "code_reference": "",
+        "security_meaning": "",
+        "status": "danger",
+        "timestamp": "2026-07-13T20:29:21.644+00:00"
+      }
+    ],
+    "database_inspector": {
+      "target_user_id_from_form": 12,
+      "current_user_id_from_session": 12,
+      "submitted_role": "admin",
+      "role_before": "user",
+      "role_after": "admin",
+      "accepted_fields": [
+        "user_id",
+        "email",
+        "role"
+      ],
+      "rejected_fields": []
+    },
+    "authorization_inspector": {
+      "subject": "user_id 12",
+      "action": "update role",
+      "object": "user 12",
+      "policy": "none",
+      "decision": "not checked",
+      "reason": "Mass assignment dùng trực tiếp user_id và role từ form."
+    },
+    "parameter_diff": [
+      {
+        "parameter": "user_id",
+        "original_value": 12,
+        "submitted_value": 12,
+        "status": "unchanged"
+      },
+      {
+        "parameter": "role",
+        "original_value": "user",
+        "submitted_value": "admin",
+        "status": "sensitive field modified"
+      }
+    ],
+    "final_verdict": {
+      "tampering_type": "role / mass assignment",
+      "success": true,
+      "privilege_escalated": true,
+      "database_changed": true,
+      "missing_check": "field allowlist and admin authorization",
+      "audit_event": "vulnerable_action_completed"
+    },
+    "created_at": "2026-07-13T20:29:21.636+00:00",
+    "current_user_id": 12,
+    "submitted_user_id": 12,
+    "submitted_role": "admin",
+    "accepted_fields": [
+      "user_id",
+      "email",
+      "role"
+    ],
+    "rejected_fields": [],
+    "role_before": "user",
+    "role_after": "admin",
+    "decision": "not checked",
+    "audit_event": "vulnerable_action_completed"
+  },
+  {
+    "trace_id": "aa2c4c38f57c42f6b50f423755f173a9",
+    "scenario": "profile",
+    "mode": "secure",
+    "current_user": {
+      "user_id": 12,
+      "username": "user_a",
+      "role": "user"
+    },
+    "request_inspector": {
+      "method": "POST",
+      "url": "http://localhost/secure/profile/update",
+      "path": "/secure/profile/update",
+      "query_string": "",
+      "content_type": "application/x-www-form-urlencoded",
+      "form_body": {
+        "user_id": "12",
+        "email": "usera@lab.local",
+        "role": "admin"
+      },
+      "parameters": {
+        "user_id": "12",
+        "email": "usera@lab.local",
+        "role": "admin"
+      },
+      "cookie": "session=***",
+      "route_handler": "profile_secure_update",
+      "session": {
+        "authenticated_user_id": 12,
+        "username": "user_a",
+        "role": "user",
+        "source": "Flask signed session",
+        "cookie": "session=***"
+      }
+    },
+    "steps": [
+      {
+        "step_number": 1,
+        "layer": "Input Validation",
+        "title": "Áp dụng field allowlist",
+        "description": "Chỉ email được chấp nhận; role và user_id bị loại.",
+        "technique": "",
+        "input_data": {
+          "user_id": "12",
+          "email": "usera@lab.local",
+          "role": "admin"
+        },
+        "output_data": {
+          "accepted": [
+            "email"
+          ],
+          "rejected": [
+            "role",
+            "user_id"
+          ]
+        },
+        "code_reference": "",
+        "security_meaning": "",
+        "status": "safe",
+        "timestamp": "2026-07-13T20:29:21.787+00:00"
+      },
+      {
+        "step_number": 2,
+        "layer": "Database Write",
+        "title": "Cập nhật email của session user",
+        "description": "Role không xuất hiện trong UPDATE.",
+        "technique": "",
+        "input_data": "",
+        "output_data": {
+          "id": 12,
+          "username": "user_a",
+          "email": "usera@lab.local",
+          "role": "user",
+          "created_at": "2026-07-13 20:29:21",
+          "updated_at": "2026-07-13 20:29:21"
+        },
+        "code_reference": "UPDATE users SET email = ? WHERE id = ?",
+        "security_meaning": "",
+        "status": "safe",
+        "timestamp": "2026-07-13T20:29:21.787+00:00"
+      }
+    ],
+    "database_inspector": {
+      "target_user_id_from_form": "12",
+      "current_user_id_from_session": 12,
+      "submitted_role": "admin",
+      "role_before": "user",
+      "role_after": "user",
+      "accepted_fields": [
+        "email"
+      ],
+      "rejected_fields": [
+        "role",
+        "user_id"
+      ]
+    },
+    "authorization_inspector": {
+      "subject": "user_id 12",
+      "action": "update profile",
+      "object": "user 12",
+      "object_owner": 12,
+      "required_permission": "self-service email only",
+      "policy": "field allowlist: email",
+      "decision": "deny sensitive fields",
+      "reason": "Trường không được phép: role, user_id"
+    },
+    "parameter_diff": [
+      {
+        "parameter": "user_id",
+        "submitted_value": "12",
+        "status": "rejected"
+      },
+      {
+        "parameter": "email",
+        "submitted_value": "usera@lab.local",
+        "status": "accepted"
+      },
+      {
+        "parameter": "role",
+        "submitted_value": "admin",
+        "status": "rejected"
+      }
+    ],
+    "final_verdict": {
+      "tampering_type": "role / mass assignment",
+      "success": false,
+      "privilege_escalated": false,
+      "database_changed": false,
+      "control": "session identity and field allowlist",
+      "audit_event": "sensitive_field_submitted"
+    },
+    "created_at": "2026-07-13T20:29:21.762+00:00",
+    "current_user_id": 12,
+    "submitted_user_id": "12",
+    "submitted_role": "admin",
+    "accepted_fields": [
+      "email"
+    ],
+    "rejected_fields": [
+      "role",
+      "user_id"
+    ],
+    "role_before": "user",
+    "role_after": "user",
+    "decision": "deny sensitive fields",
+    "audit_event": "sensitive_field_submitted"
+  }
+]

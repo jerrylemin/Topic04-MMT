@@ -1,0 +1,5 @@
+{% extends 'base.html' %}{% block content %}{% set outcome = result|default({}, true) %}{% set current_user = user|default({}, true) %}
+<section class="result-banner is-allowed"><span class="result-icon">✓</span><div><span class="eyebrow">Signed Cookie Login</span><h1>{{ outcome.get('title', 'Payload đã được ký.')|e }}</h1><p>{{ outcome.get('message', 'lab06_signed_profile mang payload và chữ ký toàn vẹn. Nội dung không được mã hóa và authorization phía server vẫn bắt buộc.')|e }}</p><div class="button-row"><a class="button button-primary" href="/secure/signed/profile">Mở signed profile</a><a class="button button-secondary" href="/secure/signed/admin">Kiểm tra admin</a></div></div></section>
+<section class="profile-layout"><article class="profile-card"><span class="mode-label secure">Integrity protected</span><h2>{{ current_user.get('display_name', current_user.get('username', 'Demo user'))|e }}</h2><p>Cookie: <code>lab06_signed_profile</code></p></article><div>{% include 'components/signature_inspector.html' %}</div></section>
+{% if trace|default(false, true) %}{% include 'components/trace_panel.html' %}{% endif %}
+{% endblock %}

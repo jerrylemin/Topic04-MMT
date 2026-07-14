@@ -1,0 +1,9 @@
+{
+  "algorithm": "URL-safe Base64",
+  "authorization_result": "deny",
+  "confidentiality": false,
+  "decoded_json": "{\"username\":\"student\",\"role\":\"user\"}",
+  "integrity": false,
+  "parse_result": "decoded_without_integrity_check",
+  "role_extracted": "user"
+}

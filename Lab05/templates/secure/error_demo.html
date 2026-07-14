@@ -1,0 +1,3 @@
+{% extends 'base.html' %}{% set trace = trace|default({}, true) %}{% block title %}Secure error demo · LAB 5{% endblock %}{% block content %}
+<header class="page-header secure-header"><div><span class="eyebrow">Error handling · secure</span><h1>Generic response + internal Error ID</h1><p>Người dùng chỉ nhận “Không thể xử lý yêu cầu”; sinh viên đối chiếu Error ID với audit evidence.</p></div><span class="mode-seal">SECURE</span></header><section class="page-section">{% include 'components/error_inspector.html' %}</section>{% include 'components/trace_panel.html' %}
+{% endblock %}

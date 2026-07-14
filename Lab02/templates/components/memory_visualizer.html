@@ -1,0 +1,41 @@
+{% set t = trace|default({}, true) %}
+{% set request_data = t.get('request_summary', {}) %}
+{% set form_body = request_data.get('form_body', {}) %}
+{% set input_value = t.get('input_value', form_body.get('name', '')) %}
+<div class="inspector-heading">
+  <h3>Memory Visualizer</h3>
+  <p>Sơ đồ giáo dục, không biểu diễn địa chỉ thật và không dùng để điều khiển luồng thực thi.</p>
+</div>
+<div class="memory-layout" data-memory-visualizer
+     data-input="{{ input_value }}"
+     data-input-bytes="{{ t.get('input_length_bytes', 0) }}"
+     data-input-chars="{{ t.get('input_length_chars', 0) }}"
+     data-buffer-size="{{ t.get('buffer_size', 32) }}">
+  <section aria-labelledby="stack-model-title">
+    <h4 id="stack-model-title">Stack frame khái niệm</h4>
+    <ol class="stack-model">
+      <li>Địa chỉ cao</li>
+      <li>Function arguments</li>
+      <li>Return address</li>
+      <li>Saved frame pointer</li>
+      <li class="stack-canary">Stack canary, nếu build có</li>
+      <li class="stack-buffer">Local variable <code>name[32]</code></li>
+      <li>Địa chỉ thấp</li>
+    </ol>
+    <p class="model-note">Stack layout thực tế phụ thuộc kiến trúc, ABI, compiler và flags.</p>
+  </section>
+  <section aria-labelledby="byte-grid-title">
+    <h4 id="byte-grid-title">Ghi byte vào name[32]</h4>
+    <dl class="memory-stats">
+      <div><dt>Input</dt><dd><b data-memory-stat="input">{{ t.get('input_length_bytes', 0) }}</b> byte</dd></div>
+      <div><dt>Sức chứa chuỗi</dt><dd><b data-memory-stat="safe">{{ t.get('safe_capacity', 31) }}</b> byte + null</dd></div>
+      <div><dt>Data vượt buffer</dt><dd><b data-memory-stat="overflow-data">0</b> byte</dd></div>
+      <div><dt>Tổng write vượt</dt><dd><b data-memory-stat="overflow-write">{{ t.get('overflow_bytes', 0) }}</b> byte</dd></div>
+    </dl>
+    <div class="memory-legend" aria-label="Chú giải bộ nhớ">
+      <span class="legend-data">DATA</span><span class="legend-null">NUL</span><span class="legend-overflow">OVERFLOW</span><span class="legend-empty">TRỐNG</span>
+    </div>
+    <div class="byte-grid" data-byte-grid aria-label="Các byte trong và ngoài buffer"></div>
+    <p class="model-note" data-memory-summary></p>
+  </section>
+</div>

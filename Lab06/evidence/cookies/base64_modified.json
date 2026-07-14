@@ -1,0 +1,12 @@
+[
+  {
+    "domain": "127.0.0.1",
+    "httponly": false,
+    "masked_value": "eyJ1…fQ==",
+    "name": "lab06_profile_b64",
+    "path": "/",
+    "samesite": null,
+    "secure": false,
+    "value_fingerprint": "8a28fd3eb98f"
+  }
+]

@@ -1,0 +1,13 @@
+**pycache**/
+.pytest_cache/
+*.pyc
+*.pyo
+.venv/
+venv/
+.coverage
+htmlcov/
+tmp/
+**/tmp/
+**/report/tmp/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,18 @@
+{% if comparison is defined %}
+  {% set code = comparison %}
+{% elif trace is defined and trace.code_comparison is defined %}
+  {% set code = trace.code_comparison %}
+{% else %}
+  {% set code = {} %}
+{% endif %}
+<div class="code-comparison" data-inspector="code">
+  <article class="code-pane code-vulnerable">
+    <header><span>Vulnerable</span><b>Tin dữ liệu client</b></header>
+    <pre><code>{{ code.vulnerable|default('# Chưa có source snippet') }}</code></pre>
+  </article>
+  <article class="code-pane code-secure">
+    <header><span>Secure</span><b>Kiểm tra phía server</b></header>
+    <pre><code>{{ code.secure|default('# Chưa có source snippet') }}</code></pre>
+  </article>
+</div>
+<p class="code-explanation">{{ code.explanation|default('Source snippet phải khớp với code route đang chạy.') }}</p>

@@ -1,0 +1,14 @@
+{
+  "decision": "session_created",
+  "headers": {
+    "Content-Type": "text/html; charset=utf-8",
+    "Location": "/secure/session/profile",
+    "X-Lab-Session-Status": "login_rotation",
+    "X-Lab-Trace-ID": "a7cfecd1bf20d1eae8510c45"
+  },
+  "set_cookie_names": [
+    "lab06_session"
+  ],
+  "status_code": 302,
+  "trace_id": "a7cfecd1bf20d1eae8510c45"
+}

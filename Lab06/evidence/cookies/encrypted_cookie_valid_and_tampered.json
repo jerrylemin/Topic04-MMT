@@ -1,0 +1,23 @@
+[
+  {
+    "domain": "host-only",
+    "httponly": true,
+    "masked_value": "gAAA…tzQ=",
+    "max_age": null,
+    "name": "lab06_encrypted_profile",
+    "path": "/",
+    "samesite": "Lax",
+    "secure": false,
+    "value_fingerprint": "30bf687a00c2"
+  },
+  {
+    "domain": "127.0.0.1",
+    "httponly": true,
+    "masked_value": "gAAA…tzQ=",
+    "name": "lab06_encrypted_profile",
+    "path": "/",
+    "samesite": "Lax",
+    "secure": false,
+    "value_fingerprint": "30bf687a00c2"
+  }
+]

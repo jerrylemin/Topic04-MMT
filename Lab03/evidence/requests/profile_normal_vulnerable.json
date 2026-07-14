@@ -1,0 +1,10 @@
+{
+  "method": "POST",
+  "route": "/vulnerable/profile/update",
+  "parameters": {
+    "user_id": 12,
+    "email": "usera@lab.local",
+    "role": "user"
+  },
+  "trace_id": "715acedeb62747d588c95ba5a3e5f019"
+}

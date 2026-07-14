@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% set workbench_title = "Bản vá dùng snprintf" %}
+{% set workbench_badge = "GIỚI HẠN GHI" %}
+{% set workbench_tone = "safe" %}
+{% set workbench_summary = "snprintf nhận sizeof(name), sau đó return value được kiểm tra để từ chối truncate âm thầm." %}
+{% set workbench_note = "Giới hạn ghi chưa đủ nếu bỏ qua giá trị trả về của snprintf." %}
+{% set workbench_action = "/secure/snprintf/submit" %}
+{% set workbench_mode = "secure_snprintf" %}
+{% block title %}Secure snprintf - Lab 02{% endblock %}
+{% block content %}{% include "components/workbench.html" %}{% endblock %}

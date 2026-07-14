@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "headers": {
+    "Content-Type": "text/html; charset=utf-8",
+    "Content-Length": "21932",
+    "X-Lab-Mode": "vulnerable"
+  },
+  "summary": {
+    "after_escape": "<img src=x onerror=alert(1)>",
+    "before_escape": "<img src=x onerror=alert(1)>",
+    "content_type": "text/html; charset=utf-8",
+    "headers": {
+      "Content-Security-Policy": "(không áp dụng)",
+      "X-Lab-Mode": "vulnerable"
+    },
+    "html_snippet": "1)>\" placeholder=\"Tìm sản phẩm\"><button>Tìm kiếm</button></form><section class=\"result\">Kết quả cho: <img src=x onerror=alert(1)></section><p>Payload an toàn: <code>&lt;img src=x onerror=\"alert('Reflected XSS')\"&gt;</code></p><ul></ul><a class=\"btn\" href=\"/secure/search?q=%3Cimg%20src%3Dx%20onerror%3Dalert%281%29%3E\">So sánh bản vá</a></section><section class=\"trace-shell\" data-trace-id=\"fe44521f6",
+    "length": 20487,
+    "status": 200
+  }
+}

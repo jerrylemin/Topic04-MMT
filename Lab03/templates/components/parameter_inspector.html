@@ -1,0 +1,10 @@
+{% set original = defaults|default({}, true) %}
+<section class="request-console" data-request-console data-route="{{ route }}" data-method="{{ 'GET' if scenario == 'invoice' else 'POST' }}" data-scenario="{{ scenario }}" data-mode="{{ mode }}">
+  <header><div><span>Local-only tool</span><h2>Request Tampering Console</h2></div><span class="fixed-route">{{ 'GET' if scenario == 'invoice' else 'POST' }} {{ route }}</span></header>
+  <p>Route cố định trong Lab03. Không có ô host, URL hoặc header tùy ý.</p>
+  <form class="console-form" action="{{ route }}" method="{{ 'get' if scenario == 'invoice' else 'post' }}">
+    <div class="parameter-editor"><div class="parameter-editor-head"><span>Parameter</span><span>Original</span><span>Editable value</span><span>Diff</span></div>{% for name, value in original.items() %}<label class="parameter-row"><code>{{ name }}</code><output>{{ value }}</output><input name="{{ name }}" value="{{ value }}" data-original="{{ value }}" aria-label="Giá trị {{ name }}"><output data-param-diff>unchanged</output></label>{% endfor %}</div>
+    <button class="button {{ 'button-danger' if mode == 'vulnerable' }}" type="submit" data-console-send>Gửi request cố định</button>
+  </form>
+  <div class="console-result" aria-live="polite"><span>Status: <b data-console-status>chưa gửi</b></span><span>Trace ID: <code data-console-trace>-</code></span><a hidden data-console-open>Open response</a></div>
+</section>

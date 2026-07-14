@@ -1,0 +1,11 @@
+{
+  "database": "Lab05 local SQLite",
+  "counts": {
+    "users": 3,
+    "products": 8,
+    "audit_logs": 18,
+    "login_attempts": 5,
+    "query_events": 12
+  },
+  "read_only_demo_flows": true
+}

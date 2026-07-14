@@ -1,0 +1,11 @@
+{
+  "decision": "deny",
+  "headers": {
+    "Content-Type": "text/html; charset=utf-8",
+    "X-Lab-Decision": "deny",
+    "X-Lab-Trace-ID": "087cb77f64d1a5b2069a9221"
+  },
+  "set_cookie_names": [],
+  "status_code": 403,
+  "trace_id": "087cb77f64d1a5b2069a9221"
+}

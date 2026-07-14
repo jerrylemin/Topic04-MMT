@@ -1,0 +1,28 @@
+{
+  "quote_login_vulnerable": {
+    "error_id": "590b919103e7",
+    "category": "sql_syntax_error",
+    "exception_class": "OperationalError",
+    "shortened_message": "unrecognized token: \"[DIGEST REDACTED]\"",
+    "handled": true,
+    "user_message": "Lỗi truy vấn đã được xử lý trong Lab05 local.",
+    "database_modified": false,
+    "query_template": "SELECT id, username, display_name, role FROM users WHERE username = '<username_input>' AND legacy_password_digest = '<password_digest>'",
+    "input_insertion": "username_input",
+    "root_cause": "Untrusted input was concatenated into SQL text.",
+    "data_modified": false
+  },
+  "quote_search_vulnerable": {
+    "error_id": "cf5f3cf12695",
+    "category": "sql_syntax_error",
+    "exception_class": "OperationalError",
+    "shortened_message": "unrecognized token: \"'\"",
+    "handled": true,
+    "user_message": "Lỗi truy vấn đã được xử lý trong Lab05 local.",
+    "database_modified": false,
+    "query_template": "SELECT id, name, category, price_vnd, stock FROM products WHERE visible = 1 AND name LIKE '%<keyword>%'",
+    "input_insertion": "keyword_inside_like_pattern",
+    "root_cause": "Untrusted input was concatenated into SQL text.",
+    "data_modified": false
+  }
+}

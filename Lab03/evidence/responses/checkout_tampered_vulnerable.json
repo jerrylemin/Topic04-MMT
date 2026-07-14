@@ -1,0 +1,14 @@
+{
+  "status": 200,
+  "trace_id": "1d15c939731f463ca71be9d381b4d8ac",
+  "decision": {
+    "tampering_type": "checkout price",
+    "success": true,
+    "database_changed": true,
+    "trusted_value": "products.price_vnd",
+    "missing_check": "server-side price lookup",
+    "audit_event": "checkout_price_mismatch",
+    "impact": "Hóa đơn giả lập lưu sai giá."
+  },
+  "content_type": "text/html; charset=utf-8"
+}

@@ -1,0 +1,5 @@
+{% extends 'base.html' %}{% block content %}{% set outcome = result|default({}, true) %}{% set current_user = user|default({}, true) %}
+<section class="result-banner is-allowed"><span class="result-icon">✓</span><div><span class="eyebrow">Database-backed authorization</span><h1>{{ outcome.get('title', 'Admin được xác nhận từ database.')|e }}</h1><p>{{ outcome.get('message', 'Session chỉ xác định record phía server; route tải role admin từ bảng users trên request hiện tại.')|e }}</p></div></section>
+<section class="profile-layout"><article class="admin-panel"><span class="mode-label secure">Allowed</span><h2>Khu vực quản trị Lab06</h2><p>Subject: <strong>{{ current_user.get('username', 'admin_lab')|e }}</strong></p><p>Database role: <strong>{{ current_user.get('role', 'admin')|e }}</strong></p><form method="post" action="/logout"><input type="hidden" name="csrf_token" value="{{ csrf_token|default('', true)|e }}"><button class="button button-secondary" type="submit">Logout và thu hồi session</button></form></article><div>{% include 'components/authorization_inspector.html' %}</div></section>
+{% include 'components/trace_panel.html' %}
+{% endblock %}

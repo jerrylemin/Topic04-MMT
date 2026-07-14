@@ -1,0 +1,287 @@
+{
+  "code_comparison": {
+    "explanation": "SQL tham số bảo vệ câu SQL; Bleach mới giới hạn HTML trước khi hiển thị.",
+    "secure": "bleach.clean(row[\"body\"], tags=ALLOWED_TAGS, attributes={})",
+    "vulnerable": "row[\"body\"] = Markup(row[\"body\"])"
+  },
+  "completed_at": "2026-07-13T19:56:38.141+00:00",
+  "database_inspector": {
+    "columns": [
+      "id",
+      "post_id",
+      "author",
+      "body",
+      "created_at"
+    ],
+    "latest": {
+      "author": "Kiểm thử",
+      "body": "<img src=x onerror=alert(1)>",
+      "created_at": "2026-07-13 19:56:38",
+      "id": 3,
+      "post_id": 1
+    },
+    "raw_value": "<img src=x onerror=alert(1)>",
+    "rendered_value": "<img src=x onerror=alert(1)>",
+    "row_count": 3,
+    "table": "comments"
+  },
+  "final_result": {
+    "csp_blocked": false,
+    "escaped": false,
+    "impact": "Mọi người xem bài viết",
+    "remaining_risk": "Cao",
+    "sanitized": false,
+    "stored": true,
+    "verdict": "Payload có thể thực thi và lặp lại"
+  },
+  "input_source": "request.form[\"body\"] / SQLite comments.body",
+  "lab_type": "stored",
+  "mode": "vulnerable",
+  "request_summary": {
+    "cookie": "(không có)",
+    "flask_route": "/vulnerable/post/1/comments",
+    "form_body": {
+      "author": "Kiểm thử",
+      "body": "<img src=x onerror=alert(1)>"
+    },
+    "headers": {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Host": "localhost",
+      "User-Agent": "Werkzeug/3.1.8"
+    },
+    "method": "POST",
+    "path": "/vulnerable/post/1/comments",
+    "query_string": "",
+    "sent_at": "2026-07-13T19:56:38.141+00:00",
+    "url": "http://localhost/vulnerable/post/1/comments"
+  },
+  "response_summary": {
+    "after_escape": "",
+    "before_escape": "",
+    "content_type": "text/html; charset=utf-8",
+    "headers": {
+      "Content-Security-Policy": "(không áp dụng)",
+      "X-Lab-Mode": "vulnerable"
+    },
+    "html_snippet": "/small><p>Unsafe · Sink</p></article><b>→</b><article><span>4</span><h3>Browser result</h3><code>HTML event</code><small>Browser · HTML parser</small><p>Executable · XSS</p></article></div></div>\n  <div class=\"tab-panel\" data-panel=\"request\"><h3>Request Inspector</h3><dl class=\"inspector\"><dt>method</dt><dd><code>POST</code></dd><dt>url</dt><dd><code>http://localhost/vulnerable/post/1/comments</co",
+    "length": 23817,
+    "status": 200
+  },
+  "security_controls": [
+    {
+      "enabled": true,
+      "file": "app.py",
+      "limit": "Không chống XSS",
+      "name": "Parameterized SQL",
+      "risk": "SQL Injection"
+    },
+    {
+      "enabled": false,
+      "file": "app.py",
+      "limit": "Allowlist phải duy trì",
+      "name": "Bleach sanitization",
+      "risk": "HTML/event nguy hiểm"
+    },
+    {
+      "enabled": false,
+      "file": "templates/stored_vulnerable.html",
+      "limit": "Markup có thể bypass",
+      "name": "Jinja autoescape",
+      "risk": "HTML injection"
+    },
+    {
+      "enabled": false,
+      "file": "app.py",
+      "limit": "Defense in depth",
+      "name": "CSP",
+      "risk": "Script ngoài policy"
+    }
+  ],
+  "source_to_sink": [
+    {
+      "file": "app.py",
+      "line": "comments()",
+      "name": "request.form[\"body\"]",
+      "risk": "Source",
+      "trust": "Không tin cậy",
+      "value": "<img src=x onerror=alert(1)>"
+    },
+    {
+      "file": "lab01.db",
+      "line": "comments",
+      "name": "SQLite comments.body",
+      "risk": "Stored",
+      "trust": "Tainted at rest",
+      "value": "<img src=x onerror=alert(1)>"
+    },
+    {
+      "file": "templates/stored_vulnerable.html",
+      "line": "comment body",
+      "name": "Jinja output",
+      "risk": "Sink",
+      "trust": "Unsafe",
+      "value": "<img src=x onerror=alert(1)>"
+    },
+    {
+      "file": "Browser",
+      "line": "HTML parser",
+      "name": "Browser result",
+      "risk": "XSS",
+      "trust": "Executable",
+      "value": "HTML event"
+    }
+  ],
+  "started_at": "2026-07-13T19:56:38.141+00:00",
+  "steps": [
+    {
+      "code_reference": "<textarea name=\"body\">",
+      "description": "Form nhận author và body.",
+      "input_data": "<img src=x onerror=alert(1)>",
+      "layer": "Browser UI",
+      "output_data": "<img src=x onerror=alert(1)>",
+      "security_meaning": "Body là dữ liệu không tin cậy",
+      "status": "warning",
+      "step_number": 1,
+      "technique": "HTML form",
+      "timestamp": "2026-07-13T19:56:38.141+00:00",
+      "title": "Nhập bình luận"
+    },
+    {
+      "code_reference": "POST /comments",
+      "description": "Browser tạo request body application/x-www-form-urlencoded.",
+      "input_data": "<img src=x onerror=alert(1)>",
+      "layer": "HTTP Request",
+      "output_data": "{'author': 'Kiểm thử', 'body': '<img src=x onerror=alert(1)>'}",
+      "security_meaning": "Request thật được Request Inspector ghi lại.",
+      "status": "normal",
+      "step_number": 2,
+      "technique": "Form encoding",
+      "timestamp": "2026-07-13T19:56:38.141+00:00",
+      "title": "Gửi POST"
+    },
+    {
+      "code_reference": "request.form.get(\"body\")",
+      "description": "Route chấp nhận GET và POST.",
+      "input_data": "{'author': 'Kiểm thử', 'body': '<img src=x onerror=alert(1)>'}",
+      "layer": "Flask Router",
+      "output_data": "<img src=x onerror=alert(1)>",
+      "security_meaning": "Dữ liệu vẫn tainted.",
+      "status": "normal",
+      "step_number": 3,
+      "technique": "request.form",
+      "timestamp": "2026-07-13T19:56:38.141+00:00",
+      "title": "Đọc request.form"
+    },
+    {
+      "code_reference": "if not author or not body",
+      "description": "Không rỗng; author ≤60, body ≤2000.",
+      "input_data": "<img src=x onerror=alert(1)>",
+      "layer": "Server Validation",
+      "output_data": "Hợp lệ",
+      "security_meaning": "Không thay output encoding.",
+      "status": "safe",
+      "step_number": 4,
+      "technique": "Length validation",
+      "timestamp": "2026-07-13T19:56:38.141+00:00",
+      "title": "Kiểm tra dữ liệu"
+    },
+    {
+      "code_reference": "INSERT ... VALUES(1,?,?)",
+      "description": "Truy vấn tham số tách mã SQL khỏi dữ liệu.",
+      "input_data": "<img src=x onerror=alert(1)>",
+      "layer": "SQLite Database",
+      "output_data": "Đã lưu",
+      "security_meaning": "Chống SQLi nhưng không chống Stored XSS.",
+      "status": "safe",
+      "step_number": 5,
+      "technique": "Parameterized SQL",
+      "timestamp": "2026-07-13T19:56:38.141+00:00",
+      "title": "SQLite INSERT"
+    },
+    {
+      "code_reference": "SELECT ... WHERE post_id=?",
+      "description": "Đọc 3 bản ghi thật từ comments.",
+      "input_data": "1",
+      "layer": "SQLite Database",
+      "output_data": "[1, 2, 3]",
+      "security_meaning": "Payload lưu được phát lại khi render.",
+      "status": "normal",
+      "step_number": 6,
+      "technique": "Parameterized SQL",
+      "timestamp": "2026-07-13T19:56:38.141+00:00",
+      "title": "SQLite SELECT"
+    },
+    {
+      "code_reference": "Markup(row[\"body\"])",
+      "description": "Body được Markup và đưa thẳng vào HTML.",
+      "input_data": "<img src=x onerror=alert(1)>",
+      "layer": "Template Engine",
+      "output_data": "<img src=x onerror=alert(1)>",
+      "security_meaning": "Sink giữ HTML nguy hiểm.",
+      "status": "danger",
+      "step_number": 7,
+      "technique": "Markup bypass",
+      "timestamp": "2026-07-13T19:56:38.141+00:00",
+      "title": "Render comments"
+    },
+    {
+      "code_reference": "render_template(...) ",
+      "description": "Response chứa dữ liệu đọc từ SQLite.",
+      "input_data": "<img src=x onerror=alert(1)>",
+      "layer": "HTTP Response",
+      "output_data": "<img src=x onerror=alert(1)>",
+      "security_meaning": "Dữ liệu phát tới mọi người xem.",
+      "status": "normal",
+      "step_number": 8,
+      "technique": "HTTP response",
+      "timestamp": "2026-07-13T19:56:38.141+00:00",
+      "title": "Trả danh sách bình luận"
+    },
+    {
+      "code_reference": "Browser parser",
+      "description": "Tạo element và event handler từ payload.",
+      "input_data": "<img src=x onerror=alert(1)>",
+      "layer": "Browser HTML Parser",
+      "output_data": "Event handler có thể chạy",
+      "security_meaning": "Reload lặp lại cùng kết quả.",
+      "status": "danger",
+      "step_number": 9,
+      "technique": "HTML parser",
+      "timestamp": "2026-07-13T19:56:38.141+00:00",
+      "title": "Parse comment"
+    },
+    {
+      "code_reference": "/vulnerable/post/1/comments",
+      "description": "Payload có thể chạy lại sau reload.",
+      "input_data": "<img src=x onerror=alert(1)>",
+      "layer": "Final Result",
+      "output_data": "payload_executed",
+      "security_meaning": "Phạm vi ảnh hưởng gồm mọi người xem.",
+      "status": "danger",
+      "step_number": 10,
+      "technique": "Security verdict",
+      "timestamp": "2026-07-13T19:56:38.141+00:00",
+      "title": "Kết luận"
+    }
+  ],
+  "trace_id": "1a4de5b9d02a4c70bd8552549ff6dd39",
+  "transformations": [
+    {
+      "label": "Trước sanitization",
+      "value": "<img src=x onerror=alert(1)>"
+    },
+    {
+      "label": "Thẻ phát hiện",
+      "value": "['img']"
+    },
+    {
+      "label": "Thuộc tính sự kiện",
+      "value": "['onerror']"
+    },
+    {
+      "label": "Sau sanitization/escape",
+      "value": "<img src=x onerror=alert(1)>"
+    }
+  ],
+  "user_action": "Gửi bình luận"
+}

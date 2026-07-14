@@ -1,0 +1,7 @@
+{% set comparison = code_comparison|default(trace.get('code_comparison', trace.get('inspectors', {}).get('code_comparison', {})), true) %}
+<article class="inspector" aria-labelledby="code-title"><header><span class="eyebrow">Running Source</span><h3 id="code-title">Code Comparison</h3><p>Mã được backend trích từ source thật; không phải ví dụ giả lập.</p></header>
+  <div class="code-compare">
+    <section><div class="code-label vulnerable-label"><span>Vulnerable</span><code>{{ comparison.get('vulnerable_file', 'vulnerable_queries.py')|e }} · {{ comparison.get('vulnerable_function', '—')|e }} · {{ comparison.get('vulnerable_lines', '—')|e }}</code></div><pre><code>{{ comparison.get('vulnerable_code', 'Chưa có source excerpt.')|e }}</code></pre><p>{{ comparison.get('vulnerable_explanation', 'Nối dữ liệu vào SQL làm thay đổi cấu trúc truy vấn.')|e }}</p></section>
+    <section><div class="code-label secure-label"><span>Secure</span><code>{{ comparison.get('secure_file', 'secure_queries.py')|e }} · {{ comparison.get('secure_function', '—')|e }} · {{ comparison.get('secure_lines', '—')|e }}</code></div><pre><code>{{ comparison.get('secure_code', 'Chưa có source excerpt.')|e }}</code></pre><p>{{ comparison.get('secure_explanation', 'Placeholder giữ dữ liệu tách biệt khỏi cấu trúc SQL.')|e }}</p></section>
+  </div>
+</article>

@@ -1,0 +1,20 @@
+{
+  "status": 200,
+  "headers": {
+    "Content-Type": "text/html; charset=utf-8",
+    "Content-Length": "25420",
+    "X-Lab-Mode": "vulnerable"
+  },
+  "summary": {
+    "after_escape": "",
+    "before_escape": "",
+    "content_type": "text/html; charset=utf-8",
+    "headers": {
+      "Content-Security-Policy": "(không áp dụng)",
+      "X-Lab-Mode": "vulnerable"
+    },
+    "html_snippet": "/small><p>Unsafe · Sink</p></article><b>→</b><article><span>4</span><h3>Browser result</h3><code>HTML event</code><small>Browser · HTML parser</small><p>Executable · XSS</p></article></div></div>\n  <div class=\"tab-panel\" data-panel=\"request\"><h3>Request Inspector</h3><dl class=\"inspector\"><dt>method</dt><dd><code>POST</code></dd><dt>url</dt><dd><code>http://localhost/vulnerable/post/1/comments</co",
+    "length": 23817,
+    "status": 200
+  }
+}

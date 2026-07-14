@@ -1,0 +1,11 @@
+Method: GET
+Full URL: http://127.0.0.1:5005/vulnerable/search?keyword='
+Path: /vulnerable/search
+Query string: keyword='
+Content-Type: -
+Content-Length: 0
+Form field names: []
+Form values: {}
+Session present: False
+Route handler: vulnerable_search_route
+Timestamp: 2026-07-14T19:34:20.432810+00:00

@@ -1,0 +1,14 @@
+{
+  "status": 200,
+  "trace_id": "6074d4c1496a4f468bf842d783aae640",
+  "decision": {
+    "tampering_type": "checkout price",
+    "success": false,
+    "database_changed": true,
+    "trusted_value": "products.price_vnd",
+    "control": "server-side price lookup",
+    "audit_event": "checkout_price_mismatch",
+    "impact": "Giá client bị bỏ qua; invoice lưu giá database."
+  },
+  "content_type": "text/html; charset=utf-8"
+}

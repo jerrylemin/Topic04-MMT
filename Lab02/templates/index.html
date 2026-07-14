@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Tổng quan - Lab 02 Buffer Overflow{% endblock %}
+{% block content %}
+<section class="hero page-section">
+  <div class="hero-copy">
+    <span class="status-badge status-safe">PHÒNG THÍ NGHIỆM LOCAL</span>
+    <h1>Buffer Overflow trong ứng dụng web local</h1>
+    <p>Theo dõi dữ liệu từ HTTP POST đến buffer C 32 byte, quan sát lỗi bằng ASan và đối chiếu hai bản vá.</p>
+    <div class="hero-actions">
+      <a class="button button-danger" href="/vulnerable">Bắt đầu bản lỗi</a>
+      <a class="button button-secondary" href="/comparison">Xem bản vá</a>
+    </div>
+  </div>
+  <aside class="scope-card" aria-label="Thông tin bài lab">
+    <dl>
+      <div><dt>MSSV</dt><dd>21127645</dd></div>
+      <div><dt>Họ tên</dt><dd>Lê Minh</dd></div>
+      <div><dt>Buffer</dt><dd><code>char name[32]</code></dd></div>
+      <div><dt>Cổng local</dt><dd><code>127.0.0.1:5002</code></dd></div>
+    </dl>
+  </aside>
+</section>
+
+<section class="safety-notice page-section" aria-labelledby="safety-title">
+  <h2 id="safety-title">Giới hạn an toàn</h2>
+  <p>Lab chỉ minh họa ghi vượt vùng nhớ, sanitizer, signal và bản vá. Không có shellcode, ROP, reverse shell hoặc thay đổi return address để thực thi mã.</p>
+</section>
+
+<section class="page-section" aria-labelledby="architecture-title">
+  <div class="section-heading">
+    <h2 id="architecture-title">Luồng hệ thống</h2>
+    <p>Mỗi lần chạy tạo một trace thật, từ thao tác trình duyệt đến response cuối.</p>
+  </div>
+  <ol class="architecture-flow">
+    <li><b>Browser</b><span>Nhập name</span></li>
+    <li><b>HTTP POST</b><span>Gửi form</span></li>
+    <li><b>Flask</b><span>Giới hạn và định tuyến</span></li>
+    <li><b>subprocess</b><span>Argument list, shell=False</span></li>
+    <li><b>C native</b><span>process_name</span></li>
+    <li><b>Stack</b><span>name[32]</span></li>
+    <li><b>Kết quả</b><span>Exit, signal hoặc ASan</span></li>
+    <li><b>Response</b><span>Trace và verdict</span></li>
+  </ol>
+</section>
+
+<section class="page-section" aria-labelledby="modes-title">
+  <div class="section-heading">
+    <h2 id="modes-title">Chế độ thực hành</h2>
+    <p>Cùng một input, khác chính sách copy và lớp bảo vệ.</p>
+  </div>
+  <div class="mode-grid">
+    <article class="mode-card mode-card-wide">
+      <span class="status-badge status-danger">CÓ LỖ HỔNG</span>
+      <h3>Vulnerable và AddressSanitizer</h3>
+      <p><code>strcpy</code> không nhận kích thước đích. ASan dừng tiến trình và chỉ ra stack-buffer-overflow.</p>
+      <a class="text-link" href="/vulnerable">Mở workbench</a>
+    </article>
+    <article class="mode-card">
+      <span class="status-badge status-safe">BẢN VÁ 1</span>
+      <h3>Kiểm tra độ dài</h3>
+      <p>Từ chối trên 31 byte trước khi copy.</p>
+      <a class="text-link" href="/secure/length">Mở length check</a>
+    </article>
+    <article class="mode-card">
+      <span class="status-badge status-safe">BẢN VÁ 2</span>
+      <h3>snprintf</h3>
+      <p>Giới hạn ghi và kiểm tra return value để phát hiện truncate.</p>
+      <a class="text-link" href="/secure/snprintf">Mở snprintf</a>
+    </article>
+    <article class="mode-card mode-card-wide">
+      <span class="status-badge status-info">DEFENSE IN DEPTH</span>
+      <h3>Compiler hardening</h3>
+      <p>So sánh Canary, PIE, RELRO, NX, FORTIFY và ASan bằng dữ liệu build thật.</p>
+      <a class="text-link" href="/hardening">Mở Hardening Inspector</a>
+    </article>
+  </div>
+</section>
+{% endblock %}

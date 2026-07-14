@@ -1,0 +1,8 @@
+{
+  "method": "GET",
+  "route": "/vulnerable/invoice",
+  "parameters": {
+    "id": 1002
+  },
+  "trace_id": "c287ac584ee64a90ac6545bb89721bf5"
+}

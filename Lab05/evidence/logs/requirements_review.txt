@@ -1,0 +1,56 @@
+LAB 5 - SQL INJECTION
+Sinh vien: 21127645 - Le Minh
+Ngay doi chieu: 2026-07-15
+
+NGUON DA DOC
+1. BaiTapTopic04.docx, phan LAB 5 tai cac doan 332-416.
+2. Topic04_Lo-Hong-Bao-Mat-Ung-Dung-Web.pptx, slide 17 ve so sanh Parameter Tampering va SQL Injection.
+3. Dac ta Lab05 dinh kem, 59 muc.
+4. README va mau trace/evidence/report/test cua Lab01-Lab04; khong sua cac lab cu.
+
+YEU CAU CHUC NANG
+- Ung dung Flask/SQLite doc lap tai http://127.0.0.1:5005.
+- Bon phan: phat hien bang dau nhay don; authentication bypass local; mo rong ket qua product search; va ban va secure.
+- Cac route vulnerable/secure cho login, search va user detail; dashboard, comparison, security controls, audit logs, trace API, health, reset va logout.
+- Ba tai khoan va toi thieu tam san pham gia lap dung theo dac ta.
+- Vulnerable login dung legacy SHA-256 digest chi de minh hoa mo hinh cu yeu.
+- Secure login query username bang placeholder, sau do dung Werkzeug PBKDF2 va check_password_hash.
+- Vulnerable search chi co the mo rong ket qua trong bang products local.
+- Secure search dung LIKE ?, parameter %keyword%, validation va LIMIT 50.
+- Moi flow co request, input, query construction, SQL execution, auth/result set, database, error, audit, code comparison, security controls, timeline va final verdict.
+- Presentation Mode chi trinh bay trace da co; Auto Play khong gui request va khong doi database.
+- Code Comparison phai doc source dang chay, khong dung vi du gia.
+
+PHAM VI AN TOAN
+- Chi bind 127.0.0.1; khong bind 0.0.0.0 va khong goi Internet khi runtime.
+- Chi dung database nam trong Lab05; khong connection string/path/host/URL/port do nguoi dung cung cap.
+- Chi cac scenario local co dinh. Khong SQL console, scanner, proxy, sqlmap, Burp API hay request hang loat.
+- Khong UNION, blind, time-based, out-of-band, stacked query, schema enumeration, sqlite_master, PRAGMA tren UI, dump, ATTACH, load_extension hay doc file he thong.
+- Input nguoi dung khong tao INSERT/UPDATE/DELETE/DROP/ALTER; vulnerable flow chi SELECT.
+- Khong Playwright, Selenium, browser automation, chup anh tu dong hay anh gia.
+- Khong du lieu that; khong password plaintext trong database; khong full hash/digest, cookie, secret, traceback hay absolute database path tren UI/evidence/log.
+
+EVIDENCE VA KIEM THU
+- Trace/request/response/query/audit/database/error evidence phai sinh tu Flask test client hoac runtime local that.
+- Demo script chay cac flow co dinh, khong nhan target/payload tuy y.
+- Runtime smoke test chi goi loopback va luu log that.
+- Toi thieu 80 test co y nghia; coverage toi thieu 90% cho database, auth, vulnerable/secure query, trace, audit, validation va error modules.
+- Pytest, coverage va smoke log khong duoc ghi cung hoac bao thanh cong neu chua chay.
+- Screenshot checker chi kiem tra file; anh duoc chup thu cong va khong la tieu chi hoan thanh cua Codex.
+
+BAO CAO
+- Tao DOCX va PDF 18-25 trang, 30 chuong va phu luc tu evidence/source that.
+- Co bang trace cho chin flow, code comparison, bon sequence diagram va hai data-flow diagram tao local.
+- Khong placeholder anh, khong phu luc anh trong, khong phu thuoc anh thu cong.
+- Render DOCX/PDF thanh PNG va kiem tra truc quan tat ca trang truoc khi ket luan.
+
+QUYET DINH KHI NGUON XUNG DOT
+- Dac ta chi tiet hep hon tai lieu goc, nen khong trien khai UNION, xoa du lieu, scanner hay cong cu target ben ngoai.
+- Vi dac ta yeu cau PBKDF2/check_password_hash, secure login khong so sanh password_hash truc tiep trong SQL nhu pseudo-query cua DOCX.
+- ORM chi duoc giai thich ve cach dung dung va gioi han; khong them ORM dependency vi sqlite3 parameter binding da dap ung lab.
+- Least privilege cua SQLite duoc mo phong trung thuc bang file local, process non-root, query dinh nghia san va khong raw SQL/write input; khong gia vo co database user permission model.
+
+TIEU CHI HOAN THANH
+- Khong skeleton, TODO, FIXME, placeholder source/evidence hay verdict gia.
+- Chay that: seed, pytest, coverage, app loopback, demo/evidence, smoke, report, render QA va cleanup.
+- Chi bao ket qua da tao, da chay va da xac minh.

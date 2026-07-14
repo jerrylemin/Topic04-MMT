@@ -1,0 +1,28 @@
+LAB04 SECURITY REVIEW
+Date: 2026-07-15
+
+Scope reviewed
+- Victim and Demo Page routes, templates, JavaScript, services, scripts and tests.
+- Fixed runtime endpoints only: 127.0.0.1:5004, 127.0.0.1:9004, localhost:9004.
+
+Verified controls
+- Both Flask entry points bind 127.0.0.1; no 0.0.0.0 bind.
+- Synchronizer token uses secrets.token_urlsafe(32) and hmac.compare_digest.
+- Origin/Referer uses urllib.parse and exact scheme/hostname/effective-port comparison.
+- Secure email, password, transfer, logout, reset and trace clear validate before mutation.
+- Logout/reset denial preserves session/database and writes linked audit + trace.
+- Audit, trace and rendered inspectors redact password, full cookie, token and secret fields.
+- CSP, nosniff, DENY framing, Referrer-Policy, Permissions-Policy and request size limit are enabled.
+- No wildcard CORS response is configured.
+- Demo Page has only fixed local email forms and requires an explicit click plus confirmation.
+- No executable auto-submit, fetch, XMLHttpRequest, document.cookie, iframe/contentDocument,
+  Playwright or Selenium behavior remains. Mentions in report/UI are explanatory safety text only.
+- No unfinished implementation markers remain.
+
+Known intentional limitation
+- SameSite and SOP browser behavior is described as Expected/theoretical unless observed manually.
+- Runtime/test-client evidence does not claim to emulate browser cookie policy or response readability.
+- Secure cookie is disabled because the lab intentionally runs over local HTTP.
+
+Result
+- PASS for the defined local educational scope.

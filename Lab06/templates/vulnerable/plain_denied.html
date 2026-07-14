@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block content %}<section class="hero compact"><span class="eyebrow">Access denied</span><h1>Plain role=user bị từ chối</h1><p>Vulnerable route đang đọc trực tiếp <code>lab06_role={{ result.role|default('missing', true)|e }}</code>.</p></section>{% include 'components/trace_panel.html' %}{% endblock %}

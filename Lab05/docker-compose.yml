@@ -1,0 +1,27 @@
+services:
+  lab05:
+    build: .
+    environment:
+      LAB05_DATABASE: /app/data/lab05.sqlite3
+      LAB05_COOKIE_SECURE: "false"
+    ports:
+      - "127.0.0.1:5005:5005"
+    volumes:
+      - lab05_database:/app/data
+      - ./evidence:/app/evidence
+      - ./report:/app/report
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5005/health', timeout=2)"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+volumes:
+  lab05_database:
+

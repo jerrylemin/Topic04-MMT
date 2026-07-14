@@ -1,0 +1,13 @@
+{
+  "decision": "logout",
+  "headers": {
+    "Content-Type": "text/html; charset=utf-8",
+    "X-Lab-Session-Status": "logout_invalidated_session",
+    "X-Lab-Trace-ID": "0e4839a53210b3e11b407f8a"
+  },
+  "set_cookie_names": [
+    "lab06_session"
+  ],
+  "status_code": 200,
+  "trace_id": "0e4839a53210b3e11b407f8a"
+}

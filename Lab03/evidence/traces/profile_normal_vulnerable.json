@@ -1,0 +1,131 @@
+{
+  "trace_id": "715acedeb62747d588c95ba5a3e5f019",
+  "scenario": "profile",
+  "mode": "vulnerable",
+  "current_user": {
+    "user_id": 12,
+    "username": "user_a",
+    "role": "user"
+  },
+  "request_inspector": {
+    "method": "POST",
+    "url": "http://localhost/vulnerable/profile/update",
+    "path": "/vulnerable/profile/update",
+    "query_string": "",
+    "content_type": "application/x-www-form-urlencoded",
+    "form_body": {
+      "user_id": "12",
+      "email": "usera@lab.local",
+      "role": "user"
+    },
+    "parameters": {
+      "user_id": "12",
+      "email": "usera@lab.local",
+      "role": "user"
+    },
+    "cookie": "session=***",
+    "route_handler": "profile_vulnerable_update",
+    "session": {
+      "authenticated_user_id": 12,
+      "username": "user_a",
+      "role": "user",
+      "source": "Flask signed session",
+      "cookie": "session=***"
+    }
+  },
+  "steps": [
+    {
+      "step_number": 1,
+      "layer": "Database Write",
+      "title": "Mass assignment",
+      "description": "Email và role từ form được cập nhật trực tiếp.",
+      "technique": "",
+      "input_data": {
+        "user_id": 12,
+        "role": "user"
+      },
+      "output_data": {
+        "id": 12,
+        "username": "user_a",
+        "email": "usera@lab.local",
+        "role": "user",
+        "created_at": "2026-07-13 20:29:21",
+        "updated_at": "2026-07-13 20:29:21"
+      },
+      "code_reference": "UPDATE users SET email = ?, role = ? WHERE id = ?",
+      "security_meaning": "",
+      "status": "danger",
+      "timestamp": "2026-07-13T20:29:21.625+00:00"
+    },
+    {
+      "step_number": 2,
+      "layer": "Final Result",
+      "title": "Kết luận",
+      "description": "Form client quyết định role.",
+      "technique": "",
+      "input_data": "",
+      "output_data": "",
+      "code_reference": "",
+      "security_meaning": "",
+      "status": "danger",
+      "timestamp": "2026-07-13T20:29:21.625+00:00"
+    }
+  ],
+  "database_inspector": {
+    "target_user_id_from_form": 12,
+    "current_user_id_from_session": 12,
+    "submitted_role": "user",
+    "role_before": "user",
+    "role_after": "user",
+    "accepted_fields": [
+      "user_id",
+      "email",
+      "role"
+    ],
+    "rejected_fields": []
+  },
+  "authorization_inspector": {
+    "subject": "user_id 12",
+    "action": "update role",
+    "object": "user 12",
+    "policy": "none",
+    "decision": "not checked",
+    "reason": "Mass assignment dùng trực tiếp user_id và role từ form."
+  },
+  "parameter_diff": [
+    {
+      "parameter": "user_id",
+      "original_value": 12,
+      "submitted_value": 12,
+      "status": "unchanged"
+    },
+    {
+      "parameter": "role",
+      "original_value": "user",
+      "submitted_value": "user",
+      "status": "unchanged"
+    }
+  ],
+  "final_verdict": {
+    "tampering_type": "role / mass assignment",
+    "success": false,
+    "privilege_escalated": false,
+    "database_changed": true,
+    "missing_check": "field allowlist and admin authorization",
+    "audit_event": "vulnerable_action_completed"
+  },
+  "created_at": "2026-07-13T20:29:21.619+00:00",
+  "current_user_id": 12,
+  "submitted_user_id": 12,
+  "submitted_role": "user",
+  "accepted_fields": [
+    "user_id",
+    "email",
+    "role"
+  ],
+  "rejected_fields": [],
+  "role_before": "user",
+  "role_after": "user",
+  "decision": "not checked",
+  "audit_event": "vulnerable_action_completed"
+}

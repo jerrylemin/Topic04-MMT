@@ -1,0 +1,13 @@
+{
+  "decision": "allow",
+  "headers": {
+    "Content-Type": "text/html; charset=utf-8",
+    "X-Lab-Decision": "allow",
+    "X-Lab-Role-Source": "database",
+    "X-Lab-Signature-Status": "valid",
+    "X-Lab-Trace-ID": "78365904d428593a977fb9ad"
+  },
+  "set_cookie_names": [],
+  "status_code": 200,
+  "trace_id": "78365904d428593a977fb9ad"
+}

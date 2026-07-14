@@ -1,0 +1,36 @@
+services:
+  victim:
+    build:
+      context: .
+      dockerfile: Dockerfile.victim
+    environment:
+      DATABASE: /app/data/lab04.db
+      SESSION_COOKIE_SECURE: "false"
+    ports:
+      - "127.0.0.1:5004:5004"
+    volumes:
+      - lab04_database:/app/data
+      - ./evidence:/app/evidence
+      - ./report:/app/report
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+  attacker:
+    build:
+      context: .
+      dockerfile: Dockerfile.attacker
+    ports:
+      - "127.0.0.1:9004:9004"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+volumes:
+  lab04_database:

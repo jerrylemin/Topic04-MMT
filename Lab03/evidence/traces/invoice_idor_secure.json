@@ -1,0 +1,113 @@
+{
+  "trace_id": "7c933990a5a049e38d230f0c68837d0a",
+  "scenario": "invoice",
+  "mode": "secure",
+  "current_user": {
+    "user_id": 12,
+    "username": "user_a",
+    "role": "user"
+  },
+  "request_inspector": {
+    "method": "GET",
+    "url": "http://localhost/secure/invoice?id=1002",
+    "path": "/secure/invoice",
+    "query_string": "id=1002",
+    "content_type": "",
+    "form_body": {},
+    "parameters": {
+      "id": "1002"
+    },
+    "cookie": "session=***",
+    "route_handler": "invoice_secure",
+    "session": {
+      "authenticated_user_id": 12,
+      "username": "user_a",
+      "role": "user",
+      "source": "Flask signed session",
+      "cookie": "session=***"
+    }
+  },
+  "steps": [
+    {
+      "step_number": 1,
+      "layer": "Authentication",
+      "title": "Lấy user từ session",
+      "description": "Danh tính không lấy từ query string.",
+      "technique": "",
+      "input_data": 12,
+      "output_data": 12,
+      "code_reference": "",
+      "security_meaning": "",
+      "status": "safe",
+      "timestamp": "2026-07-13T20:29:21.598+00:00"
+    },
+    {
+      "step_number": 2,
+      "layer": "Authorization",
+      "title": "Kiểm tra object-level authorization",
+      "description": "Người dùng hiện tại không sở hữu invoice.",
+      "technique": "",
+      "input_data": {
+        "subject": 12,
+        "owner": 13
+      },
+      "output_data": "deny",
+      "code_reference": "authorize_invoice(...) ",
+      "security_meaning": "",
+      "status": "blocked",
+      "timestamp": "2026-07-13T20:29:21.598+00:00"
+    },
+    {
+      "step_number": 3,
+      "layer": "HTTP Response",
+      "title": "Trả kết quả",
+      "description": "Không trả nội dung invoice khi policy deny.",
+      "technique": "",
+      "input_data": "",
+      "output_data": {
+        "status": 403,
+        "data_returned": false
+      },
+      "code_reference": "",
+      "security_meaning": "",
+      "status": "blocked",
+      "timestamp": "2026-07-13T20:29:21.598+00:00"
+    }
+  ],
+  "database_inspector": {
+    "invoice_id": 1002,
+    "owner_id": 13,
+    "current_user_id": 12,
+    "ownership_match": false,
+    "authorization_result": "deny"
+  },
+  "authorization_inspector": {
+    "subject": "user_id 12",
+    "action": "read invoice",
+    "object": "invoice 1002",
+    "object_owner": 13,
+    "required_permission": "owner or admin",
+    "policy": "owner or admin",
+    "decision": "deny",
+    "reason": "Người dùng hiện tại không sở hữu invoice."
+  },
+  "parameter_diff": [],
+  "final_verdict": {
+    "tampering_type": "invoice ID / IDOR",
+    "success": false,
+    "unauthorized_resource_disclosed": false,
+    "database_changed": false,
+    "control": "object-level authorization",
+    "http_status": 403,
+    "audit_event": "invoice_access_denied"
+  },
+  "created_at": "2026-07-13T20:29:21.598+00:00",
+  "current_user_id": 12,
+  "invoice_id": 1002,
+  "invoice_owner_id": 13,
+  "ownership_match": false,
+  "authorization_policy": "owner or admin",
+  "decision": "deny",
+  "http_status": 403,
+  "data_returned": false
+}

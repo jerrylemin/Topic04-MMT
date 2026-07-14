@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#102a36">
+  <title>{{ title|default('LAB 6 · Cookie Poisoning', true)|e }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/presentation.css') }}">
+  <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/trace-ui.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/cookie-visualizer.js') }}" defer></script>
+  <script src="{{ url_for('static', filename='js/presentation.js') }}" defer></script>
+</head>
+<body data-page-mode="{{ mode|default('overview', true)|e }}">
+  <a class="skip-link" href="#main-content">Bỏ qua điều hướng</a>
+  <header class="site-header">
+    <a class="brand" href="/"><span>LAB 6</span><strong>Cookie Poisoning</strong></a>
+    <button class="nav-toggle" type="button" data-nav-toggle aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <nav id="primary-nav" class="primary-nav" aria-label="Điều hướng chính" data-primary-nav>
+      <a href="/dashboard">Tổng quan</a>
+      <a href="/login">Đăng nhập demo</a>
+      <a href="/comparison">So sánh</a>
+      <a href="/security-controls">Kiểm soát</a>
+      <a href="/audit-logs">Audit</a>
+    </nav>
+    <span class="local-boundary">127.0.0.1:5006 · local only</span>
+  </header>
+  <main id="main-content" tabindex="-1">
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="site-footer"><span>21127645 · Lê Minh</span><span>LAB 6, COOKIE POISONING</span><span>Dữ liệu giả lập · không dùng cho hệ thống thật</span></footer>
+</body>
+</html>

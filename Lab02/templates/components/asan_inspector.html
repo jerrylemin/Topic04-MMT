@@ -1,0 +1,32 @@
+{% set t = trace|default({}, true) %}
+{% set asan = t.get('asan', t.get('asan_result', {})) %}
+{% set native = t.get('native_result', t.get('native', {})) %}
+{% set has_asan_data = asan or ('asan_detected' in t) %}
+{% set detected = asan.get('detected', t.get('asan_detected', false)) %}
+<div class="inspector-heading">
+  <h3>AddressSanitizer Inspector</h3>
+  {% if has_asan_data %}
+    <span class="status-badge status-{{ 'danger' if detected else 'safe' }}">{{ 'STACK-BUFFER-OVERFLOW' if detected else 'KHÔNG PHÁT HIỆN LỖI' }}</span>
+  {% else %}
+    <span class="status-badge status-info">CHƯA CÓ DỮ LIỆU ASAN</span>
+  {% endif %}
+</div>
+<dl class="inspector-list">
+  <div><dt>Loại lỗi</dt><dd><code>{{ asan.get('error_type', asan.get('type', 'Chưa có dữ liệu')) }}</code></dd></div>
+  <div><dt>File</dt><dd><code>{{ asan.get('file', 'Chưa có dữ liệu') }}</code></dd></div>
+  <div><dt>Dòng</dt><dd>{{ asan.get('line', 'Chưa có dữ liệu') }}</dd></div>
+  <div><dt>Hàm</dt><dd><code>{{ asan.get('function', 'Chưa có dữ liệu') }}</code></dd></div>
+  <div><dt>Kích thước write</dt><dd>{{ asan.get('write_size', 'Chưa có dữ liệu') }}</dd></div>
+  <div><dt>Biến buffer</dt><dd><code>{{ asan.get('buffer_name', asan.get('variable', 'name')) }}</code></dd></div>
+  <div><dt>Kích thước buffer</dt><dd>{{ asan.get('buffer_size', t.get('buffer_size', 32)) }} byte</dd></div>
+  <div><dt>Độ dài input</dt><dd>{{ t.get('input_length_bytes', 'Chưa có dữ liệu') }} byte UTF-8</dd></div>
+  <div><dt>Exit code</dt><dd>{{ asan.get('exit_code', native.get('exit_code', t.get('exit_code', 'Chưa có dữ liệu'))) }}</dd></div>
+</dl>
+<section class="stack-trace" aria-labelledby="asan-stack-title">
+  <h4 id="asan-stack-title">Tóm tắt stack trace</h4>
+  <pre><code>{{ asan.get('stack_trace', asan.get('summary', 'Chưa có stack trace đã parse.')) }}</code></pre>
+</section>
+<details class="raw-log">
+  <summary>Xem stderr đã rút gọn</summary>
+  <pre><code>{{ asan.get('raw', native.get('stderr', t.get('stderr', '(trống)'))) }}</code></pre>
+</details>
