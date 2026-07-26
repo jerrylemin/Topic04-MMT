@@ -1,12 +1,13 @@
 # LAB 6 - COOKIE POISONING
 
-**Sinh viên:** Lê Minh  
-**MSSV:** 21127645  
+**Nhóm sinh viên thực hiện:**  
+1. Lê Minh — 21127645  
+2. Nguyễn Vũ Bách — 21127224  
 **Địa chỉ duy nhất của lab:** `http://127.0.0.1:5006`
 
 Lab06 là ứng dụng học tập local, dùng tài khoản và dữ liệu giả lập để giải thích vì sao server không được tin dữ liệu phân quyền nằm trong cookie phía client. Lab so sánh năm mô hình: Plain Cookie, Base64 Cookie, Signed Cookie, Encrypted Cookie và Server-side Session.
 
-> Trạng thái tài liệu: README này mô tả hợp đồng vận hành và cách kiểm chứng. Nó không xác nhận rằng test, coverage, smoke test, evidence, DOCX/PDF hay Docker đã chạy. Chỉ xem một kết quả là đạt sau khi lệnh tương ứng chạy thành công và artifact thật đã được kiểm tra.
+> Trạng thái tài liệu: README này mô tả hợp đồng vận hành và cách kiểm chứng. Nó không xác nhận rằng test, coverage, smoke test, evidence, DOCX hay Docker đã chạy. Chỉ xem một kết quả là đạt sau khi lệnh tương ứng chạy thành công và artifact thật đã được kiểm tra.
 
 ## Phạm vi an toàn
 
@@ -308,14 +309,13 @@ python scripts/generate_report.py
 
 Đầu ra yêu cầu:
 
-- `report/21127645_LeMinh_Lab06_CookiePoisoning.docx`
-- `report/21127645_LeMinh_Lab06_CookiePoisoning.pdf`
+- `report/21127645_LeMinh_21127224_NguyenVuBach_Lab06_CookiePoisoning.docx`
 
-Script phải báo lỗi rõ nếu không tạo được PDF; không được báo hoàn thành giả. Báo cáo không phụ thuộc ảnh thủ công, không có placeholder ảnh hoặc phụ lục ảnh trống. Số trang chỉ được công bố sau khi render và đo thực tế.
+Script phải báo lỗi rõ nếu không tạo được DOCX; không được báo hoàn thành khi artifact chưa tồn tại. Các ảnh còn thiếu phải được ghi rõ và không được thay bằng ảnh dựng.
 
 ## Chụp ảnh thủ công
 
-Đọc [HUONG_DAN_CHUP_ANH.md](HUONG_DAN_CHUP_ANH.md). Người học tự chụp 48 ảnh bằng browser/DevTools. Không dùng automation. Ảnh không phải completion gate của Codex.
+Đọc [HUONG_DAN_CHUP_ANH.md](HUONG_DAN_CHUP_ANH.md). Người học tự chụp 48 ảnh bằng browser/DevTools. Không dùng automation. Chỉ ảnh thật được kiểm tra thủ công mới được dùng làm bằng chứng.
 
 Kiểm tra file ảnh sau khi người học đã chụp:
 
@@ -369,3 +369,8 @@ Vì vậy:
 - Signed/encrypted token không thay database-backed authorization và revocation.
 - SQLite/in-memory local store không đại diện cho kiến trúc phân tán production.
 - Chưa có tuyên bố test pass, coverage, smoke, evidence, report, page count, screenshot hay Docker pass trong README này.
+
+
+## Chế độ báo cáo DOCX-only
+
+`scripts/generate_report.py` chỉ tạo lại file DOCX đúng tên hiện có. Script không gọi ReportLab, LibreOffice/soffice, không chuyển đổi hoặc cập nhật PDF, không render DOCX và không chạy test/smoke test/ứng dụng. Các log cũ chỉ được đọc như evidence; ảnh chưa có được biểu diễn bằng placeholder chi tiết và không bị tuyên bố là đã chụp.

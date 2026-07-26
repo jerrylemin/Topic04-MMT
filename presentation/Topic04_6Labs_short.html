@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic04 — Sáu lab bảo mật ứng dụng web</title>
+  <style>
+    /* ================================================================
+       THEME TOKENS — Broadside: ink on fire
+       The requested font families are named first. Installed Unicode
+       fallbacks keep Vietnamese readable without a CDN or font files.
+       ================================================================ */
+    :root {
+      --ink: #111111;
+      --ink-alt: #1A1A18;
+      --orange: #E85D26;
+      --cream: #F0ECE5;
+      --muted: #888880;
+      --hint: #505048;
+      --border: #282826;
+      --orange-ink-muted: rgba(17, 17, 17, 0.75);
+      --orange-ink-hint: rgba(17, 17, 17, 0.55);
+      --orange-border: rgba(17, 17, 17, 0.20);
+      --font-display: "Barlow", "Noto Sans", "Segoe UI", sans-serif;
+      --font-mono: "IBM Plex Mono", "Noto Sans", "Segoe UI", sans-serif;
+      --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+      --duration-enter: 500ms;
+      --stage-bg: #080808;
+      --slide-bg: var(--ink);
+    }
+
+    * { box-sizing: border-box; }
+
+    /* ===========================================
+       FIXED 16:9 STAGE: MANDATORY BASE STYLES
+       Include this ENTIRE file in every presentation.
+       Slides are authored at 1920×1080 and scaled as a whole.
+       =========================================== */
+
+    /* 1. Lock the browser viewport */
+    html,
+    body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: var(--stage-bg, #000);
+    }
+
+    /* 2. Full-window deck viewport */
+    .deck-viewport {
+        position: fixed;
+        inset: 0;
+        overflow: hidden;
+        background: var(--stage-bg, #000);
+    }
+
+    /* 3. Fixed 16:9 design canvas.
+       JavaScript sets transform: translate(...) scale(...). */
+    .deck-stage {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        transform-origin: 0 0;
+        background: var(--slide-bg, #fff);
+    }
+
+    /* 4. Slides stack inside the fixed stage.
+       Content must be laid out at 1920×1080, not reflowed per device. */
+    .slide {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        display: block;
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+        background: var(--slide-bg, #fff);
+    }
+
+    .slide.active,
+    .slide.visible {
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+        z-index: 1;
+    }
+
+    /* 5. Keep media inside authored slide bounds */
+    img,
+    video,
+    canvas,
+    svg {
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    /* 6. Presentation chrome stays outside the slide design system */
+    .deck-controls {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        transform: translateX(-50%);
+        z-index: 1000;
+    }
+
+    /* 7. Print one fixed-size slide per page */
+    @media print {
+        html,
+        body {
+            width: 1920px;
+            height: auto;
+            overflow: visible;
+            background: #fff;
+        }
+
+        .deck-viewport {
+            position: static;
+            overflow: visible;
+            background: #fff;
+        }
+
+        .deck-stage {
+            position: static;
+            width: auto;
+            height: auto;
+            transform: none !important;
+            background: none;
+        }
+
+        .slide {
+            position: relative;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            width: 1920px;
+            height: 1080px;
+            break-after: page;
+            page-break-after: always;
+        }
+
+        .slide:last-child {
+            break-after: auto;
+            page-break-after: auto;
+        }
+
+        .deck-controls {
+            display: none !important;
+        }
+    }
+
+    /* 8. Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.2s !important;
+        }
+    }
+
+    /* ================================================================
+       TYPOGRAPHY AND SLIDE FRAME
+       ================================================================ */
+    body {
+      color: var(--cream);
+      font-family: var(--font-display);
+    }
+
+    h1, h2, h3, p, ul, ol, figure, table, pre { margin: 0; }
+
+    .slide--dark { background: var(--ink); color: var(--cream); }
+    .slide--orange { background: var(--orange); color: var(--ink); }
+
+    .frame {
+      position: absolute;
+      inset: 60px 106px 50px;
+      display: grid;
+      grid-template-rows: 42px 154px 1fr 38px;
+      min-height: 0;
+    }
+
+    .declarative-frame {
+      position: absolute;
+      inset: 72px 106px 72px;
+      min-height: 0;
+    }
+
+    .chrome,
+    .foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .chrome { border-bottom: 1px solid var(--border); padding-bottom: 14px; }
+    .foot { border-top: 1px solid var(--border); padding-top: 14px; color: var(--muted); }
+
+    .slide--dark .chrome .lab-label { color: var(--orange); }
+    .slide--orange .chrome,
+    .slide--orange .foot { border-color: var(--orange-border); color: var(--orange-ink-hint); }
+
+    .headline {
+      align-self: center;
+      font-size: 74px;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 0.98;
+      max-width: 1640px;
+    }
+
+    .headline.small { font-size: 66px; }
+    .headline .accent { color: var(--orange); }
+
+    .content {
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mono {
+      font-family: var(--font-mono);
+      letter-spacing: 0.04em;
+    }
+
+    .kicker {
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .body { font-size: 27px; line-height: 1.38; }
+    .body-small { font-size: 23px; line-height: 1.34; }
+    .muted { color: var(--muted); }
+    .orange-text { color: var(--orange); }
+    .ink-muted { color: var(--orange-ink-muted); }
+
+    .slash-list { list-style: none; padding: 0; }
+    .slash-list li {
+      position: relative;
+      padding-left: 32px;
+      font-size: 26px;
+      line-height: 1.32;
+    }
+    .slash-list li + li { margin-top: 14px; }
+    .slash-list li::before {
+      content: "/";
+      position: absolute;
+      left: 0;
+      color: var(--orange);
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+
+    .slide--orange .slash-list li::before { color: var(--orange-ink-hint); }
+
+    /* ================================================================
+       MOTION — one editorial entrance system
+       ================================================================ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity var(--duration-enter) var(--ease-enter),
+                  transform var(--duration-enter) var(--ease-enter);
+    }
+
+    .slide.visible .reveal {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .slide.visible .reveal[data-delay="1"] { transition-delay: 80ms; }
+    .slide.visible .reveal[data-delay="2"] { transition-delay: 160ms; }
+    .slide.visible .reveal[data-delay="3"] { transition-delay: 240ms; }
+    .slide.visible .reveal[data-delay="4"] { transition-delay: 320ms; }
+
+    .export-settle .reveal,
+    .export-settle .slide.visible .reveal {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+
+    /* ================================================================
+       BROADSIDE COMPONENTS — flat, square, hairline-divided
+       ================================================================ */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      border: 1px solid var(--orange);
+      padding: 6px 12px;
+      color: var(--orange);
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .slide--orange .tag { border-color: var(--orange-border); color: var(--orange-ink-hint); }
+
+    .rule-stub { width: 48px; height: 3px; background: var(--orange); }
+    .slide--orange .rule-stub { background: var(--ink); }
+
+    .panel {
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+      min-height: 0;
+    }
+
+    .panel-title {
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 12px;
+    }
+
+    .slide--orange .panel { border-color: var(--orange-border); }
+    .slide--orange .panel-title { color: var(--orange-ink-hint); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 46px; height: 100%; }
+    .two-col.wide-left { grid-template-columns: 1.15fr 0.85fr; }
+    .two-col.wide-right { grid-template-columns: 0.86fr 1.14fr; }
+    .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; height: 100%; }
+
+    .flow-row {
+      display: grid;
+      grid-template-columns: 225px 1fr;
+      align-items: center;
+      min-height: 142px;
+      border-top: 1px solid var(--border);
+    }
+    .flow-row:last-child { border-bottom: 1px solid var(--border); }
+
+    .flow-label {
+      font-size: 31px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .flow-label small {
+      display: block;
+      margin-top: 8px;
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .node-flow {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+      align-items: center;
+      gap: 50px;
+      min-width: 0;
+    }
+
+    .node {
+      position: relative;
+      min-height: 88px;
+      border: 1px solid var(--border);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      font-size: 25px;
+      line-height: 1.18;
+      min-width: 0;
+    }
+
+    .node strong { font-size: 27px; }
+    .node small { margin-top: 5px; color: var(--muted); font-size: 22px; }
+    .node.accent { border-color: var(--orange); }
+    .node.danger { background: var(--orange); color: var(--ink); border-color: var(--orange); }
+    .node:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      width: 28px;
+      height: 1px;
+      background: var(--orange);
+      right: -40px;
+      top: 50%;
+    }
+    .node:not(:last-child)::before {
+      content: "";
+      position: absolute;
+      right: -41px;
+      top: calc(50% - 5px);
+      border-left: 9px solid var(--orange);
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+    }
+
+    .code-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    .code-box {
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+      min-height: 0;
+    }
+    .code-box pre {
+      font-family: var(--font-mono);
+      font-size: 22px;
+      line-height: 1.34;
+      white-space: pre-wrap;
+      color: var(--cream);
+    }
+    .code-box.secure { border-color: var(--orange); }
+    .code-box .code-label {
+      display: block;
+      margin-bottom: 10px;
+      font-family: var(--font-mono);
+      font-size: 22px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .code-box.secure .code-label { color: var(--orange); }
+
+    .matrix {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    .matrix th,
+    .matrix td {
+      border-top: 1px solid var(--border);
+      padding: 13px 14px 12px 0;
+      text-align: left;
+      vertical-align: top;
+      font-size: 22px;
+      line-height: 1.24;
+      overflow-wrap: break-word;
+    }
+    .matrix th {
+      color: var(--orange);
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .matrix td strong { color: var(--cream); font-size: 23px; }
+    .matrix tr:last-child td { border-bottom: 1px solid var(--border); }
+    .matrix.compact th, .matrix.compact td { padding-top: 10px; padding-bottom: 9px; font-size: 22px; }
+
+    .takeaways {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+    .takeaway {
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+      font-size: 23px;
+      line-height: 1.28;
+    }
+    .takeaway strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--orange);
+      font-family: var(--font-mono);
+      font-size: 22px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .layer-stack { display: grid; gap: 10px; }
+    .layer {
+      min-height: 62px;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 58px 160px 1fr;
+      align-items: center;
+      gap: 16px;
+      font-size: 23px;
+    }
+    .layer-num { color: var(--orange); font-family: var(--font-mono); font-size: 23px; }
+    .layer strong { font-size: 25px; }
+
+    /* ================================================================
+       DECLARATIVE SLIDES
+       ================================================================ */
+    .catalogue {
+      position: absolute;
+      top: 0;
+      left: 0;
+      font-family: var(--font-mono);
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: var(--orange-ink-hint);
+    }
+
+    .cover-meta {
+      position: absolute;
+      top: 0;
+      right: 0;
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--orange-ink-hint);
+    }
+
+    .cover-title {
+      position: absolute;
+      left: 0;
+      top: 126px;
+      max-width: 1420px;
+      font-size: 151px;
+      font-weight: 900;
+      letter-spacing: -0.055em;
+      line-height: 0.87;
+    }
+
+    .cover-subtitle {
+      position: absolute;
+      left: 0;
+      bottom: 142px;
+      max-width: 1120px;
+      font-size: 34px;
+      line-height: 1.28;
+      color: var(--orange-ink-muted);
+    }
+
+    .cover-authors {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid var(--orange-border);
+      padding-top: 18px;
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--orange-ink-hint);
+    }
+
+    .chapter-title {
+      position: absolute;
+      left: 0;
+      top: 98px;
+      max-width: 1590px;
+      font-size: 130px;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      line-height: 0.9;
+    }
+
+    .chapter-sub {
+      position: absolute;
+      left: 0;
+      bottom: 38px;
+      font-size: 32px;
+      color: var(--orange-ink-muted);
+    }
+
+    .three-questions {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 125px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 34px;
+    }
+    .question {
+      border-top: 1px solid var(--orange-border);
+      padding-top: 16px;
+      padding-bottom: 4px;
+      font-size: 29px;
+      line-height: 1.18;
+    }
+    .question strong {
+      display: block;
+      margin-bottom: 8px;
+      font-family: var(--font-mono);
+      font-size: 23px;
+      letter-spacing: 0.1em;
+      color: var(--orange-ink-hint);
+      text-transform: uppercase;
+    }
+
+    /* ================================================================
+       SPECIALIZED VISUALS
+       ================================================================ */
+    .xss-content { display: grid; grid-template-rows: repeat(3, 1fr) 58px; height: 100%; }
+    .xss-note { display: flex; align-items: center; color: var(--muted); font-size: 23px; }
+
+    .xss-defense { display: grid; grid-template-rows: 1fr 150px; gap: 22px; height: 100%; }
+    .comparison-strip { display: grid; grid-template-columns: 170px 1fr 1fr; }
+    .comparison-strip > div { border-top: 1px solid var(--border); padding: 13px 14px 10px 0; font-size: 23px; line-height: 1.22; }
+    .comparison-strip .head { font-family: var(--font-mono); font-size: 22px; color: var(--orange); text-transform: uppercase; letter-spacing: .07em; }
+    .comparison-strip .row-label { font-weight: 800; font-size: 25px; }
+
+    .pipeline-five { display: grid; grid-template-columns: repeat(5, 1fr); gap: 42px; align-items: center; }
+    .pipeline-five .node { min-height: 106px; text-align: center; align-items: center; }
+
+    .memory-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; height: 100%; }
+    .memory-card { display: grid; grid-template-rows: 46px 1fr; min-height: 0; }
+    .memory-title { font-family: var(--font-mono); font-size: 22px; color: var(--orange); letter-spacing: .1em; text-transform: uppercase; }
+    .stack { display: grid; grid-template-rows: 0.8fr 2.2fr 0.8fr 0.8fr 0.8fr; min-height: 0; border: 1px solid var(--border); }
+    .stack-cell { border-top: 1px solid var(--border); display: grid; grid-template-columns: 220px 1fr; align-items: center; padding: 8px 18px; font-size: 23px; }
+    .stack-cell:first-child { border-top: 0; }
+    .stack-cell strong { font-size: 25px; }
+    .stack-cell small { color: var(--muted); font-size: 22px; }
+    .stack-cell.buffer { border-left: 8px solid var(--orange); }
+    .stack.overflow .stack-cell.buffer,
+    .stack.overflow .stack-cell.canary,
+    .stack.overflow .stack-cell.frame-slot { background: var(--orange); color: var(--ink); border-color: var(--ink); }
+    .stack.overflow .stack-cell small { color: var(--orange-ink-muted); }
+
+    .tamper-map { position: relative; height: 100%; display: grid; grid-template-columns: 1fr 100px 1fr; gap: 22px; }
+    .trust-boundary { border-left: 1px solid var(--orange); border-right: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+    .trust-boundary span { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 22px; letter-spacing: .1em; color: var(--orange); text-transform: uppercase; }
+    .tamper-side { display: grid; grid-template-rows: repeat(3, 1fr); gap: 16px; }
+    .tamper-item { border-top: 1px solid var(--border); padding-top: 14px; display: grid; align-content: center; }
+    .tamper-item .mini-label { font-family: var(--font-mono); font-size: 22px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+    .tamper-item .big { font-size: 34px; font-weight: 800; margin-top: 6px; }
+    .tamper-item .desc { font-size: 23px; line-height: 1.25; margin-top: 7px; color: var(--muted); }
+    .tamper-side.server .big { color: var(--orange); }
+
+    .sequence {
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      column-gap: 64px;
+      position: relative;
+    }
+    .actor { position: relative; border-top: 1px solid var(--border); padding-top: 16px; }
+    .actor::after { content: ""; position: absolute; left: 50%; top: 70px; bottom: 24px; border-left: 1px solid var(--border); }
+    .actor h3 { position: relative; z-index: 2; background: var(--ink); font-size: 29px; line-height: 1.05; }
+    .actor p { position: relative; z-index: 2; margin-top: 8px; background: var(--ink); color: var(--muted); font-size: 22px; }
+    .message { position: absolute; height: 52px; border-top: 1px solid var(--orange); font-size: 22px; padding-top: 7px; z-index: 3; }
+    .message::after { content: ""; position: absolute; right: -1px; top: -6px; border-left: 10px solid var(--orange); border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+    .message.reverse::after { right: auto; left: -1px; transform: rotate(180deg); }
+    .m1 { left: 16.5%; width: 33%; top: 142px; }
+    .m2 { left: 16.5%; width: 66.5%; top: 260px; }
+    .m3 { left: 50%; width: 33%; top: 390px; }
+    .m4 { left: 50%; width: 33%; top: 522px; }
+    .sequence-note { position: absolute; left: 0; bottom: 0; right: 0; border-top: 1px solid var(--border); padding-top: 12px; font-size: 23px; color: var(--muted); z-index: 5; background: var(--ink); }
+
+    .csrf-gate { display: grid; grid-template-rows: 170px 1fr; gap: 28px; height: 100%; }
+    .request-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; min-height: 0; }
+    .request-card { border-top: 1px solid var(--border); padding-top: 14px; }
+    .request-card h3 { font-size: 31px; margin-bottom: 12px; }
+    .request-lines { display: grid; grid-template-columns: 170px 1fr; font-size: 23px; line-height: 1.35; }
+    .request-lines div { border-top: 1px solid var(--border); padding: 8px 0; }
+    .request-lines .key { color: var(--muted); font-family: var(--font-mono); }
+    .decision { margin-top: 14px; font-size: 28px; font-weight: 800; color: var(--orange); }
+
+    .sql-content { display: grid; grid-template-rows: 142px 1fr; gap: 28px; height: 100%; }
+    .sql-branches { display: grid; grid-template-columns: 1fr 1fr; gap: 42px; }
+    .sql-branch { border-top: 1px solid var(--border); padding-top: 14px; }
+    .sql-branch h3 { font-size: 31px; margin-bottom: 12px; }
+    .sql-code { font-family: var(--font-mono); font-size: 22px; line-height: 1.34; color: var(--cream); }
+    .sql-result { margin-top: 14px; color: var(--orange); font-size: 25px; font-weight: 700; }
+
+    .cookie-cycle { display: grid; grid-template-columns: repeat(4, 1fr); gap: 46px; align-items: center; }
+    .cookie-cycle .node { min-height: 118px; text-align: center; align-items: center; }
+    .base64-line { margin-top: 30px; border-top: 1px solid var(--border); padding-top: 18px; display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 24px; }
+    .base64-line h3 { font-size: 29px; }
+
+    .root-matrix th:nth-child(1) { width: 13%; }
+    .root-matrix th:nth-child(2) { width: 25%; }
+    .root-matrix th:nth-child(3) { width: 28%; }
+    .root-matrix th:nth-child(4) { width: 34%; }
+
+    .workflow { display: grid; grid-template-rows: 178px 1fr; gap: 30px; height: 100%; }
+    .seven-flow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 34px; align-items: center; }
+    .seven-flow .node { min-height: 105px; padding: 12px; text-align: center; align-items: center; font-size: 22px; }
+    .report-map { display: grid; grid-template-columns: 1.15fr .85fr; gap: 46px; min-height: 0; }
+    .four-blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 26px; }
+    .report-block { border-top: 1px solid var(--border); padding-top: 12px; }
+    .report-block strong { display: block; color: var(--orange); font-family: var(--font-mono); font-size: 22px; letter-spacing: .07em; text-transform: uppercase; }
+    .report-block p { margin-top: 8px; font-size: 23px; line-height: 1.25; }
+
+    .closing-title {
+      position: absolute;
+      left: 0;
+      top: 118px;
+      max-width: 1550px;
+      font-size: 155px;
+      font-weight: 900;
+      letter-spacing: -0.055em;
+      line-height: 0.88;
+    }
+    .closing-principles {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 115px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 36px;
+    }
+    .principle { border-top: 1px solid var(--orange-border); padding: 16px 0 4px; font-size: 28px; line-height: 1.22; }
+    .principle strong { display: block; margin-bottom: 8px; font-family: var(--font-mono); font-size: 23px; color: var(--orange-ink-hint); letter-spacing: .1em; }
+
+    /* ================================================================
+       OUTSIDE-STAGE CONTROLS AND INLINE EDITING
+       ================================================================ */
+    .deck-controls {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid rgba(240, 236, 229, 0.25);
+      background: rgba(17, 17, 17, 0.92);
+      color: var(--cream);
+      padding: 9px 14px;
+      font-family: var(--font-mono);
+      font-size: clamp(12px, 1.2vw, 16px);
+    }
+    .progress-track { width: clamp(120px, 20vw, 260px); height: 2px; background: var(--hint); }
+    .progress-fill { height: 100%; width: 0; background: var(--orange); }
+
+    .edit-hotzone { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
+    .edit-toggle {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 10001;
+      opacity: 0;
+      pointer-events: none;
+      border: 1px solid var(--orange);
+      background: var(--ink);
+      color: var(--cream);
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      transition: opacity 0.3s ease;
+    }
+    .edit-toggle.show, .edit-toggle.active { opacity: 1; pointer-events: auto; }
+    .capture-mode .deck-controls,
+    .capture-mode .edit-hotzone,
+    .capture-mode .edit-toggle { visibility: hidden !important; }
+    .editing [data-editable] { outline: 2px solid var(--orange); outline-offset: 4px; cursor: text; }
+    .editing .deck-viewport { cursor: text; }
+  </style>
+</head>
+<body>
+  <div class="deck-viewport" aria-live="polite">
+    <main class="deck-stage" id="deckStage" aria-label="Bài trình bày Topic04 gồm 18 slide">
+
+      <!-- SLIDE 01 — Cover -->
+      <section class="slide slide--orange active visible" aria-label="Slide 1: Bìa">
+        <div class="declarative-frame">
+          <div class="catalogue reveal">01 / 18</div>
+          <div class="cover-meta reveal" data-delay="1">Topic04 · Teaching deck</div>
+          <h1 class="cover-title reveal" data-delay="1" data-editable>Sáu lỗ hổng,<br>một ranh giới<br>niềm tin</h1>
+          <p class="cover-subtitle reveal" data-delay="2" data-editable>Thử nghiệm kỹ thuật khai thác lỗ hổng bảo mật ứng dụng web trong môi trường local có kiểm soát.</p>
+          <div class="cover-authors reveal" data-delay="3">
+            <span data-editable>Lê Minh · 21127645</span>
+            <span data-editable>Nguyễn Vũ Bách · 21127224</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 02 — Chapter / learning lens -->
+      <section class="slide slide--orange" aria-label="Slide 2: Khung đọc và phạm vi an toàn">
+        <div class="declarative-frame">
+          <div class="catalogue reveal">02 / 18</div>
+          <div class="cover-meta reveal" data-delay="1">Khung đọc chung</div>
+          <h1 class="chapter-title reveal" data-delay="1" data-editable>Đọc mọi lỗi qua<br>ba câu hỏi</h1>
+          <div class="three-questions">
+            <div class="question reveal" data-delay="2" data-overlap-check><strong>01 / Source</strong><span data-editable>Dữ liệu đến từ đâu?</span></div>
+            <div class="question reveal" data-delay="3" data-overlap-check><strong>02 / Sink</strong><span data-editable>Nó được diễn giải ở đâu?</span></div>
+            <div class="question reveal" data-delay="4" data-overlap-check><strong>03 / Decision</strong><span data-editable>Ai giữ quyết định cuối cùng?</span></div>
+          </div>
+          <p class="chapter-sub reveal" data-delay="4" data-editable>Chỉ local / dữ liệu giả lập / không website thật / không chiếm quyền hệ thống.</p>
+        </div>
+      </section>
+
+      <!-- SLIDE 03 — Lab01 flow -->
+      <section class="slide slide--dark" aria-label="Slide 3: Ba luồng XSS">
+        <div class="frame">
+          <header class="chrome"><span class="lab-label">Lab01 / XSS</span><span>03 / 18</span></header>
+          <h2 class="headline reveal" data-editable>XSS là đường đi từ <span class="accent">source</span> đến sink</h2>
+          <div class="content xss-content">
+            <div class="flow-row reveal" data-delay="1">
+              <div class="flow-label" data-editable>Reflected<small>một request</small></div>
+              <div class="node-flow">
+                <div class="node" data-overlap-check><strong>URL query</strong><small>q từ người dùng</small></div>
+                <div class="node accent" data-overlap-check><strong>HTML response</strong><small>phản chiếu chưa encode</small></div>
+                <div class="node danger" data-overlap-check><strong>Browser parser</strong><small>nạn nhân mở URL</small></div>
+              </div>
+            </div>
+            <div class="flow-row reveal" data-delay="2">
+              <div class="flow-label" data-editable>Stored<small>nhiều lượt xem</small></div>
+              <div class="node-flow">
+                <div class="node" data-overlap-check><strong>Comment form</strong><small>body không tin cậy</small></div>
+                <div class="node accent" data-overlap-check><strong>SQLite</strong><small>payload được lưu</small></div>
+                <div class="node" data-overlap-check><strong>Template render</strong><small>phát lại dữ liệu</small></div>
+                <div class="node danger" data-overlap-check><strong>Mọi viewer</strong><small>tải lại là chạy lại</small></div>
+              </div>
+            </div>
+            <div class="flow-row reveal" data-delay="3">
+              <div class="flow-label" data-editable>DOM-based<small>phía browser</small></div>
+              <div class="node-flow">
+                <div class="node" data-overlap-check><strong>location.hash</strong><small>fragment URL</small></div>
+                <div class="node accent" data-overlap-check><strong>innerHTML</strong><small>parse chuỗi thành DOM</small></div>
+                <div class="node danger" data-overlap-check><strong>Event handler</strong><small>thực thi ở client</small></div>
+              </div>
+            </div>
+            <p class="xss-note reveal" data-delay="4" data-editable>Fragment không đi trong HTTP request: server có thể không thấy source, nhưng browser vẫn chạm sink nguy hiểm.</p>
+          </div>
+          <footer class="foot"><span>Source → storage → sink</span><span>Reflected / Stored / DOM</span></footer>
+        </div>
+      </section>
+
+      <!-- SLIDE 04 — Lab01 defense -->
+      <section class="slide slide--dark" aria-label="Slide 4: Vá XSS">
+        <div class="frame">
+          <header class="chrome"><span class="lab-label">Lab01 / Root fix</span><span>04 / 18</span></header>
+          <h2 class="headline reveal" data-editable>Vá tại sink, không dừng ở validation</h2>
+          <div class="content xss-defense">
+            <div class="two-col wide-left">
+              <div class="comparison-strip reveal" data-delay="1" data-overlap-check>
+                <div class="head">Biến thể</div><div class="head">Vulnerable</div><div class="head">Secure</div>
+                <div class="row-label">Reflected</div><div class="mono">Markup(q)</div><div class="mono orange-text">Jinja autoescape</div>
+                <div class="row-label">Stored</div><div class="mono">Markup(body)</div><div class="mono orange-text">sanitize allowlist</div>
+                <div class="row-label">DOM</div><div class="mono">innerHTML</div><div class="mono orange-text">textContent</div>
+              </div>
+              <div class="layer-stack reveal" data-delay="2" data-overlap-check>
+                <div class="layer"><span class="layer-num">01</span><strong>Contextual encoding</strong><span>HTML / JS / URL / attribute</span></div>
+                <div class="layer"><span class="layer-num">02</span><strong>Safe DOM API</strong><span>textContent khi chỉ cần text</span></div>
+                <div class="layer"><span class="layer-num">03</span><strong>Sanitization</strong><span>thư viện tin cậy nếu cho phép rich text</span></div>
+                <div class="layer"><span class="layer-num">04</span><strong>Defense in depth</strong><span>CSP + HttpOnly + Secure + SameSite</span></div>
+                <div class="layer"><span class="layer-num">05</span><strong>Validation</strong><span>hỗ trợ, không thay output encoding</span></div>
+              </div>
+            </div>
+            <div class="takeaways">
+              <div class="takeaway reveal" data-delay="2" data-overlap-check><strong>Validation</strong><span data-editable>Input hợp lệ ở context này vẫn có thể nguy hiểm ở context khác.</span></div>
+              <div class="takeaway reveal" data-delay="3" data-overlap-check><strong>CSP</strong><span data-editable>Giảm khả năng thực thi; không biến sink nguy hiểm thành an toàn.</span></div>
+              <div class="takeaway reveal" data-delay="4" data-overlap-check><strong>Phạm vi</strong><span data-editable>Stored lan tới mọi viewer; HttpOnly chỉ giảm rủi ro đọc cookie.</span></div>
+            </div>
+          </div>
+          <footer class="foot"><span>Root fix: encode / sanitize / safe DOM API</span><span>Defense in depth ≠ root fix</span></footer>
+        </div>
+      </section>
+
+      <!-- SLIDE 05 — Lab02 flow and memory -->
+      <section class="slide slide--dark" aria-label="Slide 5: HTTP tới stack memory">
+        <div class="frame">
+          <header class="chrome"><span class="lab-label">Lab02 / Buffer Overflow</span><span>05 / 18</span></header>
+          <h2 class="headline small reveal" data-editable>HTTP có thể chạm vùng nhớ stack</h2>
+          <div class="content" style="display:grid;grid-template-rows:132px 1fr;gap:24px;">
+            <div class="pipeline-five reveal" data-delay="1">
+              <div class="node" data-overlap-check><strong>Browser</strong><small>input local</small></div>
+              <div class="node" data-overlap-check><strong>POST /submit</strong><small>request hợp lệ</small></div>
+              <div class="node" data-overlap-check><strong>Flask</strong><small>request limit</small></div>
+              <div class="node accent" data-overlap-check><strong>subprocess</strong><small>shell=False</small></div>
+              <div class="node danger" data-overlap-check><strong>C / strcpy</strong><small>name[32]</small></div>
+            </div>
+            <div class="memory-pair">
+              <div class="memory-card reveal" data-delay="2" data-overlap-check>
+                <div class="memory-title">Input ngắn / trong capacity</div>
+                <div class="stack">
+                  <div class="stack-cell"><strong>Địa chỉ cao</strong><small>stack grows ↓</small></div>
+                  <div class="stack-cell buffer"><strong>name[32]</strong><small>31 byte dữ liệu + 1 byte null</small></div>
+                  <div class="stack-cell canary"><strong>Canary</strong><small>nếu build bật bảo vệ</small></div>
+                  <div class="stack-cell frame-slot"><strong>Saved frame</strong><small>metadata của stack frame</small></div>
+                  <div class="stack-cell"><strong>Return address</strong><small>control data</small></div>
+                </div>
+              </div>
+              <div class="memory-card reveal" data-delay="3" data-overlap-check>
+                <div class="memory-title">Input dài / ghi vượt biên</div>
+                <div class="stack overflow">
+                  <div class="stack-cell"><strong>Địa chỉ cao</strong><small>vùng chưa bị chạm</small></div>
+                  <div class="stack-cell buffer"><strong>A × N</strong><small>strcpy không biết capacity đích</small></div>
+                  <div class="stack-cell canary"><strong>Canary bị đổi</strong><small>có thể phát hiện overflow</small></div>
+                  <div class="stack-cell frame-slot"><strong>Frame bị hỏng</strong><small>undefined behavior</small></div>
+                  <div class="stack-cell"><strong>Return address</strong><small>control data có thể bị ảnh hưởng</small></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <footer class="foot"><span>Lab chỉ quan sát crash có kiểm soát</span><span>Không shellcode / ROP / chiếm quyền</span></footer>
+        </div>
+      </section>
+
+      <!-- SLIDE 06 — Lab02 fixes -->
+      <section class="slide slide--dark" aria-label="Slide 6: Vá Buffer Overflow">
+        <div class="frame">
+          <header class="chrome"><span class="lab-label">Lab02 / Root fix</span><span>06 / 18</span></header>
+          <h2 class="headline reveal" data-editable>Source fix trước, hardening sau</h2>
+          <div class="content" style="display:grid;grid-template-rows:1fr 142px;gap:24px;">
+            <div class="two-col wide-left">
+              <div class="code-pair reveal" data-delay="1" data-overlap-check>
+                <div class="code-box">
+                  <span class="code-label">Vulnerable</span>
+                  <pre>char name[32];
+strcpy(name, input);
+
+// không biết capacity
+// ghi vượt biên nếu input dài</pre>
+                </div>
+                <div class="code-box secure">
+                  <span class="code-label">Secure × 2</span>
+                  <pre>len = strnlen(input, 33);
+if (len &gt; 31) reject();
+
+n = snprintf(name, 32, "%s", input);
+if (n &gt;= 32) reject();</pre>
+                </div>
+              </div>
+              <div class="layer-stack reveal" data-delay="2" data-overlap-check>
+                <div class="layer"><span class="layer-num">01</span><strong>Source</strong><span>length check / bounded write</span></div>
+                <div class="layer"><span class="layer-num">02</span><strong>HTTP</strong><span>request limit chặn đầu vào quá lớn</span></div>
+                <div class="layer"><span class="layer-num">03</span><strong>Compiler</strong><span>stack protector + FORTIFY + PIE</span></div>
+                <div class="layer"><span class="layer-num">04</span><strong>Loader</strong><span>RELRO + ASLR</span></div>
+                <div class="layer"><span class="layer-num">05</span><strong>OS</strong><span>NX/DEP + ưu tiên memory-safe</span></div>
+              </div>
+            </div>
+            <div class="takeaways">
+              <div class="takeaway reveal" data-delay="2" data-overlap-check><strong>Khác Injection</strong><span data-editable>Overflow phá vùng nhớ; Injection đổi cú pháp hoặc ý nghĩa lệnh/query.</span></div>
+              <div class="takeaway reveal" data-delay="3" data-overlap-check><strong>Firewall</strong><span data-editable>HTTP vẫn hợp lệ; capacity nội bộ của chương trình C mới là ranh giới bị phá.</span></div>
+              <div class="takeaway reveal" data-delay="4" data-overlap-check><strong>Evidence</strong><span data-editable>Mốc crash/overwrite phải đến từ GDB/ASan thật, không suy từ source.</span></div>
+            </div>
+          </div>
+          <footer class="foot"><span>Invariant: tối đa 31 byte dữ liệu</span><span>Hardening giảm khai thác, không vá strcpy</span></footer>
+        </div>
+      </section>
+
+      <!-- SLIDE 07 — Lab03 trust boundary -->
+      <section class="slide slide--dark" aria-label="Slide 7: Parameter Tampering">
+        <div class="frame">
+          <header class="chrome"><span class="lab-label">Lab03 / Parameter Tampering</span><span>07 / 18</span></header>
+          <h2 class="headline reveal" data-editable>Client gửi tham số; server giữ quyền quyết định</h2>
+          <div class="content tamper-map">
+            <div class="tamper-side client reveal" data-delay="1" data-overlap-check>
+              <div class="tamper-item"><span class="mini-label">Checkout</span><span class="big mono">price = 1</span><span class="desc">Hidden field vẫn là input do client kiểm soát.</span></div>
+              <div class="tamper-item"><span class="mini-label">Invoice</span><span class="big mono">id = 1002</span><span class="desc">Đổi ID có thể trỏ sang object của người khác.</span></div>
+              <div class="tamper-item"><span class="mini-label">Profile</span><span class="big mono">role = admin</span><span class="desc">Mass assignment biến field nhạy cảm thành đầu vào.</span></div>
+            </div>
+            <div class="trust-boundary reveal" data-delay="2"><span>Trust boundary</span></div>
+            <div class="tamper-side server reveal" data-delay="3" data-overlap-check>
+              <div class="tamper-item"><span class="mini-label">Nguồn giá</span><span class="big">Database hiện tại</span><span class="desc">Server đọc products.price_vnd rồi mới tính tổng.</span></div>
+              <div class="tamper-item"><span class="mini-label">Object policy</span><span class="big">Owner hoặc admin</span><span class="desc">Kiểm quyền trên chính invoice trước khi trả dữ liệu.</span></div>
+              <div class="tamper-item"><span class="mini-label">Field policy</span><span class="big">Allowlist email</span><span class="desc">Identity từ session; loại role, user_id, balance.</span></div>
+            </div>
+          </div>
+          <footer class="foot"><span>Validation kiểu/range ≠ authorization</span><span>Policy thuộc về server</span></footer>
+        </div>
+      </section>
+
+      <!-- SLIDE 08 — Lab03 answer matrix -->
+      <section class="slide slide--dark" aria-label="Slide 8: Ma trận Parameter Tampering">
+        <div class="frame">
+          <header class="chrome"><span class="lab-label">Lab03 / Root fix</span><span>08 / 18</span></header>
+          <h2 class="headline reveal" data-editable>Ba tampering, ba nguồn authoritative</h2>
+          <div class="content" style="display:grid;grid-template-rows:1fr 138px;gap:24px;">
+            <table class="matrix reveal" data-delay="1" data-overlap-check>
+              <thead><tr><th>Scenario</th><th>Client sửa</th><th>Kiểm tra bị thiếu</th><th>Nguồn authoritative</th><th>Secure result</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Giá checkout</strong></td><td class="mono">price</td><td>Đối chiếu giá server</td><td>Product trong database</td><td>Tính lại tổng đúng</td></tr>
+                <tr><td><strong>IDOR invoice</strong></td><td class="mono">id</td><td>Object-level authz</td><td>Session + owner của invoice</td><td>403 nếu không sở hữu</td></tr>
+                <tr><td><strong>Role tampering</strong></td><td class="mono">role</td><td>Field allowlist</td><td>Session + role trong DB</td><td>Giữ role hiện tại</td></tr>
+              </tbody>
+            </table>
+            <div class="takeaways">
+              <div class="takeaway reveal" data-delay="2" data-overlap-check><strong>Hidden field</strong><span data-editable>Chỉ ẩn trong UI; không phải cơ chế bảo mật.</span></div>
+              <div class="takeaway reveal" data-delay="3" data-overlap-check><strong>IDOR</strong><span data-editable>Thuộc Broken Access Control vì thiếu kiểm tra owner trên object.</span></div>
+              <div class="takeaway reveal" data-delay="4" data-overlap-check><strong>Khác SQLi</strong><span data-editable>Tampering đổi giá trị/policy; SQLi đổi cấu trúc truy vấn.</span></div>
+            </div>
+          </div>
+          <footer class="foot"><span>Identity từ session</span><span>Giá / owner / role từ server</span></footer>
+        </div>
+      </section>
+
+      <!-- SLIDE 09 — Lab04 sequence -->
+      <section class="slide slide--dark" aria-label="Slide 9: Luồng CSRF">
+        <div class="frame">
+          <header class="chrome"><span class="lab-label">Lab04 / CSRF</span><span>09 / 18</span></header>
+          <h2 class="headline reveal" data-editable>Session chứng minh danh tính, không chứng minh ý định</h2>
+          <div class="content sequence reveal" data-delay="1" data-overlap-check>
+            <div class="actor"><h3>Trang giả lập local</h3><p>form cross-origin cố định</p></div>
+            <div class="actor"><h3>Victim browser</h3><p>đã có session cookie</p></div>
+            <div class="actor"><h3>Target application</h3><p>state-changing endpoint</p></div>
+            <div class="message m1">01 / mở trang + bấm gửi form</div>
+            <div class="message m2">02 / POST change-email + cookie tự gắn</div>
+            <div class="message m3">03 / thiếu token, origin cross-origin</div>
+            <div class="message m4 reverse">04 / vulnerable: cập nhật email</div>
+            <div class="sequence-note" data-editable>SOP thường ngăn script đọc response; không cần đọc response để gây thay đổi trạng thái. CORS vì vậy không phải bản vá CSRF.</div>
+          </div>
+          <footer class="foot"><span>Cookie theo target request</span><span>Credential ≠ intent</span></footer>
+        </div>
+      </section>
+
+      <!-- SLIDE 10 — Lab04 defenses -->
+      <section class="slide slide--dark" aria-label="Slide 10: Vá CSRF">
+        <div class="frame">
+          <header class="chrome"><span class="lab-label">Lab04 / Root fix</span><span>10 / 18</span></header>
+          <h2 class="headline reveal" data-editable>Deny trước mutation</h2>
+          <div class="content csrf-gate">
+            <div class="pipeline-five reveal" data-delay="1">
+              <div class="node" data-overlap-check><strong>Session</strong><small>victim đã login</small></div>
+              <div class="node" data-overlap-check><strong>Origin / Referer</strong><small>exact allowlist</small></div>
+              <div class="node accent" data-overlap-check><strong>CSRF token</strong><small>unique per session</small></div>
+              <div class="node" data-overlap-check><strong>Input</strong><small>method POST + validate</small></div>
+              <div class="node danger" data-overlap-check><strong>Mutation</strong><small>chỉ chạy sau allow</small></div>
+            </div>
+            <div class="request-pair">
+              <div class="request-card reveal" data-delay="2" data-overlap-check>
+                <h3>Vulnerable request</h3>
+                <div class="request-lines">
+                  <div class="key">Cookie</div><div>có — browser tự gửi</div>
+                  <div class="key">Token</div><div>thiếu</div>
+                  <div class="key">Origin</div><div>khác origin</div>
+                  <div class="key">Decision</div><div>allow chỉ vì session hợp lệ</div>
+                </div>
+                <div class="decision">Email bị đổi</div>
+              </div>
+              <div class="request-card reveal" data-delay="3" data-overlap-check>
+                <h3>Secure policy</h3>
+                <div class="request-lines">
+                  <div class="key">Token</div><div>random + compare server-side</div>
+                  <div class="key">Origin</div><div>exact match</div>
+                  <div class="key">Cookie</div><div>SameSite hỗ trợ</div>
+                  <div class="key">Sensitive</div><div>re-authentication</div>
+                </div>
+                <div class="decision">Sai một gate → 403, state giữ nguyên</div>
+              </div>
+            </div>
+          </div>
+          <footer class="foot"><span>POST-only cho state change</span><span>CAPTCHA chỉ hỗ trợ</span></footer>
+        </div>
+      </section>
+
+      <!-- SLIDE 11 — Lab05 SQLi flow -->
+      <section class="slide slide--dark" aria-label="Slide 11: SQL Injection">
+        <div class="frame">
+          <header class="chrome"><span class="lab-label">Lab05 / SQL Injection</span><span>11 / 18</span></header>
+          <h2 class="headline reveal" data-editable>Nối chuỗi trộn code và dữ liệu</h2>
+          <div class="content sql-content">
+            <div class="pipeline-five reveal" data-delay="1">
+              <div class="node" data-overlap-check><strong>Input</strong><small>chuỗi lab cố định</small></div>
+              <div class="node accent" data-overlap-check><strong>Concatenation</strong><small>data nhập vào SQL</small></div>
+              <div class="node" data-overlap-check><strong>SQL parser</strong><small>đọc input như syntax</small></div>
+              <div class="node danger" data-overlap-check><strong>Logic đổi</strong><small>WHERE khác dự kiến</small></div>
+              <div class="node" data-overlap-check><strong>Result</strong><small>auth / rows bị đổi</small></div>
+            </div>
+            <div class="sql-branches">
+              <div class="sql-branch reveal" data-delay="2" data-overlap-check>
+                <h3>Authentication bypass</h3>
+                <p class="sql-code">username = "admin_lab' -- "<br><br>WHERE username='admin_lab' -- '<br>AND password_digest='…'</p>
+                <p class="sql-result" data-editable>Điều kiện password không còn tham gia logic.</p>
+              </div>
+              <div class="sql-branch reveal" data-delay="3" data-overlap-check>
+                <h3>Expanded search</h3>
+                <p class="sql-code">keyword = "%' OR 1=1 -- "<br><br>WHERE name LIKE '%%'<br>OR 1=1 -- %'</p>
+                <p class="sql-result" data-editable>Tập kết quả mở rộng ngoài baseline dự kiến.</p>
+              </div>
+            </div>
+          </div>
+          <footer class="foot"><span>Chỉ SQLite local / SELECT-only</span><span>Không UNION / blind / stacked query</span></footer>
+        </div>
+      </section>
+
+      <!-- SLIDE 12 — Lab05 fixes -->
+      <section class="slide slide--dark" aria-label="Slide 12: Vá SQL Injection">
+        <div class="frame">
+          <header class="chrome"><span class="lab-label">Lab05 / Root fix</span><span>12 / 18</span></header>
+          <h2 class="headline reveal" data-editable>Parameter binding khóa cấu trúc SQL</h2>
+          <div class="content" style="display:grid;grid-template-rows:1fr 142px;gap:24px;">
+            <div class="two-col wide-left">
+              <div class="code-pair reveal" data-delay="1" data-overlap-check>
+                <div class="code-box">
+                  <span class="code-label">Nối chuỗi</span>
+                  <pre>sql = "... WHERE username='" \
+      + username + "'"
+cursor.execute(sql)
+
+// input có thể thành syntax</pre>
+                </div>
+                <div class="code-box secure">
+                  <span class="code-label">Bind tham số</span>
+                  <pre>sql = "... WHERE username = ?"
+cursor.execute(sql, (username,))
+
+// structure cố định
+// input luôn là data</pre>
+                </div>
+              </div>
+              <div class="layer-stack reveal" data-delay="2" data-overlap-check>
+                <div class="layer"><span class="layer-num">01</span><strong>Primary fix</strong><span>prepared / parameterized query</span></div>
+                <div class="layer"><span class="layer-num">02</span><strong>Password</strong><span>PBKDF2 / bcrypt / Argon2</span></div>
+                <div class="layer"><span class="layer-num">03</span><strong>Error</strong><span>generic message, không lộ schema/query</span></div>
+                <div class="layer"><span class="layer-num">04</span><strong>Database</strong><span>least privilege + result limit</span></div>
+                <div class="layer"><span class="layer-num">05</span><strong>Support</strong><span>validation + logging + WAF</span></div>
+              </div>
+            </div>
+            <div class="takeaways">
+              <div class="takeaway reveal" data-delay="2" data-overlap-check><strong>Tầng lỗi</strong><span data-editable>Data-access/query construction trước khi SQL parser thực thi.</span></div>
+              <div class="takeaway reveal" data-delay="3" data-overlap-check><strong>Escaping / ORM</strong><span data-editable>Thủ công dễ sai; raw SQL hoặc interpolation vẫn có thể tái tạo lỗi.</span></div>
+              <div class="takeaway reveal" data-delay="4" data-overlap-check><strong>Retest</strong><span data-editable>Cùng input phải được bind như literal và không đổi logic query.</span></div>
+            </div>
+          </div>
+          <footer class="foot"><span>Tách code khỏi data</span><span>WAF không thay sửa code</span></footer>
+        </div>
+      </section>
+
+      <!-- SLIDE 13 — Lab06 flow -->
+      <section class="slide slide--dark" aria-label="Slide 13: Cookie Poisoning">
+        <div class="frame">
+          <header class="chrome"><span class="lab-label">Lab06 / Cookie Poisoning</span><span>13 / 18</span></header>
+          <h2 class="headline reveal" data-editable>Cookie quay lại server như dữ liệu client</h2>
+          <div class="content" style="display:grid;grid-template-rows:1fr 170px;gap:24px;">
+            <div class="cookie-cycle reveal" data-delay="1">
+              <div class="node" data-overlap-check><strong>Server đặt cookie</strong><small>role=user</small></div>
+              <div class="node accent" data-overlap-check><strong>Client lưu</strong><small>Name / Value / flags</small></div>
+              <div class="node danger" data-overlap-check><strong>Client sửa</strong><small>role=admin</small></div>
+              <div class="node" data-overlap-check><strong>Server quyết định</strong><small>tin cookie → allow sai</small></div>
+            </div>
+            <div class="base64-line reveal" data-delay="2" data-overlap-check>
+              <h3>Base64 cũng vậy</h3>
+              <div class="node-flow">
+                <div class="node" data-overlap-check><strong>Decode</strong><small>JSON đọc được</small></div>
+                <div class="node danger" data-overlap-check><strong>Sửa role</strong><small>không cần secret</small></div>
+                <div class="node" data-overlap-check><strong>Encode lại</strong><small>chỉ biểu diễn bytes</small></div>
+                <div class="node accent" data-overlap-check><strong>Server tin</strong><small>không integrity</small></div>
+              </div>
+            </div>
+          </div>
+          <footer class="foot"><span>Plain / Base64: client-controlled</span><span>Cookie flags không thay authorization</span></footer>
+        </div>
+      </section>
+
+      <!-- SLIDE 14 — Lab06 model matrix -->
+      <section class="slide slide--dark" aria-label="Slide 14: So sánh mô hình cookie và session">
+        <div class="frame">
+          <header class="chrome"><span class="lab-label">Lab06 / Root fix</span><span>14 / 18</span></header>
+          <h2 class="headline small reveal" data-editable>Chọn state model theo thuộc tính cần bảo vệ</h2>
+          <div class="content" style="display:grid;grid-template-rows:1fr 124px;gap:20px;">
+            <table class="matrix compact reveal" data-delay="1" data-overlap-check>
+              <thead><tr><th>Mô hình</th><th>Đọc được</th><th>Phát hiện sửa</th><th>Confidentiality</th><th>Revoke tức thời</th><th>Nguồn role</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Plain</strong></td><td>Có</td><td>Không</td><td>Không</td><td>Không</td><td>Client — sai</td></tr>
+                <tr><td><strong>Base64</strong></td><td>Có</td><td>Không</td><td>Không</td><td>Không</td><td>Client — sai</td></tr>
+                <tr><td><strong>Signed</strong></td><td>Có</td><td>Có</td><td>Không</td><td>Hạn chế</td><td>Payload đã ký</td></tr>
+                <tr><td><strong>Encrypted</strong></td><td>Không</td><td>Có nếu AEAD/MAC</td><td>Có</td><td>Hạn chế</td><td>Không nên mang role động</td></tr>
+                <tr><td><strong>Server session</strong></td><td>Opaque ID</td><td>Lookup server</td><td>State ở server</td><td>Có</td><td>Database hiện tại</td></tr>
+              </tbody>
+            </table>
+            <div class="takeaways">
+              <div class="takeaway reveal" data-delay="2" data-overlap-check><strong>Signed cookie</strong><span data-editable>Bảo vệ integrity/authenticity; không che payload.</span></div>
+              <div class="takeaway reveal" data-delay="3" data-overlap-check><strong>Session lifecycle</strong><span data-editable>Opaque ID → hash lookup → active/expiry → rotate → revoke.</span></div>
+              <div class="takeaway reveal" data-delay="4" data-overlap-check><strong>Authorization</strong><span data-editable>Policy + role hiện tại phía server trên từng request.</span></div>
+            </div>
+          </div>
+          <footer class="foot"><span>Poisoning sửa state; hijacking lấy token</span><span>Base64 ≠ encryption</span></footer>
+        </div>
+      </section>
+
+      <!-- SLIDE 15 — Chapter synthesis -->
+      <section class="slide slide--orange" aria-label="Slide 15: Chuyển chương tổng hợp">
+        <div class="declarative-frame">
+          <div class="catalogue reveal">15 / 18</div>
+          <div class="cover-meta reveal" data-delay="1">Tổng hợp</div>
+          <h1 class="chapter-title reveal" data-delay="1" data-editable>Sáu lỗi khác tên.<br>Cùng một câu hỏi.</h1>
+          <div class="rule-stub reveal" data-delay="2" style="position:absolute;left:0;bottom:180px;"></div>
+          <p class="chapter-sub reveal" data-delay="3" data-editable>Ứng dụng đã đặt niềm tin ở đâu?</p>
+        </div>
+      </section>
+
+      <!-- SLIDE 16 — Cross-lab matrix -->
+      <section class="slide slide--dark" aria-label="Slide 16: Ma trận sáu lab">
+        <div class="frame">
+          <header class="chrome"><span class="lab-label">Ma trận root cause</span><span>16 / 18</span></header>
+          <h2 class="headline small reveal" data-editable>Điểm gãy khác nhau; root fix luôn ở ranh giới</h2>
+          <div class="content">
+            <table class="matrix compact root-matrix reveal" data-delay="1" data-overlap-check>
+              <thead><tr><th>Lab</th><th>Dữ liệu bị tin sai</th><th>Điểm gãy</th><th>Root fix</th></tr></thead>
+              <tbody>
+                <tr><td><strong>XSS</strong></td><td>URL / form / storage</td><td>HTML hoặc DOM sink</td><td>Encode/sanitize đúng context; safe DOM API</td></tr>
+                <tr><td><strong>Overflow</strong></td><td>Input HTTP đi tới C</td><td>Capacity của buffer</td><td>Length invariant + bounded write</td></tr>
+                <tr><td><strong>Tampering</strong></td><td>Giá / ID / role</td><td>Business/access policy</td><td>DB + session + object authorization + allowlist</td></tr>
+                <tr><td><strong>CSRF</strong></td><td>Request có cookie</td><td>Ý định trước mutation</td><td>Token + Origin/Referer + deny before write</td></tr>
+                <tr><td><strong>SQLi</strong></td><td>Input ghép vào query</td><td>SQL parser</td><td>Parameterized query; tách code/data</td></tr>
+                <tr><td><strong>Cookie</strong></td><td>Role/state ở client</td><td>Authorization source</td><td>Server session + current DB role + revoke</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <footer class="foot"><span>Client không phải vùng an toàn</span><span>Root fix gần quyết định nhất</span></footer>
+        </div>
+      </section>
+
+      <!-- SLIDE 17 — Workflow and report evidence -->
+      <section class="slide slide--dark" aria-label="Slide 17: Chu trình thực hành và báo cáo">
+        <div class="frame">
+          <header class="chrome"><span class="lab-label">Quy trình thực hành</span><span>17 / 18</span></header>
+          <h2 class="headline small reveal" data-editable>Bằng chứng đi trước kết luận</h2>
+          <div class="content workflow">
+            <div class="seven-flow reveal" data-delay="1">
+              <div class="node" data-overlap-check><strong>01</strong><small>Nhận diện</small></div>
+              <div class="node" data-overlap-check><strong>02</strong><small>Khai thác local</small></div>
+              <div class="node" data-overlap-check><strong>03</strong><small>Quan sát</small></div>
+              <div class="node" data-overlap-check><strong>04</strong><small>Phân tích</small></div>
+              <div class="node" data-overlap-check><strong>05</strong><small>Đánh giá</small></div>
+              <div class="node accent" data-overlap-check><strong>06</strong><small>Vá lỗi</small></div>
+              <div class="node danger" data-overlap-check><strong>07</strong><small>Retest secure</small></div>
+            </div>
+            <div class="report-map">
+              <div class="four-blocks reveal" data-delay="2" data-overlap-check>
+                <div class="report-block"><strong>01 / Bối cảnh</strong><p data-editable>Tên lab · mục tiêu · môi trường · phạm vi an toàn.</p></div>
+                <div class="report-block"><strong>02 / Thực hành</strong><p data-editable>Các bước · kết quả quan sát · request/response.</p></div>
+                <div class="report-block"><strong>03 / Phân tích</strong><p data-editable>Nguyên nhân · ảnh hưởng · phòng chống · bản vá.</p></div>
+                <div class="report-block"><strong>04 / Kết luận</strong><p data-editable>Bài học · retest · phụ lục ảnh/log/trace.</p></div>
+              </div>
+              <div class="panel reveal" data-delay="3" data-overlap-check>
+                <div class="panel-title">Evidence tối thiểu</div>
+                <ul class="slash-list">
+                  <li data-editable>Ảnh từng bước và trạng thái trước/sau.</li>
+                  <li data-editable>Request, response, log, trace hoặc debugger thật.</li>
+                  <li data-editable>Before/after code và retest cùng input.</li>
+                </ul>
+                <p class="body-small muted" style="margin-top:20px;" data-editable>Không biến source hoặc hướng dẫn thành kết quả runtime.</p>
+              </div>
+            </div>
+          </div>
+          <footer class="foot"><span>Chu trình 7 bước</span><span>11 mục báo cáo → 4 khối đọc nhanh</span></footer>
+        </div>
+      </section>
+
+      <!-- SLIDE 18 — Closing -->
+      <section class="slide slide--orange" aria-label="Slide 18: Kết luận">
+        <div class="declarative-frame">
+          <div class="catalogue reveal">18 / 18</div>
+          <div class="cover-meta reveal" data-delay="1">Kết luận</div>
+          <h1 class="closing-title reveal" data-delay="1" data-editable>Đặt niềm tin<br>đúng chỗ</h1>
+          <div class="closing-principles">
+            <div class="principle reveal" data-delay="2" data-overlap-check><strong>01 / Data</strong><span data-editable>Mọi dữ liệu từ client đều không đáng tin cậy.</span></div>
+            <div class="principle reveal" data-delay="3" data-overlap-check><strong>02 / Decision</strong><span data-editable>Xác thực, phân quyền và toàn vẹn thuộc về server.</span></div>
+            <div class="principle reveal" data-delay="4" data-overlap-check><strong>03 / Evidence</strong><span data-editable>Chỉ kết luận điều đã được quan sát và retest.</span></div>
+          </div>
+          <div class="cover-authors reveal" data-delay="4">
+            <span data-editable>Lê Minh · 21127645</span>
+            <span data-editable>Nguyễn Vũ Bách · 21127224</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Controls live outside the fixed stage and never enter slide captures. -->
+  <nav class="deck-controls" aria-label="Điều khiển trình chiếu">
+    <span id="slideCounter">01 / 18</span>
+    <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+    <span>← → / Space</span>
+  </nav>
+
+  <!-- Inline editing: hover/click the top-left hotzone or press E. -->
+  <div class="edit-hotzone" aria-hidden="true"></div>
+  <button class="edit-toggle" id="editToggle" type="button" title="Chế độ chỉnh sửa (E)">Edit · E</button>
+
+  <script>
+    /* ================================================================
+       PRESENTATION CONTROLLER
+       Keyboard, wheel, touch, stage scaling and active/visible switching.
+       ================================================================ */
+    class SlidePresentation {
+      constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.currentSlide = 0;
+        this.stage = document.getElementById('deckStage');
+        this.counter = document.getElementById('slideCounter');
+        this.progress = document.getElementById('progressFill');
+        this.wheelLocked = false;
+        this.touchStartX = null;
+        this.touchStartY = null;
+        this.setupStageScale();
+        this.setupKeyboardNav();
+        this.setupWheelNav();
+        this.setupTouchNav();
+        this.setupIntersectionObserver();
+        this.showSlide(0);
+      }
+
+      setupStageScale() {
+        const scale = () => {
+          const factor = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+          const x = (window.innerWidth - 1920 * factor) / 2;
+          const y = (window.innerHeight - 1080 * factor) / 2;
+          this.stage.style.transform = `translate(${x}px, ${y}px) scale(${factor})`;
+        };
+        scale();
+        window.addEventListener('resize', scale, { passive: true });
+      }
+
+      setupKeyboardNav() {
+        document.addEventListener('keydown', (event) => {
+          if (event.target && event.target.getAttribute('contenteditable') === 'true') return;
+          if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(event.key)) {
+            event.preventDefault();
+            this.next();
+          }
+          if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(event.key)) {
+            event.preventDefault();
+            this.previous();
+          }
+          if (event.key === 'Home') this.showSlide(0);
+          if (event.key === 'End') this.showSlide(this.slides.length - 1);
+        });
+      }
+
+      setupWheelNav() {
+        window.addEventListener('wheel', (event) => {
+          if (this.wheelLocked || Math.abs(event.deltaY) < 24) return;
+          this.wheelLocked = true;
+          event.deltaY > 0 ? this.next() : this.previous();
+          window.setTimeout(() => { this.wheelLocked = false; }, 650);
+        }, { passive: true });
+      }
+
+      setupTouchNav() {
+        window.addEventListener('touchstart', (event) => {
+          const touch = event.changedTouches[0];
+          this.touchStartX = touch.clientX;
+          this.touchStartY = touch.clientY;
+        }, { passive: true });
+        window.addEventListener('touchend', (event) => {
+          if (this.touchStartX === null || this.touchStartY === null) return;
+          const touch = event.changedTouches[0];
+          const dx = touch.clientX - this.touchStartX;
+          const dy = touch.clientY - this.touchStartY;
+          if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) dx < 0 ? this.next() : this.previous();
+          this.touchStartX = null;
+          this.touchStartY = null;
+        }, { passive: true });
+      }
+
+      setupIntersectionObserver() {
+        this.stageObserver = new IntersectionObserver((entries) => {
+          document.body.classList.toggle('stage-in-viewport', entries.some((entry) => entry.isIntersecting));
+        }, { threshold: 0.5 });
+        this.stageObserver.observe(this.stage);
+      }
+
+      showSlide(index) {
+        const nextIndex = Math.max(0, Math.min(index, this.slides.length - 1));
+        this.currentSlide = nextIndex;
+        this.slides.forEach((slide, i) => {
+          const active = i === nextIndex;
+          slide.classList.toggle('active', active);
+          slide.classList.toggle('visible', active);
+          slide.setAttribute('aria-hidden', active ? 'false' : 'true');
+        });
+        const current = String(nextIndex + 1).padStart(2, '0');
+        const total = String(this.slides.length).padStart(2, '0');
+        this.counter.textContent = `${current} / ${total}`;
+        this.progress.style.width = `${((nextIndex + 1) / this.slides.length) * 100}%`;
+        history.replaceState(null, '', `#slide-${nextIndex + 1}`);
+      }
+
+      next() { this.showSlide(this.currentSlide + 1); }
+      previous() { this.showSlide(this.currentSlide - 1); }
+    }
+
+    /* ================================================================
+       INLINE EDITOR
+       Local-only edits persist in localStorage. Ctrl+S exports HTML.
+       ================================================================ */
+    class InlineEditor {
+      constructor(controller) {
+        this.controller = controller;
+        this.isActive = false;
+        this.items = Array.from(document.querySelectorAll('[data-editable]'));
+        this.storageKey = 'topic04-short-deck-edits-v1';
+        this.restore();
+        this.items.forEach((item, index) => item.addEventListener('input', () => this.save(index, item.innerHTML)));
+      }
+
+      toggleEditMode() {
+        this.isActive = !this.isActive;
+        document.body.classList.toggle('editing', this.isActive);
+        document.getElementById('editToggle').classList.toggle('active', this.isActive);
+        this.items.forEach((item) => item.setAttribute('contenteditable', this.isActive ? 'true' : 'false'));
+      }
+
+      snapshot() {
+        return this.items.map((item) => item.innerHTML);
+      }
+
+      save() {
+        localStorage.setItem(this.storageKey, JSON.stringify(this.snapshot()));
+      }
+
+      restore() {
+        const saved = JSON.parse(localStorage.getItem(this.storageKey) || 'null');
+        if (!Array.isArray(saved)) return;
+        saved.forEach((html, index) => { if (this.items[index] && typeof html === 'string') this.items[index].innerHTML = html; });
+      }
+
+      exportHtml() {
+        this.save();
+        const blob = new Blob(['<!DOCTYPE html>\n' + document.documentElement.outerHTML], { type: 'text/html;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'Topic04_6Labs_short_edited.html';
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }
+    }
+
+    const deckController = new SlidePresentation();
+    const editor = new InlineEditor(deckController);
+    window.deckController = deckController;
+    window.deckEditor = editor;
+
+    const hashMatch = location.hash.match(/slide-(\d+)/);
+    if (hashMatch) deckController.showSlide(Number(hashMatch[1]) - 1);
+
+    const hotzone = document.querySelector('.edit-hotzone');
+    const editToggle = document.getElementById('editToggle');
+    let hideTimeout = null;
+    hotzone.addEventListener('mouseenter', () => { clearTimeout(hideTimeout); editToggle.classList.add('show'); });
+    hotzone.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!editor.isActive) editToggle.classList.remove('show'); }, 400); });
+    editToggle.addEventListener('mouseenter', () => clearTimeout(hideTimeout));
+    editToggle.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!editor.isActive) editToggle.classList.remove('show'); }, 400); });
+    editToggle.addEventListener('click', () => editor.toggleEditMode());
+    hotzone.addEventListener('click', () => editor.toggleEditMode());
+
+    document.addEventListener('keydown', (event) => {
+      const editingText = event.target && event.target.getAttribute('contenteditable') === 'true';
+      if ((event.key === 'e' || event.key === 'E') && !editingText) editor.toggleEditMode();
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+        event.preventDefault();
+        editor.exportHtml();
+      }
+    });
+  </script>
+</body>
+</html>

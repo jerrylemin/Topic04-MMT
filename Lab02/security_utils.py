@@ -20,14 +20,20 @@ def is_local_origin(
     origin: str | None,
     allowed: set[str] | frozenset[str],
     port: int = 5002,
+    request_host: str | None = None,
 ) -> bool:
     if not origin:
         return True
     try:
         parsed = urlsplit(origin)
+        target = urlsplit(f"//{request_host}") if request_host else None
     except ValueError:
         return False
-    return parsed.scheme == "http" and parsed.hostname in allowed and parsed.port == port
+    if parsed.scheme != "http" or parsed.hostname not in allowed or parsed.port != port:
+        return False
+    if target is None:
+        return True
+    return target.hostname == parsed.hostname and target.port in {None, port}
 
 
 def utf8_length(value: str) -> int:

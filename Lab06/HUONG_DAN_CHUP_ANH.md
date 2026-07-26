@@ -1,6 +1,304 @@
-# HƯỚNG DẪN CHỤP ẢNH THỦ CÔNG - LAB 6 COOKIE POISONING
+# HƯỚNG DẪN CHỤP ẢNH THỦ CÔNG - LAB06 COOKIE POISONING
 
-**Sinh viên:** Lê Minh - **MSSV:** 21127645  
+## 1. Mục đích tài liệu
+
+Tài liệu giúp sinh viên tự cài môi trường, tự chạy lab, tự thực hiện kịch bản và tự chụp bằng chứng thật. Chỉ thao tác trên localhost của repository; không thử trên website/hệ thống thật, không dùng ảnh dựng, Playwright, Selenium, extension/macro chụp tự động hoặc công cụ chỉnh DOM để giả kết quả. Đóng tab riêng tư, không để lộ cookie/token thật, dữ liệu cá nhân, password, session ID hay chữ ký dài.
+
+## 2. Chuẩn bị môi trường từ đầu
+
+Từ Command Prompt tại thư mục repository, vào `Topic04\Lab06`, rồi chạy `scripts\run_lab.bat`. Script tạo `.venv`, cài requirements, reset database nếu thiếu và chạy `app.py`. Mở `http://127.0.0.1:5006`; dừng bằng `Ctrl+C`. Trước mỗi mode, logout/reset và chỉ xóa năm cookie Lab06 được nêu trong source/hướng dẫn. Không dùng Console hay `document.cookie`; chỉ sửa bằng Application/Storage DevTools.
+
+### Tài khoản và dữ liệu cố định
+
+Student: `student` / `Student123!`; Admin: `admin_lab` / `AdminLab123!`. Che password, session ID, signed/encrypted token dài.
+
+## 3. Chuẩn bị trình duyệt và F12
+
+1. Mở Chrome hoặc Microsoft Edge và truy cập đúng URL `127.0.0.1`/`localhost` nêu trong từng ảnh.
+2. Nhấn `F12`, chọn menu DevTools > Dock side > Dock to right. Đặt browser zoom 80-100% và kéo vách ngăn để cùng thấy thanh địa chỉ, UI và DevTools.
+3. Mở **Network**; bật **Preserve log** khi thao tác có redirect/reload; bật **Disable cache** trong lúc DevTools mở nếu cache làm sai nội dung.
+4. Bấm Clear để xóa request cũ trước mỗi kịch bản. Lọc theo route như `login`, `search`, `checkout`, `invoice`, `change-email`, `admin` hoặc `submit`.
+5. Chọn đúng request, lần lượt mở **Headers**, **Payload**, **Response** hoặc **Preview**. Mở **Cookies**, **Initiator** hay **Timing** chỉ khi mục ảnh yêu cầu.
+6. Dùng **Application/Storage > Cookies** cho cookie; **Elements** cho DOM/form/hidden field; **Console** chỉ quan sát lỗi/trạng thái được yêu cầu, không chạy lệnh đọc cookie; **Sources** chỉ khi cần chứng minh JavaScript client-side.
+7. Kéo rộng cột/khung chi tiết, thu gọn panel không liên quan và che value nhạy cảm; không cắt mất URL, status, tên request, tab đang mở hoặc kết quả UI.
+
+## 4. Luồng thao tác theo kịch bản F12
+
+Trước mỗi nhóm: reset đúng cách, đăng nhập đúng tài khoản, chụp trạng thái trước, thực hiện request vulnerable, chụp request/payload/response/trạng thái sau, rồi reset và chạy cùng dữ liệu ở bản secure. Không giả định bước trước còn hiệu lực; kiểm tra lại URL, account và cookie trước từng ảnh.
+
+### F12-01. `49_cookie_initial_application.png`
+
+- **Mục tiêu:** Ghi cookie ban đầu và đầy đủ flags
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5006/vulnerable/plain/profile`
+- **Tài khoản:** student / Student123!
+- **Dữ liệu nhập:** `Plain Cookie Demo`
+- **Thao tác/nút:** Đăng nhập rồi mở Cookies
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Application/Storage > Cookies
+- **Request cần chọn:** `GET /vulnerable/plain/profile`
+- **Trường cần mở:** Name, Value, Domain, Path, HttpOnly, Secure, SameSite
+- **Nội dung bắt buộc:** lab06_username=student; lab06_role=user; flags đúng config; chỉ cookie Lab06
+- **Kết quả mong đợi:** Baseline trước poisoning
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Cookie Plain ban đầu trong Application
+- **Mục báo cáo:** F12 / Plain / Before
+
+### F12-02. `50_plain_cookie_request_header.png`
+
+- **Mục tiêu:** Chứng minh cookie được gửi trong HTTP request
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5006/vulnerable/plain/admin`
+- **Tài khoản:** student
+- **Dữ liệu nhập:** `role=user`
+- **Thao tác/nút:** Mở admin trước khi sửa
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network > Headers
+- **Request cần chọn:** `GET /vulnerable/plain/admin`
+- **Trường cần mở:** Request Headers > Cookie
+- **Nội dung bắt buộc:** Tên cookie/role hiện diện; giá trị nhạy cảm khác che
+- **Kết quả mong đợi:** Request bị từ chối khi role=user
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Cookie header trước poisoning
+- **Mục báo cáo:** F12 / Plain / Request before
+
+### F12-03. `51_plain_cookie_modified_application.png`
+
+- **Mục tiêu:** Chứng minh role được sửa thủ công
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5006/vulnerable/plain/admin`
+- **Tài khoản:** student
+- **Dữ liệu nhập:** `lab06_role: user → admin`
+- **Thao tác/nút:** Sửa Value trong Application và Enter
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Application/Storage > Cookies
+- **Request cần chọn:** `N/A`
+- **Trường cần mở:** Cookie row
+- **Nội dung bắt buộc:** Đúng origin, Name lab06_role, Value admin, flags không đổi
+- **Kết quả mong đợi:** Browser lưu giá trị tampered
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Sửa role cookie bằng DevTools
+- **Mục báo cáo:** F12 / Plain / Modified
+
+### F12-04. `52_plain_admin_request_response.png`
+
+- **Mục tiêu:** Chứng minh vulnerable cho phép sau sửa
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5006/vulnerable/plain/admin`
+- **Tài khoản:** student
+- **Dữ liệu nhập:** `lab06_role=admin`
+- **Thao tác/nút:** Reload admin
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network > Headers/Response
+- **Request cần chọn:** `GET /vulnerable/plain/admin`
+- **Trường cần mở:** Cookie Request Header và Response
+- **Nội dung bắt buộc:** Request gửi role=admin; response 200/admin allowed/verdict vulnerable
+- **Kết quả mong đợi:** Server tin cookie client
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Response vulnerable cho phép admin
+- **Mục báo cáo:** F12 / Plain / Vulnerable
+
+### F12-05. `53_base64_cookie_modified_request.png`
+
+- **Mục tiêu:** Chứng minh Base64 cookie bị sửa
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5006/vulnerable/base64/admin`
+- **Tài khoản:** student
+- **Dữ liệu nhập:** `lab06_profile_b64 dùng giá trị role=admin read-only của UI`
+- **Thao tác/nút:** Sửa cookie thủ công rồi reload
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Application Cookies; Network Headers
+- **Request cần chọn:** `GET /vulnerable/base64/admin`
+- **Trường cần mở:** Cookie và Response
+- **Nội dung bắt buộc:** Tên cookie; giá trị rút gọn/che; response cho phép; không dùng decoder ngoài
+- **Kết quả mong đợi:** Base64 không cung cấp integrity
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Request Base64 sau sửa role
+- **Mục báo cáo:** F12 / Base64 / Vulnerable
+
+### F12-06. `54_signed_cookie_valid_request.png`
+
+- **Mục tiêu:** Chứng minh signed cookie hợp lệ
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5006/secure/signed/profile`
+- **Tài khoản:** student
+- **Dữ liệu nhập:** `Signed Cookie Demo`
+- **Thao tác/nút:** Login và mở profile
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network > Headers/Response
+- **Request cần chọn:** `GET /secure/signed/profile`
+- **Trường cần mở:** Cookie header và Response
+- **Nội dung bắt buộc:** Cookie rút gọn/che, response valid, Signature Inspector hợp lệ
+- **Kết quả mong đợi:** Signed cookie chấp nhận khi nguyên vẹn
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Request signed cookie hợp lệ
+- **Mục báo cáo:** F12 / Signed / Valid
+
+### F12-07. `55_signed_cookie_tampered_application.png`
+
+- **Mục tiêu:** Chứng minh sửa đúng một ký tự
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5006/secure/signed/profile`
+- **Tài khoản:** student
+- **Dữ liệu nhập:** `Sửa một ký tự lab06_signed_profile`
+- **Thao tác/nút:** Edit Value và Enter
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Application/Storage > Cookies
+- **Request cần chọn:** `N/A`
+- **Trường cần mở:** Cookie row
+- **Nội dung bắt buộc:** Origin local, tên cookie, giá trị đã che nhưng thể hiện đã sửa
+- **Kết quả mong đợi:** Browser lưu token tampered
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Sửa signed cookie bằng DevTools
+- **Mục báo cáo:** F12 / Signed / Tamper
+
+### F12-08. `56_signed_cookie_rejected_response.png`
+
+- **Mục tiêu:** Chứng minh chữ ký sai bị từ chối
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5006/secure/signed/profile`
+- **Tài khoản:** student
+- **Dữ liệu nhập:** `Signed cookie đã sửa`
+- **Thao tác/nút:** Reload
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network > Headers/Response
+- **Request cần chọn:** `GET /secure/signed/profile`
+- **Trường cần mở:** Cookie header, status, Response
+- **Nội dung bắt buộc:** Response từ chối/invalid signature; không dùng payload cho authorization
+- **Kết quả mong đợi:** Integrity check hiệu quả
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Response secure từ chối signed cookie sửa
+- **Mục báo cáo:** F12 / Signed / Rejected
+
+### F12-09. `57_server_session_cookie_request.png`
+
+- **Mục tiêu:** Chứng minh cookie session không chứa role
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5006/secure/session/profile`
+- **Tài khoản:** student
+- **Dữ liệu nhập:** `Server-side Session Demo`
+- **Thao tác/nút:** Login và mở profile
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Application Cookies; Network Headers
+- **Request cần chọn:** `GET /secure/session/profile`
+- **Trường cần mở:** lab06_session và Request Header
+- **Nội dung bắt buộc:** Cookie value che/fingerprint; không user_id/role trong cookie
+- **Kết quả mong đợi:** Role được tra phía server
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Server-side session cookie đã che
+- **Mục báo cáo:** F12 / Session / Cookie
+
+### F12-10. `58_student_admin_denied_response.png`
+
+- **Mục tiêu:** Chứng minh database role user bị từ chối
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5006/secure/session/admin`
+- **Tài khoản:** student
+- **Dữ liệu nhập:** `Session student hợp lệ`
+- **Thao tác/nút:** Mở admin
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network > Headers/Response
+- **Request cần chọn:** `GET /secure/session/admin`
+- **Trường cần mở:** Status/Response
+- **Nội dung bắt buộc:** 403/denied; Authorization Inspector role source database
+- **Kết quả mong đợi:** Secure authorization từ chối student
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Response secure từ chối student
+- **Mục báo cáo:** F12 / Session / Denied
+
+### F12-11. `59_admin_session_allowed_response.png`
+
+- **Mục tiêu:** Chứng minh admin thật được phép
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5006/secure/session/admin`
+- **Tài khoản:** admin_lab / AdminLab123!
+- **Dữ liệu nhập:** `Server-side Session Demo`
+- **Thao tác/nút:** Logout/reset; login admin; mở admin
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network > Headers/Response
+- **Request cần chọn:** `GET /secure/session/admin`
+- **Trường cần mở:** Status/Response
+- **Nội dung bắt buộc:** 200/allowed; role admin từ database; cookie value che
+- **Kết quả mong đợi:** Admin hợp lệ được phép
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Response secure cho phép admin thật
+- **Mục báo cáo:** F12 / Session / Allowed
+
+### F12-12. `60_secure_set_cookie_headers.png`
+
+- **Mục tiêu:** Chứng minh Set-Cookie secure modes
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5006/login`
+- **Tài khoản:** student
+- **Dữ liệu nhập:** `Signed hoặc Server-side Session Demo`
+- **Thao tác/nút:** Login và chọn POST
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network > Headers
+- **Request cần chọn:** `POST /login`
+- **Trường cần mở:** Response Headers > Set-Cookie
+- **Nội dung bắt buộc:** Tên cookie tương ứng, HttpOnly, SameSite=Lax, Path=/, Secure theo config local; giá trị che
+- **Kết quả mong đợi:** Flags khớp `cookie_options`
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Set-Cookie của chế độ secure
+- **Mục báo cáo:** F12 / Secure / Set-Cookie
+
+## 5. Bảng mô tả ảnh F12
+
+| STT | Tên file | Mục tiêu | Chuẩn bị | URL/lệnh | Dữ liệu và thao tác | F12 cần mở | Nội dung bắt buộc | Kết quả | Caption | Mục báo cáo |
+|---:|---|---|---|---|---|---|---|---|---|---|
+| 1 | `49_cookie_initial_application.png` | Ghi cookie ban đầu và đầy đủ flags | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5006/vulnerable/plain/profile` | Plain Cookie Demo; Đăng nhập rồi mở Cookies | Application/Storage > Cookies; Name, Value, Domain, Path, HttpOnly, Secure, SameSite | lab06_username=student; lab06_role=user; flags đúng config; chỉ cookie Lab06 | Baseline trước poisoning | Cookie Plain ban đầu trong Application | F12 / Plain / Before |
+| 2 | `50_plain_cookie_request_header.png` | Chứng minh cookie được gửi trong HTTP request | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5006/vulnerable/plain/admin` | role=user; Mở admin trước khi sửa | Network > Headers; Request Headers > Cookie | Tên cookie/role hiện diện; giá trị nhạy cảm khác che | Request bị từ chối khi role=user | Cookie header trước poisoning | F12 / Plain / Request before |
+| 3 | `51_plain_cookie_modified_application.png` | Chứng minh role được sửa thủ công | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5006/vulnerable/plain/admin` | lab06_role: user → admin; Sửa Value trong Application và Enter | Application/Storage > Cookies; Cookie row | Đúng origin, Name lab06_role, Value admin, flags không đổi | Browser lưu giá trị tampered | Sửa role cookie bằng DevTools | F12 / Plain / Modified |
+| 4 | `52_plain_admin_request_response.png` | Chứng minh vulnerable cho phép sau sửa | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5006/vulnerable/plain/admin` | lab06_role=admin; Reload admin | Network > Headers/Response; Cookie Request Header và Response | Request gửi role=admin; response 200/admin allowed/verdict vulnerable | Server tin cookie client | Response vulnerable cho phép admin | F12 / Plain / Vulnerable |
+| 5 | `53_base64_cookie_modified_request.png` | Chứng minh Base64 cookie bị sửa | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5006/vulnerable/base64/admin` | lab06_profile_b64 dùng giá trị role=admin read-only của UI; Sửa cookie thủ công rồi reload | Application Cookies; Network Headers; Cookie và Response | Tên cookie; giá trị rút gọn/che; response cho phép; không dùng decoder ngoài | Base64 không cung cấp integrity | Request Base64 sau sửa role | F12 / Base64 / Vulnerable |
+| 6 | `54_signed_cookie_valid_request.png` | Chứng minh signed cookie hợp lệ | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5006/secure/signed/profile` | Signed Cookie Demo; Login và mở profile | Network > Headers/Response; Cookie header và Response | Cookie rút gọn/che, response valid, Signature Inspector hợp lệ | Signed cookie chấp nhận khi nguyên vẹn | Request signed cookie hợp lệ | F12 / Signed / Valid |
+| 7 | `55_signed_cookie_tampered_application.png` | Chứng minh sửa đúng một ký tự | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5006/secure/signed/profile` | Sửa một ký tự lab06_signed_profile; Edit Value và Enter | Application/Storage > Cookies; Cookie row | Origin local, tên cookie, giá trị đã che nhưng thể hiện đã sửa | Browser lưu token tampered | Sửa signed cookie bằng DevTools | F12 / Signed / Tamper |
+| 8 | `56_signed_cookie_rejected_response.png` | Chứng minh chữ ký sai bị từ chối | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5006/secure/signed/profile` | Signed cookie đã sửa; Reload | Network > Headers/Response; Cookie header, status, Response | Response từ chối/invalid signature; không dùng payload cho authorization | Integrity check hiệu quả | Response secure từ chối signed cookie sửa | F12 / Signed / Rejected |
+| 9 | `57_server_session_cookie_request.png` | Chứng minh cookie session không chứa role | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5006/secure/session/profile` | Server-side Session Demo; Login và mở profile | Application Cookies; Network Headers; lab06_session và Request Header | Cookie value che/fingerprint; không user_id/role trong cookie | Role được tra phía server | Server-side session cookie đã che | F12 / Session / Cookie |
+| 10 | `58_student_admin_denied_response.png` | Chứng minh database role user bị từ chối | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5006/secure/session/admin` | Session student hợp lệ; Mở admin | Network > Headers/Response; Status/Response | 403/denied; Authorization Inspector role source database | Secure authorization từ chối student | Response secure từ chối student | F12 / Session / Denied |
+| 11 | `59_admin_session_allowed_response.png` | Chứng minh admin thật được phép | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5006/secure/session/admin` | Server-side Session Demo; Logout/reset; login admin; mở admin | Network > Headers/Response; Status/Response | 200/allowed; role admin từ database; cookie value che | Admin hợp lệ được phép | Response secure cho phép admin thật | F12 / Session / Allowed |
+| 12 | `60_secure_set_cookie_headers.png` | Chứng minh Set-Cookie secure modes | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5006/login` | Signed hoặc Server-side Session Demo; Login và chọn POST | Network > Headers; Response Headers > Set-Cookie | Tên cookie tương ứng, HttpOnly, SameSite=Lax, Path=/, Secure theo config local; giá trị che | Flags khớp `cookie_options` | Set-Cookie của chế độ secure | F12 / Secure / Set-Cookie |
+
+## 6. Xử lý lỗi thường gặp
+
+- **Port 5006 bị chiếm:** dừng server lab cũ bằng `Ctrl+C`; dùng `Get-NetTCPConnection -LocalPort 5006 -ErrorAction SilentlyContinue` để xác định tiến trình, không tự đổi port tài liệu.
+- **Virtual environment chưa kích hoạt/thiếu dependency:** dùng đúng Python trong `.venv\Scripts\python.exe` và chạy `-m pip install -r requirements.txt`.
+- **Database chưa seed/state cũ:** chạy script reset nêu ở mục 2, restart server rồi đăng nhập lại.
+- **Cookie/session cũ hoặc sai tài khoản:** logout/reset, chỉ xóa cookie của đúng origin local, mở cửa sổ mới rồi đăng nhập lại.
+- **Network không thấy request/bị lọc mất:** bỏ filter, bật Preserve log, bấm Clear rồi thực hiện lại; lưu ý đổi `location.hash` không phát sinh request mới.
+- **Payload chưa URL encode:** nhập payload qua form; kiểm tra Request URL encoded và Query String Parameters decoded, không sửa payload sang chuỗi khác.
+- **Alert không xuất hiện/redirect làm mất request/cache cũ:** bật Preserve log và Disable cache, reload, reset state rồi lặp lại đúng mode.
+- **Server chưa nhận biến môi trường mới:** dừng bằng `Ctrl+C`, chạy lại script; không sửa source để làm khớp ảnh.
+- **Ảnh nhỏ/bị cắt:** dock phải, giảm zoom, mở rộng trường cần đọc; giữ URL, request, status và UI kết quả.
+
+## 7. Checklist cuối lab
+
+- [ ] Server chạy đúng localhost và port.
+- [ ] Đúng tài khoản/dữ liệu local; đủ ảnh theo manifest và đúng tên file.
+- [ ] Ảnh có URL/lệnh, kết quả UI và đúng request/tab/field F12.
+- [ ] Cookie/token/session/chữ ký dài đã che; vulnerable và secure tách biệt.
+- [ ] Caption khớp báo cáo; không có ảnh trùng/ảnh giả/ảnh chụp tự động.
+- [ ] Không chạy lại pytest/smoke test/Docker để tạo ảnh; ảnh test cũ (nếu có) chỉ là bằng chứng tùy chọn.
+- [ ] Chỉ tạo DOCX; không tạo, cập nhật, mở hoặc render PDF.
+- [ ] Chạy `python scripts/check_screenshots.py` khi sinh viên đã tự chụp đủ ảnh, rồi `python scripts/generate_report.py` để tạo DOCX.
+
+## 8. Phụ lục hướng dẫn bộ ảnh hiện có
+
+Các tên ảnh cũ được giữ để không phá vỡ quy trình hiện có. Thực hiện theo mô tả dưới đây; ảnh test cũ là tùy chọn và ảnh report chỉ cần chứng minh DOCX.
+
+**Nhóm sinh viên thực hiện:** Lê Minh — 21127645 và Nguyễn Vũ Bách — 21127224.  
 **Base URL duy nhất:** `http://127.0.0.1:5006`  
 **Thư mục ảnh:** `evidence/screenshots/`
 
@@ -10,8 +308,8 @@
 - Chỉ thao tác cookie thuộc `127.0.0.1:5006` và chỉ các tên cố định của Lab06. Không mở website thật, không đọc/copy toàn bộ cookie trình duyệt, không nhập domain/host/URL/port/cookie name tùy ý.
 - Không dùng Console và không chạy `document.cookie`. Không gửi cookie bằng JavaScript.
 - Không chụp secret key, password hash, plaintext password ngoài ô login demo, full Session ID, full signed token hoặc full encrypted token. Nếu panel chưa mask, dừng và sửa ứng dụng trước khi chụp.
-- 48 ảnh là evidence do sinh viên bổ sung. **Ảnh thủ công không phải completion gate của Codex** và thiếu ảnh không được dùng để tạo ảnh placeholder hay tuyên bố ảnh đã có.
-- Chỉ chụp ảnh test/coverage/report sau khi lệnh thật đã chạy và màn hình hiển thị kết quả thật.
+- 48 ảnh là evidence do nhóm sinh viên bổ sung. Thiếu ảnh không được thay bằng ảnh dựng hoặc tuyên bố đã có bằng chứng.
+> Bằng chứng test/coverage cũ là tùy chọn; không chạy lại để phục vụ nhiệm vụ cập nhật tài liệu này.
 
 ## Chuẩn bị chung
 
@@ -435,32 +733,32 @@
 - **Kết quả mong đợi / Caption:** điều hướng hoạt động thủ công; “Presentation Mode đồng bộ Timeline và Inspector”.
 - **Lỗi thường gặp / Reset:** phím browser cuộn trang thay vì đổi step; focus presentation control hoặc dùng nút; thoát và bật lại mode.
 
-### 46. `46_pytest_passed.png`
+> Bằng chứng test/coverage cũ là tùy chọn; không chạy lại để phục vụ nhiệm vụ cập nhật tài liệu này.
 
-- **Mục đích / URL / Mode / Tài khoản:** ghi kết quả pytest thật; terminal tại thư mục Lab06; test; N/A.
+> Bằng chứng test/coverage cũ là tùy chọn; không chạy lại để phục vụ nhiệm vụ cập nhật tài liệu này.
 - **Điều kiện ban đầu / Cookie / Giá trị gốc:** source/test hoàn chỉnh; N/A.
-- **Thao tác DevTools thủ công:** không cần DevTools; tự chạy `pytest`, chờ kết thúc rồi chụp terminal; không sửa output.
+> Bằng chứng test/coverage cũ là tùy chọn; không chạy lại để phục vụ nhiệm vụ cập nhật tài liệu này.
 - **Panel / Timeline step / Nội dung bắt buộc:** terminal; N/A; command, số collected/passed/failed/skipped và exit summary thật, không secret/path nhạy cảm.
-- **Kết quả mong đợi / Caption:** chỉ dùng caption “Pytest passed” nếu exit code 0; “Kết quả pytest thực tế của Lab06”.
+> Bằng chứng test/coverage cũ là tùy chọn; không chạy lại để phục vụ nhiệm vụ cập nhật tài liệu này.
 - **Lỗi thường gặp / Reset:** test fail hoặc output cũ; sửa lỗi, chạy lại toàn bộ lệnh rồi chụp kết quả mới; không crop mất summary.
 
-### 47. `47_coverage.png`
+> Bằng chứng test/coverage cũ là tùy chọn; không chạy lại để phục vụ nhiệm vụ cập nhật tài liệu này.
 
-- **Mục đích / URL / Mode / Tài khoản:** ghi coverage thật; terminal tại Lab06; coverage; N/A.
-- **Điều kiện ban đầu / Cookie / Giá trị gốc:** pytest-cov cài và test chạy được; N/A.
-- **Thao tác DevTools thủ công:** tự chạy `pytest --cov=. --cov-report=term-missing`, chờ xong rồi chụp; không chỉnh log.
+> Bằng chứng test/coverage cũ là tùy chọn; không chạy lại để phục vụ nhiệm vụ cập nhật tài liệu này.
+> Bằng chứng test/coverage cũ là tùy chọn; không chạy lại để phục vụ nhiệm vụ cập nhật tài liệu này.
+> Bằng chứng test/coverage cũ là tùy chọn; không chạy lại để phục vụ nhiệm vụ cập nhật tài liệu này.
 - **Panel / Timeline step / Nội dung bắt buộc:** terminal; N/A; từng module lõi, percent/missing lines và summary thật; không chỉ chụp total nếu module bị thiếu.
-- **Kết quả mong đợi / Caption:** ghi đúng số đo, chỉ nói đạt 90% khi mọi module yêu cầu thật sự đạt; “Coverage thực tế của các module lõi”.
-- **Lỗi thường gặp / Reset:** coverage thấp hoặc module omitted; bổ sung test có ý nghĩa, chạy lại; không sửa file coverage thủ công.
+> Bằng chứng test/coverage cũ là tùy chọn; không chạy lại để phục vụ nhiệm vụ cập nhật tài liệu này.
+> Bằng chứng test/coverage cũ là tùy chọn; không chạy lại để phục vụ nhiệm vụ cập nhật tài liệu này.
 
 ### 48. `48_report_files.png`
 
-- **Mục đích / URL / Mode / Tài khoản:** chứng minh DOCX/PDF thật tồn tại; File Explorer và/hoặc viewer local; report; N/A.
+- **Mục đích / URL / Mode / Tài khoản:** chứng minh DOCX thật tồn tại; File Explorer và/hoặc viewer local; report; N/A.
 - **Điều kiện ban đầu / Cookie / Giá trị gốc:** đã chạy `python scripts/generate_report.py` thành công; N/A.
-- **Thao tác DevTools thủ công:** không cần DevTools; mở thư mục `report`, sau đó mở DOCX/PDF để xác nhận không hỏng; tự chụp màn hình.
-- **Panel / Timeline step / Nội dung bắt buộc:** Explorer/viewer; N/A; đúng hai tên `21127645_LeMinh_Lab06_CookiePoisoning.docx/.pdf`, dung lượng khác 0, trang nội dung thật, không placeholder ảnh.
-- **Kết quả mong đợi / Caption:** hai file mở được; ghi page count chỉ sau khi đo; “Báo cáo DOCX và PDF được tạo từ evidence thật”.
-- **Lỗi thường gặp / Reset:** PDF thiếu/hỏng hoặc script báo lỗi; không chụp/tuyên bố hoàn thành, sửa generator rồi chạy lại.
+- **Thao tác DevTools thủ công:** không cần DevTools; mở thư mục `report`, sau đó mở DOCX để xác nhận không hỏng; tự chụp màn hình.
+- **Panel / Timeline step / Nội dung bắt buộc:** Explorer/viewer; N/A; đúng tên `21127645_LeMinh_21127224_NguyenVuBach_Lab06_CookiePoisoning.docx`, dung lượng khác 0 và mở được bằng Word. Quy trình báo cáo chỉ bàn giao DOCX.
+- **Kết quả mong đợi / Caption:** file DOCX mở được; ghi page count chỉ sau khi đo; “Báo cáo DOCX được tạo từ evidence thật”.
+- **Lỗi thường gặp / Reset:** DOCX thiếu/hỏng hoặc script báo lỗi; không chụp/tuyên bố hoàn thành, sửa generator rồi chạy lại.
 
 ## Kiểm tra ảnh sau khi chụp
 
@@ -479,3 +777,6 @@ Script chỉ được kiểm tra tên, PNG, file rỗng, kích thước quá nh�
 3. Trong DevTools, chỉ xóa năm cookie Lab06 cố định: `lab06_username`, `lab06_role`, `lab06_profile_b64`, `lab06_signed_profile`, `lab06_session` (nếu tồn tại). Không xóa/copy cookie của site khác.
 4. Đóng DevTools, mở lại `/login`, chọn đúng mode và chạy lại nhóm ảnh.
 5. Không giữ ảnh của flow lỗi rồi đổi tên thành ảnh đạt.
+### Bằng chứng cũ tùy chọn
+
+- `46_pytest_passed.png` và `47_coverage.png`: giữ tên để tương thích manifest cũ; không chạy lại pytest/coverage cho nhiệm vụ này. Chỉ dùng nếu ảnh thật đã có từ trước.

@@ -1,6 +1,6 @@
 # LAB04 - CROSS-SITE REQUEST FORGERY (CSRF)
 
-Sinh viên: **21127645 - Lê Minh**.
+**Nhóm sinh viên thực hiện:** Lê Minh — 21127645 và Nguyễn Vũ Bách — 21127224.
 
 Lab04 là hai ứng dụng Flask local minh họa đúng một hành vi vulnerable (đổi email thiếu CSRF token) và bản secure dùng Synchronizer Token Pattern, exact Origin/Referer validation, audit và trace từ SQLite thật.
 
@@ -31,7 +31,8 @@ Browser
 - `scripts/`: evidence, smoke test, report và cleanup.
 - `tests/`: kiểm thử hành vi và acceptance.
 - `evidence/`: trace/request/response/audit/state/log thật.
-- `report/`: DOCX/PDF hoàn chỉnh không phụ thuộc ảnh.
+- `report/`: DOCX hoàn chỉnh không phụ thuộc ảnh.
+- Báo cáo chính: `report/21127645_LeMinh_21127224_NguyenVuBach_Lab04_CSRF.docx`.
 
 ## Tài khoản demo
 
@@ -92,8 +93,13 @@ python scripts/generate_report.py
 python scripts/clean_submission.py
 ```
 
-`run_runtime_smoke_test.py` chỉ gọi hai endpoint loopback cố định và không tuyên bố kiểm tra SameSite/SOP của browser. `generate_report.py` đọc evidence/source thật và tạo lại cùng một nội dung dưới DOCX/PDF. `clean_submission.py` xóa cache/file tạm nhưng giữ source, database demo, evidence, tests, README và report.
+`run_runtime_smoke_test.py` chỉ gọi hai endpoint loopback cố định và không tuyên bố kiểm tra SameSite/SOP của browser. `generate_report.py` đọc evidence/source thật và tạo lại cùng một nội dung dưới DOCX. `clean_submission.py` xóa cache/file tạm nhưng giữ source, database demo, evidence, tests, README và report.
 
 ## Quyết định tối giản
 
 Lab dùng Flask session, Python stdlib (`secrets`, `hmac`, `urllib.parse`, `ast`) và SQLite trực tiếp. Không thêm framework frontend, CSRF framework, browser driver hay dịch vụ ngoài.
+
+
+## Chế độ báo cáo DOCX-only
+
+`scripts/generate_report.py` chỉ tạo lại file DOCX đúng tên hiện có. Script không gọi ReportLab, LibreOffice/soffice, không chuyển đổi hoặc cập nhật PDF, không render DOCX và không chạy test/smoke test/ứng dụng. Các log cũ chỉ được đọc như evidence; ảnh chưa có được biểu diễn bằng placeholder chi tiết và không bị tuyên bố là đã chụp.

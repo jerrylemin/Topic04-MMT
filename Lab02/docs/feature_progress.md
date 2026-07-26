@@ -9,6 +9,6 @@
 | Docker/Compose | Hoàn tất và đã chạy thử | `docker compose config --quiet`; container healthy; `/health` trả HTTP 200 |
 | Hướng dẫn 28 ảnh | Hoàn tất | `HUONG_DAN_CHUP_ANH.md` |
 | Ảnh thủ công | Chưa có | Checker báo thiếu 28/28 |
-| DOCX | Đã sinh, structural QA đạt | `report/21127645_LeMinh_Lab02_BufferOverflow.docx` |
+| DOCX | Đã sinh, kiểm tra cấu trúc đạt | `report/21127645_LeMinh_21127224_NguyenVuBach_Lab02_BufferOverflow.docx` |
 | PDF | Đã sinh, visual QA đạt | 19 trang, Poppler render sạch |
 | Pytest | Đạt tại thời điểm handoff | 14 passed; `evidence/logs/pytest.txt` |

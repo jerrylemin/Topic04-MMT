@@ -2,11 +2,11 @@
 
 Ứng dụng Flask/SQLite chạy độc lập tại `http://127.0.0.1:5003`, minh họa ba lỗi logic bằng dữ liệu giả lập: sửa giá checkout, IDOR hóa đơn và mass assignment `role=admin`. Mỗi tình huống có bản vulnerable, bản secure, audit log, trace thật, inspector, code comparison và Final Security Verdict.
 
-Sinh viên: **21127645 - Lê Minh**. Nguồn yêu cầu: `../BaiTapTopic04.docx`, slide 14-18 của `../Topic04_Lo-Hong-Bao-Mat-Ung-Dung-Web.pptx` và đặc tả Lab03 đính kèm.
+**Nhóm sinh viên thực hiện:** Lê Minh — 21127645 và Nguyễn Vũ Bách — 21127224. Nguồn yêu cầu: `../BaiTapTopic04.docx`, slide 14-18 của `../Topic04_Lo-Hong-Bao-Mat-Ung-Dung-Web.pptx` và đặc tả Lab03 đính kèm.
 
 ## Phạm vi an toàn
 
-- Chỉ chạy tại `127.0.0.1`, máy ảo local hoặc Docker local; không bind `0.0.0.0`.
+- Khi chạy trực tiếp, Flask chỉ bind `127.0.0.1`. Trong Docker, Flask nghe interface container để bridge hoạt động, còn Compose chỉ publish `127.0.0.1:5003`, nên dịch vụ vẫn không lộ ra mạng ngoài host.
 - Không gọi Internet, không nhận host/URL tùy ý, không quét ID ngoài dữ liệu mẫu.
 - Không thanh toán, chuyển tiền, gửi email, thu thập tài khoản hay dữ liệu thật.
 - Bản vulnerable chỉ dùng trong Lab03. Mọi SQL vẫn parameterized để không tạo SQL Injection ngoài mục tiêu bài.
@@ -66,7 +66,7 @@ python seed.py
 python app.py
 ```
 
-Hoặc dùng `scripts/run_lab.ps1`, `scripts/run_lab.bat`, `scripts/run_lab.sh`. Docker dùng `docker compose up --build`; compose chỉ publish `127.0.0.1:5003:5003`, chạy non-root, drop capability và không dùng host network/privileged.
+Hoặc dùng `scripts/run_lab.ps1`, `scripts/run_lab.bat`, `scripts/run_lab.sh`. Docker dùng `docker compose up --build`; compose chỉ publish `127.0.0.1:5003:5003`, chạy non-root, drop capability và không dùng host network/privileged. `LAB03_SECRET_KEY` có giá trị demo ổn định để session không mất sau restart; khi dùng ngoài lab local phải override biến này.
 
 ## URL demo
 
@@ -149,7 +149,7 @@ python scripts/check_screenshots.py
 
 Checker chỉ kiểm tra tên, PNG, file rỗng, kích thước, ảnh thiếu/thừa và hash trùng; không OCR, không phân tích nội dung và không tạo ảnh.
 
-## Báo cáo DOCX/PDF
+## Báo cáo DOCX
 
 ```powershell
 python scripts/generate_report.py
@@ -157,8 +157,7 @@ python scripts/generate_report.py
 
 Output:
 
-- `report/21127645_LeMinh_Lab03_ParameterTampering.docx`
-- `report/21127645_LeMinh_Lab03_ParameterTampering.pdf`
+- `report/21127645_LeMinh_21127224_NguyenVuBach_Lab03_ParameterTampering.docx`
 
 Nếu thiếu ảnh, report vẫn được tạo và placeholder ghi tên ảnh, tài khoản, URL, dữ liệu cần sửa, panel và nội dung bắt buộc. Khi ảnh thật có mặt, chạy lại để thay placeholder mà giữ tỷ lệ.
 
@@ -177,10 +176,15 @@ pytest 2>&1 | Tee-Object evidence/logs/pytest.txt
 ## Lỗi thường gặp
 
 - Redirect về login: đăng nhập lại đúng tài khoản demo.
-- Port 5003 bận: dừng process lab cũ; không đổi app sang `0.0.0.0`.
+- Port 5003 bận: dừng process lab cũ. Không publish Compose ra địa chỉ host khác `127.0.0.1`.
 - State không đúng: chạy `python scripts/reset_database.py`, rồi chỉ chạy một flow.
 - Secure invoice 1002 trả 403: đây là kết quả đúng với User A; admin được phép theo policy.
 - Report thiếu ảnh: xem danh sách cuối output, chụp thủ công đúng tên và chạy lại generator.
 - Cookie `Secure=False`: đúng cho local HTTP; đặt `SESSION_COOKIE_SECURE=true` khi triển khai HTTPS.
 
 Parameterized SQL chống SQL Injection, nhưng không tự vá sai logic giá, IDOR hoặc mass assignment. CSP/CSRF cũng không thay thế authorization.
+
+
+## Chế độ báo cáo DOCX-only
+
+`scripts/generate_report.py` chỉ tạo lại file DOCX đúng tên hiện có. Script không gọi ReportLab, LibreOffice/soffice, không chuyển đổi hoặc cập nhật PDF, không render DOCX và không chạy test/smoke test/ứng dụng. Các log cũ chỉ được đọc như evidence; ảnh chưa có được biểu diễn bằng placeholder chi tiết và không bị tuyên bố là đã chụp.

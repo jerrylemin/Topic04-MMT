@@ -1,5 +1,4 @@
 import os
-import secrets
 from pathlib import Path
 
 
@@ -23,7 +22,7 @@ def _env_bool(name: str, default: bool = False) -> bool:
 
 
 class Config:
-    SECRET_KEY = os.getenv("LAB05_SECRET_KEY") or secrets.token_hex(32)
+    SECRET_KEY = os.getenv("LAB05_SECRET_KEY") or "lab05-local-demo-key-not-for-production"
     DATABASE = os.getenv("LAB05_DATABASE") or str(Path(__file__).with_name("lab05.sqlite3"))
     SERVER_HOST = SERVER_HOST
     SERVER_PORT = SERVER_PORT

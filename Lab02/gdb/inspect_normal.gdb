@@ -12,6 +12,6 @@ p &name
 x/64bx &name
 list
 disassemble process_name
-continue
 backtrace
+continue
 quit

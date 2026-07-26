@@ -261,4 +261,5 @@ def create_app(test_config=None) -> Flask:
 
 
 if __name__ == "__main__":
-    create_app().run(host="127.0.0.1", port=5003, debug=False)
+    application = create_app()
+    application.run(host=application.config["BIND_HOST"], port=5003, debug=False)

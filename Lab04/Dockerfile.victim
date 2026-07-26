@@ -8,4 +8,4 @@ RUN mkdir -p /app/data /app/evidence /app/report && chown -R labuser:labuser /ap
 USER labuser
 EXPOSE 5004
 HEALTHCHECK --interval=15s --timeout=3s --retries=3 CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5004/health', timeout=2)"]
-CMD ["python", "victim_app.py"]
+CMD ["python", "-m", "flask", "--app", "victim_app:create_app", "run", "--host=0.0.0.0", "--port=5004", "--no-reload"]

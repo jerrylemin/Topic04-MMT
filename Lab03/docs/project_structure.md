@@ -9,4 +9,4 @@
 - `scripts/`: run/reset/demo/export/check/report utilities.
 - `tests/`: behavior and safety regressions.
 - `evidence/`: real generated traces, requests, responses, logs, database and manual screenshots.
-- `report/`: final DOCX/PDF.
+- `report/`: báo cáo DOCX chính.

@@ -1,6 +1,6 @@
 # LAB 5 - SQL INJECTION
 
-**Sinh viên:** 21127645 - Lê Minh  
+**Nhóm sinh viên thực hiện:** Lê Minh — 21127645 và Nguyễn Vũ Bách — 21127224.  
 **Ứng dụng:** Flask/SQLite local tại `http://127.0.0.1:5005`
 
 Lab05 minh họa nguyên nhân SQL Injection bằng hai luồng `SELECT` cố tình nối
@@ -45,7 +45,7 @@ Browser/Jinja
 - `templates/`, `static/`: giao diện responsive, visualizer và Presentation Mode.
 - `scripts/`: reset, demo/evidence, smoke, report, screenshot checker và cleanup.
 - `evidence/`: trace/request/response/query/audit/log thật đã che dữ liệu nhạy cảm.
-- `report/`: DOCX/PDF sinh từ evidence và source thật.
+- `report/`: DOCX sinh từ evidence và source thật.
 
 ## Database và dữ liệu mẫu
 
@@ -242,7 +242,7 @@ python scripts/run_runtime_smoke_test.py
 Smoke test chỉ gọi `http://127.0.0.1:5005` và ghi
 `evidence/logs/runtime_smoke_test.txt`.
 
-## Báo cáo DOCX/PDF
+## Báo cáo DOCX
 
 Sau khi có evidence và ba log thật:
 
@@ -252,12 +252,11 @@ python scripts/generate_report.py
 
 Output:
 
-- `report/21127645_LeMinh_Lab05_SQLInjection.docx`
-- `report/21127645_LeMinh_Lab05_SQLInjection.pdf`
+- `report/21127645_LeMinh_21127224_NguyenVuBach_Lab05_SQLInjection.docx`
 
 Generator đọc trace/request/response/query/audit/log/source thật, tạo 30 chương,
 trace table, code comparison, sequence/data-flow diagram dạng vector Word, rồi
-chuyển PDF bằng LibreOffice. Thiếu evidence/log/PDF converter sẽ trả lỗi rõ;
+ghi DOCX bằng python-docx. Thiếu evidence/log/DOCX generator sẽ trả lỗi rõ;
 không tạo placeholder ảnh hoặc kết quả test/coverage giả.
 
 ## Ảnh thủ công
@@ -271,7 +270,7 @@ python scripts/check_screenshots.py
 
 Checker chỉ kiểm tra tên, PNG, file rỗng/hỏng, kích thước, thiếu/thừa và hash
 trùng; không OCR, không phân tích nội dung và không tạo ảnh. Ảnh không phải tiêu
-chí hoàn thành tự động của Codex.
+chí hoàn thành tự động.
 
 ## Docker
 
@@ -307,3 +306,8 @@ report, README và hướng dẫn ảnh.
   các lớp bổ sung.
 - Secure cookie là `False` cho local HTTP; đặt `LAB05_COOKIE_SECURE=true` khi
   triển khai HTTPS thực tế. Lab này không phải sản phẩm production.
+
+
+## Chế độ báo cáo DOCX-only
+
+`scripts/generate_report.py` chỉ tạo lại file DOCX đúng tên hiện có. Script không gọi ReportLab, LibreOffice/soffice, không chuyển đổi hoặc cập nhật PDF, không render DOCX và không chạy test/smoke test/ứng dụng. Các log cũ chỉ được đọc như evidence; ảnh chưa có được biểu diễn bằng placeholder chi tiết và không bị tuyên bố là đã chụp.

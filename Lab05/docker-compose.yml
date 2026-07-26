@@ -4,6 +4,7 @@ services:
     environment:
       LAB05_DATABASE: /app/data/lab05.sqlite3
       LAB05_COOKIE_SECURE: "false"
+      LAB05_SECRET_KEY: "${LAB05_SECRET_KEY:-lab05-local-docker-demo-key-not-for-production}"
     ports:
       - "127.0.0.1:5005:5005"
     volumes:

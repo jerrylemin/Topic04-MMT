@@ -53,6 +53,47 @@ def test_external_origin_is_rejected_before_native_execution(monkeypatch, tmp_pa
     assert called is False
 
 
+def test_origin_must_match_request_host_while_both_local_names_work(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        "app.run_native",
+        lambda mode, *_args, **_kwargs: {
+            "binary": mode,
+            "build_profile": mode,
+            "pid": 42,
+            "timeout": False,
+            "exit_code": 0,
+            "signal": None,
+            "stdout": "Processed name: Short",
+            "stderr": "",
+            "asan": {"detected": False},
+            "crash_detected": False,
+            "duration_ms": 1.0,
+            "status": "completed",
+        },
+    )
+    client = create_app({"TESTING": True, "TRACE_DIR": tmp_path}).test_client()
+    form = {"name": "Short", "mode": "vulnerable_asan"}
+
+    assert client.post(
+        "/submit",
+        data=form,
+        base_url="http://127.0.0.1:5002",
+        headers={"Origin": "http://127.0.0.1:5002"},
+    ).status_code == 200
+    assert client.post(
+        "/submit",
+        data=form,
+        base_url="http://localhost:5002",
+        headers={"Origin": "http://localhost:5002"},
+    ).status_code == 200
+    assert client.post(
+        "/submit",
+        data=form,
+        base_url="http://127.0.0.1:5002",
+        headers={"Origin": "http://localhost:5002"},
+    ).status_code == 403
+
+
 def test_mode_allowlist_and_debug_guard_block_uncontrolled_runs(monkeypatch, tmp_path):
     called = False
 

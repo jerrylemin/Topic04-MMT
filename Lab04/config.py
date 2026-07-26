@@ -1,5 +1,4 @@
 import os
-import secrets
 from pathlib import Path
 
 
@@ -9,7 +8,7 @@ def _env_bool(name: str, default: bool = False) -> bool:
 
 
 class Config:
-    SECRET_KEY = os.getenv("VICTIM_SECRET_KEY") or os.getenv("LAB04_SECRET_KEY") or secrets.token_hex(32)
+    SECRET_KEY = os.getenv("VICTIM_SECRET_KEY") or os.getenv("LAB04_SECRET_KEY") or "lab04-local-demo-key-not-for-production"
     DATABASE = os.getenv("DATABASE") or os.getenv("LAB04_DATABASE") or str(Path(__file__).with_name("lab04.sqlite3"))
     MAX_CONTENT_LENGTH = 64 * 1024
     SESSION_COOKIE_NAME = "lab04_session"

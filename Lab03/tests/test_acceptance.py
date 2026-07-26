@@ -92,7 +92,7 @@ def test_runtime_has_no_external_url_or_browser_automation():
 
 def test_requirements_are_minimal_and_have_no_browser_driver():
     requirements = (ROOT / "requirements.txt").read_text(encoding="utf-8").lower()
-    for dependency in ["flask", "pytest", "requests", "python-docx", "reportlab"]:
+    for dependency in ["flask", "pytest", "requests", "python-docx"]:
         assert dependency in requirements
     assert "playwright" not in requirements and "selenium" not in requirements
 
@@ -105,8 +105,8 @@ def test_docker_is_local_non_root_and_unprivileged():
     assert "no-new-privileges:true" in compose and "cap_drop" in compose
     assert "network_mode" not in compose and "privileged:" not in compose
     config = (ROOT / "config.py").read_text(encoding="utf-8")
-    assert "DATABASE_PATH" in config and "secrets.token_hex" in config
-    assert "SECRET_KEY:" not in compose
+    assert "DATABASE_PATH" in config and "LAB03_SECRET_KEY" in config
+    assert "LAB03_BIND_HOST" in compose and '127.0.0.1:5003:5003' in compose
     assert ".venv" in (ROOT / ".dockerignore").read_text(encoding="utf-8")
 
 
@@ -127,37 +127,40 @@ def test_screenshot_guide_lists_every_required_image():
 def test_screenshot_checker_runs_without_ocr_or_generation():
     source = (ROOT / "scripts/check_screenshots.py").read_text(encoding="utf-8").lower()
     assert "ocr" not in source and "pytesseract" not in source
-    env = {**os.environ, "PYTHONIOENCODING": "cp1252"}
+    env = {**os.environ, "PYTHONIOENCODING": "utf-8"}
     result = subprocess.run([sys.executable, "scripts/check_screenshots.py"], cwd=ROOT, text=True,
                             encoding="utf-8", errors="replace", capture_output=True, env=env)
     assert result.returncode in (0, 1)
-    assert "OK: 41 valid screenshots" in result.stdout or "MISSING:" in result.stdout
+    assert "Đúng tên trong manifest:" in result.stdout
 
 
 def test_report_artifacts_exist_and_open():
-    docx = ROOT / "report/21127645_LeMinh_Lab03_ParameterTampering.docx"
-    pdf = ROOT / "report/21127645_LeMinh_Lab03_ParameterTampering.pdf"
-    assert docx.stat().st_size > 20_000 and pdf.stat().st_size > 20_000
+    result = subprocess.run([sys.executable, "scripts/generate_report.py"], cwd=ROOT, check=False)
+    docx = ROOT / "report/21127645_LeMinh_21127224_NguyenVuBach_Lab03_ParameterTampering.docx"
+    assert result.returncode == 0 and docx.stat().st_size > 20_000
     with ZipFile(docx) as archive:
         assert "word/document.xml" in archive.namelist()
-    assert pdf.read_bytes().startswith(b"%PDF")
 
 
 def test_report_has_all_chapters_questions_and_placeholders():
-    doc = Document(ROOT / "report/21127645_LeMinh_Lab03_ParameterTampering.docx")
-    text = "\n".join(paragraph.text for paragraph in doc.paragraphs)
-    assert all(f"Chương {number}." in text for number in range(1, 20))
-    for answer in ["Parameter Tampering đổi giá trị request", "Hidden field không phải cơ chế bảo mật",
-                   "IDOR thuộc Broken Access Control", "Trước khi trả invoice", "Không truyền giá như nguồn quyết định"]:
+    doc = Document(ROOT / "report/21127645_LeMinh_21127224_NguyenVuBach_Lab03_ParameterTampering.docx")
+    text = "\n".join(
+        [paragraph.text for paragraph in doc.paragraphs]
+        + [cell.text for table in doc.tables for row in table.rows for cell in row.cells]
+    )
+    assert all(f"{number}." in text for number in range(1, 15))
+    for answer in ["Tampering khác SQLi", "Hidden field có bảo mật không",
+                   "IDOR thuộc nhóm nào", "Trước khi trả invoice", "giá authoritative"]:
         assert answer in text
-    assert len(doc.tables) >= 44
+    assert len(doc.tables) >= 8
+    assert "42_login_user_a_network.png" in text
 
 
 def test_report_generator_mentions_real_log_and_missing_images():
     source = (ROOT / "scripts/generate_report.py").read_text(encoding="utf-8")
-    assert "evidence\" / \"logs\" / \"pytest.txt" in source
-    assert "ẢNH CẦN BỔ SUNG" in source and "image_size" in source
-    assert "missing.append" in source
+    central = (ROOT.parent / "scripts/topic04_reports.py").read_text(encoding="utf-8")
+    assert "topic04_reports" in source and 'generate("Lab03")' in source
+    assert "evidence" in central and "screenshot_manifest.py" in central
 
 
 def test_readme_documents_all_operator_commands():

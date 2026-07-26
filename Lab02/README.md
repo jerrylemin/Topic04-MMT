@@ -2,7 +2,7 @@
 
 Ứng dụng minh họa luồng dữ liệu `Browser -> HTTP POST -> Flask -> subprocess -> chương trình C -> exit/signal -> HTTP response`. Bản lỗi dùng `char name[32]` và `strcpy`; hai bản vá kiểm tra tối đa 31 byte hoặc dùng `snprintf` kèm kiểm tra return value. AddressSanitizer, GDB và compiler hardening hỗ trợ quan sát/phòng thủ nhưng không thay secure coding.
 
-Thông tin bài: **MSSV 21127645 - Lê Minh - LAB 2, BUFFER OVERFLOW TRONG ỨNG DỤNG WEB LOCAL**.
+**Nhóm sinh viên thực hiện:** Lê Minh — 21127645 và Nguyễn Vũ Bách — 21127224.
 
 ## Phạm vi an toàn
 
@@ -42,13 +42,13 @@ Lab02/
 ├── gdb/                    # Ba script quan sát và README_GDB.md
 ├── tests/                  # pytest
 ├── evidence/               # log/trace/request/response/ASan/GDB/ảnh thật
-└── report/                 # DOCX/PDF sinh từ generate_report.py
+└── report/                 # DOCX sinh từ generate_report.py
 ```
 
 ## Yêu cầu hệ thống
 
 - Python 3.11+, GCC, Make, GDB và binutils trên Linux/WSL; Docker là lựa chọn tái lập.
-- Python packages trong `requirements.txt`: Flask, requests, pytest, Pillow, python-docx và ReportLab.
+- Python packages trong `requirements.txt`: Flask, requests, pytest, Pillow, python-docx.
 - Không có Playwright/Selenium/CDN. Ảnh được chụp thủ công.
 
 Trên Windows, dùng WSL hoặc Docker cho GCC/GDB; tài liệu không giả định GDB native Windows hoạt động.
@@ -182,7 +182,7 @@ python scripts/check_screenshots.py
 
 Script kiểm tra tên, PNG, file rỗng/hỏng, kích thước, ảnh thiếu/thừa và hash trùng; không OCR hoặc tạo/phân tích nội dung ảnh.
 
-## Tạo báo cáo DOCX và PDF
+## Tạo báo cáo DOCX
 
 ```bash
 python scripts/generate_report.py
@@ -190,10 +190,9 @@ python scripts/generate_report.py
 
 Kết quả:
 
-- `report/21127645_LeMinh_Lab02_BufferOverflow.docx`
-- `report/21127645_LeMinh_Lab02_BufferOverflow.pdf`
+- `report/21127645_LeMinh_21127224_NguyenVuBach_Lab02_BufferOverflow.docx`
 
-Script dùng python-docx và ReportLab, có bìa editorial, mục lục, số trang, 17 chương, phụ lục, caption hình/bảng. Ảnh thật được giữ tỷ lệ; ảnh chưa có trở thành placeholder chi tiết gồm tên, URL/lệnh, thao tác và nội dung bắt buộc. Chạy lại sẽ tự thay placeholder bằng ảnh thật. Script chỉ đọc bằng chứng hiện có và ghi rõ phần chưa thu thập, không tạo log/GDB/ASan giả.
+Script dùng python-docx, có bìa editorial, mục lục, số trang, 17 chương, phụ lục, caption hình/bảng. Ảnh thật được giữ tỷ lệ; ảnh chưa có trở thành placeholder chi tiết gồm tên, URL/lệnh, thao tác và nội dung bắt buộc. Chạy lại sẽ tự thay placeholder bằng ảnh thật. Script chỉ đọc bằng chứng hiện có và ghi rõ phần chưa thu thập, không tạo log/GDB/ASan giả.
 
 ## Chạy pytest
 
@@ -217,7 +216,7 @@ Chỉ kết luận pass khi lệnh trả exit code 0. Log được ghi vào `evi
 | GDB không attach trong Docker | Chạy đúng profile `gdb`; không thêm ptrace vào service web |
 | Screenshot checker trả 1 | Đọc danh sách thiếu/thừa/hỏng/kích thước/hash; chụp lại thủ công |
 | Báo cáo còn placeholder | Bổ sung đúng PNG rồi chạy lại `generate_report.py` |
-| DOCX chưa cập nhật TOC | Mở bằng Word/LibreOffice và cập nhật fields; PDF có mục lục/số trang được dựng trực tiếp |
+| DOCX chưa cập nhật TOC | Mở bằng Word/LibreOffice và cập nhật fields; DOCX dùng field mục lục/số trang của Word |
 
 ## Dọn file sinh ra
 
@@ -229,3 +228,8 @@ python scripts/clean_generated_files.py --yes
 ```
 
 Lệnh xác nhận chỉ dọn build, report và evidence sinh tự động; luôn giữ `evidence/screenshots/` để không xóa ảnh thủ công của người dùng.
+
+
+## Chế độ báo cáo DOCX-only
+
+`scripts/generate_report.py` chỉ tạo lại file DOCX đúng tên hiện có. Script không gọi ReportLab, LibreOffice/soffice, không chuyển đổi hoặc cập nhật PDF, không render DOCX và không chạy test/smoke test/ứng dụng. Các log cũ chỉ được đọc như evidence; ảnh chưa có được biểu diễn bằng placeholder chi tiết và không bị tuyên bố là đã chụp.

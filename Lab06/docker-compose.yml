@@ -8,13 +8,12 @@ services:
     environment:
       LAB06_DATABASE: /app/data/lab06.sqlite3
       LAB06_EVIDENCE_DIR: /app/evidence
-      LAB06_SECRET_KEY: "${LAB06_SECRET_KEY:?Set LAB06_SECRET_KEY in the local environment}"
-      LAB06_SIGNING_KEY: "${LAB06_SIGNING_KEY:?Set LAB06_SIGNING_KEY in the local environment}"
-      LAB06_FERNET_KEY: "${LAB06_FERNET_KEY:?Set LAB06_FERNET_KEY in the local environment}"
+      LAB06_SECRET_KEY: "${LAB06_SECRET_KEY:-lab06-local-docker-key-not-for-production}"
+      LAB06_SIGNING_KEY: "${LAB06_SIGNING_KEY:-lab06-local-signing-key-not-for-production}"
+      LAB06_FERNET_KEY: "${LAB06_FERNET_KEY:-MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA=}"
       LAB06_COOKIE_SECURE: "false"
-    # Host publication is loopback-only. Because app.py also binds container
-    # loopback, Docker bridge NAT cannot reach it from the host. This is an
-    # explicit safety/portability limitation; run scripts are the working route.
+    # The container process listens on its interface; host publication remains
+    # loopback-only, so the service is reachable only from this machine.
     ports:
       - "127.0.0.1:5006:5006"
     volumes:

@@ -8,5 +8,5 @@
   va cleanup.
 - `tests/`: behavior, security boundary, evidence va report acceptance tests.
 - `evidence/`: artifact da che thong tin nhay cam tu cac flow chay that.
-- `report/`: DOCX/PDF cuoi cung sinh tu source va evidence.
+- `report/`: bao cao DOCX chinh sinh tu source va evidence.
 

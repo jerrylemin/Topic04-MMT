@@ -1,17 +1,15 @@
 from __future__ import annotations
 
-import base64
 import os
-import secrets
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
 
 
 ROOT = Path(__file__).resolve().parent
-_PROCESS_SECRET = secrets.token_urlsafe(48)
-_PROCESS_SIGNING_KEY = secrets.token_urlsafe(48)
-_PROCESS_FERNET_KEY = base64.urlsafe_b64encode(os.urandom(32)).decode("ascii")
+_PROCESS_SECRET = "lab06-local-demo-key-not-for-production"
+_PROCESS_SIGNING_KEY = "lab06-local-signing-key-not-for-production"
+_PROCESS_FERNET_KEY = "MDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDA="
 
 
 class Config:

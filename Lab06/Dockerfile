@@ -19,8 +19,6 @@ RUN mkdir -p /app/data /app/evidence /app/report \
 USER 10001:10001
 EXPOSE 5006
 
-# app.py intentionally binds 127.0.0.1 inside the container. A normal bridge
-# port publish cannot reach a process bound only to the container loopback.
-# The compose file keeps the required host-side 127.0.0.1 publish and documents
-# this limitation instead of weakening the lab by binding the app to 0.0.0.0.
-CMD ["python", "app.py"]
+# Flask listens on the container interface so bridge forwarding works. Compose
+# publishes the port only on host loopback, so the lab remains localhost-only.
+CMD ["python", "-m", "flask", "--app", "app:create_app", "run", "--host=0.0.0.0", "--port=5006", "--no-reload"]

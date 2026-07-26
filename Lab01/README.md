@@ -1,6 +1,10 @@
 # Lab 01 — Cross-Site Scripting
 
+**Nhóm sinh viên thực hiện:** Lê Minh — 21127645 và Nguyễn Vũ Bách — 21127224.
+
 Ứng dụng Flask offline minh họa Reflected, Stored và DOM-based XSS cùng bản vá. Mỗi thao tác tạo timeline và các inspector từ request, SQLite, response hoặc DOM thật. Chỉ chạy tại `127.0.0.1`; payload chỉ dùng `alert()` trong lab local.
+
+**Báo cáo DOCX:** `report/21127645_LeMinh_21127224_NguyenVuBach_Lab01_XSS.docx`.
 
 ## Chạy ứng dụng
 
@@ -55,4 +59,9 @@ python scripts/generate_trace_samples.py
 pytest -q
 ```
 
-Trace mẫu nằm trong `evidence/traces/`; log test nằm trong `evidence/logs/pytest.txt`. Nếu cổng 5000 bận, dừng tiến trình cũ. Nếu báo cáo thiếu ảnh, kiểm tra tên bằng checker; nếu PDF thiếu glyph, bảo đảm Windows có Arial hoặc cài font Unicode phù hợp.
+Trace mẫu nằm trong `evidence/traces/`; log test nằm trong `evidence/logs/pytest.txt`. Nếu cổng 5000 bận, dừng tiến trình cũ. Nếu báo cáo thiếu ảnh, kiểm tra tên bằng checker; nếu DOCX thiếu glyph, bảo đảm Windows có Arial hoặc cài font Unicode phù hợp.
+
+
+## Chế độ báo cáo DOCX-only
+
+`scripts/generate_report.py` chỉ tạo lại file DOCX đúng tên hiện có. Script không gọi ReportLab, LibreOffice/soffice, không chuyển đổi hoặc cập nhật PDF, không render DOCX và không chạy test/smoke test/ứng dụng. Các log cũ chỉ được đọc như evidence; ảnh chưa có được biểu diễn bằng placeholder chi tiết và không bị tuyên bố là đã chụp.

@@ -1,51 +1,41 @@
 from __future__ import annotations
 
-import pytest
+import subprocess
+import sys
+from pathlib import Path
 
-from scripts.generate_report import (
-    CHAPTER_TITLES,
-    FLOW_SPECS,
-    QA_ANSWERS,
-    ReportInputError,
-    parse_coverage_log,
-    parse_pytest_log,
-    parse_smoke_log,
-)
+from docx import Document
 
 
-def test_report_has_required_structural_content():
-    assert len(CHAPTER_TITLES) == 35
-    assert len(FLOW_SPECS) == 15
-    assert len(QA_ANSWERS) == 22
+ROOT = Path(__file__).resolve().parents[1]
+REPORT = ROOT / "report" / "21127645_LeMinh_21127224_NguyenVuBach_Lab06_CookiePoisoning.docx"
 
 
-def test_report_input_parsers_fail_closed(tmp_path):
-    with pytest.raises(ReportInputError):
-        parse_pytest_log(tmp_path / "missing-pytest.txt")
-    failed_smoke = tmp_path / "smoke.txt"
-    failed_smoke.write_text("runtime smoke: failed\n", encoding="utf-8")
-    with pytest.raises(ReportInputError):
-        parse_smoke_log(failed_smoke)
+def test_report_wrapper_generates_current_two_member_docx():
+    completed = subprocess.run(
+        [sys.executable, "scripts/generate_report.py"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert REPORT.is_file() and REPORT.stat().st_size > 20_000
+
+    document = Document(REPORT)
+    text = "\n".join(
+        [paragraph.text for paragraph in document.paragraphs]
+        + [cell.text for table in document.tables for row in table.rows for cell in row.cells]
+    )
+    assert "21127645" in text and "Lê Minh" in text
+    assert "21127224" in text and "Nguyễn Vũ Bách" in text
+    assert "COOKIE POISONING" in text
+    assert "49_cookie_initial_application.png" in text
 
 
-def test_report_input_parsers_accept_truthful_success_logs(tmp_path):
-    pytest_log = tmp_path / "pytest.txt"
-    pytest_log.write_text("173 passed in 1.00s\n", encoding="utf-8")
-    smoke_log = tmp_path / "smoke.txt"
-    smoke_log.write_text("20/20 checks passed\nSMOKE_TEST_PASSED\n", encoding="utf-8")
-
-    assert parse_pytest_log(pytest_log).passed == 173
-    assert parse_smoke_log(smoke_log).status == "passed"
-
-
-def test_coverage_parser_accepts_real_module_row_format(tmp_path):
-    from scripts.generate_report import CORE_MODULES
-
-    coverage_log = tmp_path / "coverage.txt"
-    rows = [f"{name:<30} 10      0   100%" for name in CORE_MODULES]
-    rows.append(f"{'TOTAL':<30} 100      0   100%")
-    coverage_log.write_text("\n".join(rows), encoding="utf-8")
-
-    summary = parse_coverage_log(coverage_log)
-    assert summary.total == 100
-    assert all(summary.modules[name] == 100 for name in CORE_MODULES)
+def test_report_wrapper_uses_shared_docx_only_generator():
+    source = (ROOT / "scripts" / "generate_report.py").read_text(encoding="utf-8").lower()
+    assert "topic04_reports" in source
+    assert "reportlab" not in source
+    assert "soffice" not in source
+    assert ".pdf" not in source

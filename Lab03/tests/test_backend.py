@@ -157,8 +157,7 @@ def test_security_headers_request_limit_reset_and_local_bind(app, client, login)
     assert client.post("/reset-lab").status_code == 302
     with app.app_context():
         assert query_one("SELECT role FROM users WHERE id = ?", (12,))["role"] == "user"
-    source = (ROOT / "app.py").read_text(encoding="utf-8")
-    assert 'host="127.0.0.1"' in source and 'host="0.0.0.0"' not in source
+    assert app.config["BIND_HOST"] == "127.0.0.1"
 
 
 def test_sql_calls_do_not_interpolate_request_data():

@@ -1,4 +1,262 @@
-# Hướng dẫn chụp ảnh thủ công - Lab02 Buffer Overflow
+# HƯỚNG DẪN CHỤP ẢNH THỦ CÔNG - LAB02 BUFFER OVERFLOW LOCAL
+
+## 1. Mục đích tài liệu
+
+Tài liệu giúp sinh viên tự cài môi trường, tự chạy lab, tự thực hiện kịch bản và tự chụp bằng chứng thật. Chỉ thao tác trên localhost của repository; không thử trên website/hệ thống thật, không dùng ảnh dựng, Playwright, Selenium, extension/macro chụp tự động hoặc công cụ chỉnh DOM để giả kết quả. Đóng tab riêng tư, không để lộ cookie/token thật, dữ liệu cá nhân, password, session ID hay chữ ký dài.
+
+## 2. Chuẩn bị môi trường từ đầu
+
+Mở Command Prompt tại thư mục repository, vào `Topic04\Lab02`, rồi chạy `scripts\run_lab.bat`. Wrapper gọi PowerShell và WSL Ubuntu để chạy `scripts/run_lab.sh`; terminal Administrator bị từ chối theo source. Trong WSL có thể chạy `python3 -m venv .venv`, `source .venv/bin/activate`, `pip install -r requirements.txt`, `make all`, `python app.py`. Khi thấy server tại `http://127.0.0.1:5002`, mở URL đó; dừng bằng `Ctrl+C`. Docker chỉ là phương án phụ trong README và không cần dùng để chụp bộ ảnh này.
+
+### Tài khoản và dữ liệu cố định
+
+Không có đăng nhập. Input bình thường là `Le Minh`; input dài dùng ký tự `A` lặp 64, mode `vulnerable_asan`, `secure_length` hoặc `secure_snprintf`.
+
+## 3. Chuẩn bị trình duyệt và F12
+
+1. Mở Chrome hoặc Microsoft Edge và truy cập đúng URL `127.0.0.1`/`localhost` nêu trong từng ảnh.
+2. Nhấn `F12`, chọn menu DevTools > Dock side > Dock to right. Đặt browser zoom 80-100% và kéo vách ngăn để cùng thấy thanh địa chỉ, UI và DevTools.
+3. Mở **Network**; bật **Preserve log** khi thao tác có redirect/reload; bật **Disable cache** trong lúc DevTools mở nếu cache làm sai nội dung.
+4. Bấm Clear để xóa request cũ trước mỗi kịch bản. Lọc theo route như `login`, `search`, `checkout`, `invoice`, `change-email`, `admin` hoặc `submit`.
+5. Chọn đúng request, lần lượt mở **Headers**, **Payload**, **Response** hoặc **Preview**. Mở **Cookies**, **Initiator** hay **Timing** chỉ khi mục ảnh yêu cầu.
+6. Dùng **Application/Storage > Cookies** cho cookie; **Elements** cho DOM/form/hidden field; **Console** chỉ quan sát lỗi/trạng thái được yêu cầu, không chạy lệnh đọc cookie; **Sources** chỉ khi cần chứng minh JavaScript client-side.
+7. Kéo rộng cột/khung chi tiết, thu gọn panel không liên quan và che value nhạy cảm; không cắt mất URL, status, tên request, tab đang mở hoặc kết quả UI.
+
+## 4. Luồng thao tác theo kịch bản F12
+
+Trước mỗi nhóm: reset đúng cách, đăng nhập đúng tài khoản, chụp trạng thái trước, thực hiện request vulnerable, chụp request/payload/response/trạng thái sau, rồi reset và chạy cùng dữ liệu ở bản secure. Không giả định bước trước còn hiệu lực; kiểm tra lại URL, account và cookie trước từng ảnh.
+
+### F12-01. `29_normal_network_payload.png`
+
+- **Mục tiêu:** Chứng minh request bình thường từ browser tới backend
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5002/vulnerable`
+- **Tài khoản:** N/A
+- **Dữ liệu nhập:** `name=Le Minh; mode=vulnerable_asan`
+- **Thao tác/nút:** Bấm Gửi dữ liệu
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network > Payload
+- **Request cần chọn:** `POST /submit`
+- **Trường cần mở:** Form Data
+- **Nội dung bắt buộc:** name `Le Minh`, mode `vulnerable_asan`, Content-Type form
+- **Kết quả mong đợi:** Request bình thường được backend nhận
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Payload HTTP bình thường tới chương trình C
+- **Mục báo cáo:** F12 / Normal / Request
+
+### F12-02. `30_normal_network_response.png`
+
+- **Mục tiêu:** Chứng minh response thành công
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5002/vulnerable`
+- **Tài khoản:** N/A
+- **Dữ liệu nhập:** `Le Minh`
+- **Thao tác/nút:** Chọn POST vừa gửi
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network > Response/Preview
+- **Request cần chọn:** `POST /submit`
+- **Trường cần mở:** Response và status
+- **Nội dung bắt buộc:** HTTP thành công; trace/HTML có native exit code 0 hoặc trạng thái thực
+- **Kết quả mong đợi:** UI hiển thị kết quả xử lý bình thường
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Response bình thường từ backend native
+- **Mục báo cáo:** F12 / Normal / Response
+
+### F12-03. `31_long_input_network_payload.png`
+
+- **Mục tiêu:** Chứng minh request input dài
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5002/vulnerable`
+- **Tài khoản:** N/A
+- **Dữ liệu nhập:** `A lặp 64; mode=vulnerable_asan`
+- **Thao tác/nút:** Submit input dài
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network > Payload
+- **Request cần chọn:** `POST /submit`
+- **Trường cần mở:** Form Data
+- **Nội dung bắt buộc:** Chuỗi A dài và mode; độ dài 64 thể hiện trong UI/trace
+- **Kết quả mong đợi:** Backend nhận input dài có kiểm soát
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Payload 64 byte gửi tới bản vulnerable
+- **Mục báo cáo:** F12 / Long input / Request
+
+### F12-04. `32_long_input_network_response.png`
+
+- **Mục tiêu:** Ghi response lỗi hoặc trạng thái backend thực
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5002/vulnerable`
+- **Tài khoản:** N/A
+- **Dữ liệu nhập:** `A lặp 64`
+- **Thao tác/nút:** Chọn request 64 byte
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network > Response/Timing
+- **Request cần chọn:** `POST /submit`
+- **Trường cần mở:** Status, Response, Timing
+- **Nội dung bắt buộc:** Response lỗi/ASan/exit/signal/connection state đúng quan sát; không khẳng định crash nếu không thấy
+- **Kết quả mong đợi:** Kết quả phản ánh tiến trình C thực
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Response của input dài ở bản vulnerable
+- **Mục báo cáo:** F12 / Long input / Response
+
+### F12-05. `33_browser_to_c_trace.png`
+
+- **Mục tiêu:** Chứng minh luồng browser → Flask → subprocess → C
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5002/vulnerable`
+- **Tài khoản:** N/A
+- **Dữ liệu nhập:** `Trace 64 byte đã có`
+- **Thao tác/nút:** Mở Request Inspector và Native Inspector cạnh Network
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network > Headers; UI Trace
+- **Request cần chọn:** `POST /submit`
+- **Trường cần mở:** Request URL, mode, trace id và native result
+- **Nội dung bắt buộc:** Cùng trace nối request browser với binary/process/exit
+- **Kết quả mong đợi:** Luồng web-to-native được đối chiếu
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** UI trace đối chiếu request tới chương trình C
+- **Mục báo cáo:** F12 / Trace
+
+### F12-06. `34_secure_length_network_response.png`
+
+- **Mục tiêu:** Chứng minh bản vá length từ chối input dài
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5002/secure/length`
+- **Tài khoản:** N/A
+- **Dữ liệu nhập:** `A lặp 64; mode=secure_length`
+- **Thao tác/nút:** Submit
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network > Payload và Response
+- **Request cần chọn:** `POST /secure/length/submit`
+- **Trường cần mở:** Form Data; Response
+- **Nội dung bắt buộc:** Input length 64; response từ chối/giới hạn trước copy
+- **Kết quả mong đợi:** Không overflow ở bản length check
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Response secure_length từ chối input dài
+- **Mục báo cáo:** F12 / Secure length
+
+### F12-07. `35_secure_snprintf_network_response.png`
+
+- **Mục tiêu:** Chứng minh bản snprintf xử lý giới hạn
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5002/secure/snprintf`
+- **Tài khoản:** N/A
+- **Dữ liệu nhập:** `A lặp 64; mode=secure_snprintf`
+- **Thao tác/nút:** Submit
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network > Payload và Response
+- **Request cần chọn:** `POST /secure/snprintf/submit`
+- **Trường cần mở:** Form Data; Response
+- **Nội dung bắt buộc:** Input dài; response báo reject/truncation theo source
+- **Kết quả mong đợi:** Bản vá không ghi vượt buffer
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Response secure_snprintf kiểm soát input dài
+- **Mục báo cáo:** F12 / Secure snprintf
+
+### F12-08. `36_patched_request_comparison.png`
+
+- **Mục tiêu:** So sánh cùng input giữa vulnerable và secure
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5002/comparison`
+- **Tài khoản:** N/A
+- **Dữ liệu nhập:** `A lặp 64`
+- **Thao tác/nút:** Giữ Preserve log; gửi lần lượt vulnerable và secure
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network
+- **Request cần chọn:** `Ba POST tương ứng`
+- **Trường cần mở:** Headers/Payload/Response
+- **Nội dung bắt buộc:** Cùng độ dài input; route và response khác nhau
+- **Kết quả mong đợi:** Bản vá từ chối hoặc giới hạn có chủ đích
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** So sánh HTTP vulnerable và secure
+- **Mục báo cáo:** F12 / Comparison
+
+### F12-09. `37_backend_unavailable_timing.png`
+
+- **Mục tiêu:** Ghi trạng thái nếu backend native không khả dụng
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5002/vulnerable`
+- **Tài khoản:** N/A
+- **Dữ liệu nhập:** `Input 64 byte`
+- **Thao tác/nút:** Chỉ dùng khi request thực sự lỗi/reset
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network > Timing/Response
+- **Request cần chọn:** `POST /submit`
+- **Trường cần mở:** Timing và status
+- **Nội dung bắt buộc:** Failed/connection reset/5xx hoặc thông báo binary unavailable đúng thực tế
+- **Kết quả mong đợi:** Không diễn giải lỗi giả thành crash
+- **Nếu không thấy:** Nếu request trả bình thường, không tạo ảnh giả; dùng ảnh response thực và ghi trạng thái quan sát được.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Trạng thái Network khi backend không trả bình thường
+- **Mục báo cáo:** F12 / Error handling
+
+### F12-10. `38_secure_payload_limit.png`
+
+- **Mục tiêu:** Chứng minh giới hạn input ở response secure
+- **Trạng thái ban đầu:** Server local đang chạy; xóa request cũ trong Network.
+- **URL hoặc lệnh:** `http://127.0.0.1:5002/secure/length`
+- **Tài khoản:** N/A
+- **Dữ liệu nhập:** `A lặp 256 là tối đa cấu hình; không vượt giới hạn lab`
+- **Thao tác/nút:** Submit và chọn request
+- **Tab UI:** Trang chức năng tương ứng.
+- **Tab F12:** Network > Payload/Response
+- **Request cần chọn:** `POST /secure/length/submit`
+- **Trường cần mở:** Form Data và Response
+- **Nội dung bắt buộc:** Độ dài input; thông báo giới hạn/từ chối; không shellcode
+- **Kết quả mong đợi:** Server áp chính sách độ dài
+- **Nếu không thấy:** Bật Preserve log, bỏ bộ lọc sai, thực hiện lại thao tác rồi chọn đúng request.
+- **Phạm vi ảnh:** Giữ thanh địa chỉ, UI kết quả và vùng DevTools liên quan trong cùng ảnh.
+- **Caption:** Giới hạn input của bản vá
+- **Mục báo cáo:** F12 / Secure / Limit
+
+## 5. Bảng mô tả ảnh F12
+
+| STT | Tên file | Mục tiêu | Chuẩn bị | URL/lệnh | Dữ liệu và thao tác | F12 cần mở | Nội dung bắt buộc | Kết quả | Caption | Mục báo cáo |
+|---:|---|---|---|---|---|---|---|---|---|---|
+| 1 | `29_normal_network_payload.png` | Chứng minh request bình thường từ browser tới backend | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5002/vulnerable` | name=Le Minh; mode=vulnerable_asan; Bấm Gửi dữ liệu | Network > Payload; Form Data | name `Le Minh`, mode `vulnerable_asan`, Content-Type form | Request bình thường được backend nhận | Payload HTTP bình thường tới chương trình C | F12 / Normal / Request |
+| 2 | `30_normal_network_response.png` | Chứng minh response thành công | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5002/vulnerable` | Le Minh; Chọn POST vừa gửi | Network > Response/Preview; Response và status | HTTP thành công; trace/HTML có native exit code 0 hoặc trạng thái thực | UI hiển thị kết quả xử lý bình thường | Response bình thường từ backend native | F12 / Normal / Response |
+| 3 | `31_long_input_network_payload.png` | Chứng minh request input dài | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5002/vulnerable` | A lặp 64; mode=vulnerable_asan; Submit input dài | Network > Payload; Form Data | Chuỗi A dài và mode; độ dài 64 thể hiện trong UI/trace | Backend nhận input dài có kiểm soát | Payload 64 byte gửi tới bản vulnerable | F12 / Long input / Request |
+| 4 | `32_long_input_network_response.png` | Ghi response lỗi hoặc trạng thái backend thực | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5002/vulnerable` | A lặp 64; Chọn request 64 byte | Network > Response/Timing; Status, Response, Timing | Response lỗi/ASan/exit/signal/connection state đúng quan sát; không khẳng định crash nếu không thấy | Kết quả phản ánh tiến trình C thực | Response của input dài ở bản vulnerable | F12 / Long input / Response |
+| 5 | `33_browser_to_c_trace.png` | Chứng minh luồng browser → Flask → subprocess → C | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5002/vulnerable` | Trace 64 byte đã có; Mở Request Inspector và Native Inspector cạnh Network | Network > Headers; UI Trace; Request URL, mode, trace id và native result | Cùng trace nối request browser với binary/process/exit | Luồng web-to-native được đối chiếu | UI trace đối chiếu request tới chương trình C | F12 / Trace |
+| 6 | `34_secure_length_network_response.png` | Chứng minh bản vá length từ chối input dài | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5002/secure/length` | A lặp 64; mode=secure_length; Submit | Network > Payload và Response; Form Data; Response | Input length 64; response từ chối/giới hạn trước copy | Không overflow ở bản length check | Response secure_length từ chối input dài | F12 / Secure length |
+| 7 | `35_secure_snprintf_network_response.png` | Chứng minh bản snprintf xử lý giới hạn | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5002/secure/snprintf` | A lặp 64; mode=secure_snprintf; Submit | Network > Payload và Response; Form Data; Response | Input dài; response báo reject/truncation theo source | Bản vá không ghi vượt buffer | Response secure_snprintf kiểm soát input dài | F12 / Secure snprintf |
+| 8 | `36_patched_request_comparison.png` | So sánh cùng input giữa vulnerable và secure | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5002/comparison` | A lặp 64; Giữ Preserve log; gửi lần lượt vulnerable và secure | Network; Headers/Payload/Response | Cùng độ dài input; route và response khác nhau | Bản vá từ chối hoặc giới hạn có chủ đích | So sánh HTTP vulnerable và secure | F12 / Comparison |
+| 9 | `37_backend_unavailable_timing.png` | Ghi trạng thái nếu backend native không khả dụng | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5002/vulnerable` | Input 64 byte; Chỉ dùng khi request thực sự lỗi/reset | Network > Timing/Response; Timing và status | Failed/connection reset/5xx hoặc thông báo binary unavailable đúng thực tế | Không diễn giải lỗi giả thành crash | Trạng thái Network khi backend không trả bình thường | F12 / Error handling |
+| 10 | `38_secure_payload_limit.png` | Chứng minh giới hạn input ở response secure | Server local đang chạy; xóa request cũ trong Network. | `http://127.0.0.1:5002/secure/length` | A lặp 256 là tối đa cấu hình; không vượt giới hạn lab; Submit và chọn request | Network > Payload/Response; Form Data và Response | Độ dài input; thông báo giới hạn/từ chối; không shellcode | Server áp chính sách độ dài | Giới hạn input của bản vá | F12 / Secure / Limit |
+
+## 6. Xử lý lỗi thường gặp
+
+- **Port 5002 bị chiếm:** dừng server lab cũ bằng `Ctrl+C`; dùng `Get-NetTCPConnection -LocalPort 5002 -ErrorAction SilentlyContinue` để xác định tiến trình, không tự đổi port tài liệu.
+- **Virtual environment chưa kích hoạt/thiếu dependency:** dùng đúng Python trong `.venv\Scripts\python.exe` và chạy `-m pip install -r requirements.txt`.
+- **Database chưa seed/state cũ:** chạy script reset nêu ở mục 2, restart server rồi đăng nhập lại.
+- **Cookie/session cũ hoặc sai tài khoản:** logout/reset, chỉ xóa cookie của đúng origin local, mở cửa sổ mới rồi đăng nhập lại.
+- **Network không thấy request/bị lọc mất:** bỏ filter, bật Preserve log, bấm Clear rồi thực hiện lại; lưu ý đổi `location.hash` không phát sinh request mới.
+- **Payload chưa URL encode:** nhập payload qua form; kiểm tra Request URL encoded và Query String Parameters decoded, không sửa payload sang chuỗi khác.
+- **Alert không xuất hiện/redirect làm mất request/cache cũ:** bật Preserve log và Disable cache, reload, reset state rồi lặp lại đúng mode.
+- **Server chưa nhận biến môi trường mới:** dừng bằng `Ctrl+C`, chạy lại script; không sửa source để làm khớp ảnh.
+- **Ảnh nhỏ/bị cắt:** dock phải, giảm zoom, mở rộng trường cần đọc; giữ URL, request, status và UI kết quả.
+
+## 7. Checklist cuối lab
+
+- [ ] Server chạy đúng localhost và port.
+- [ ] Đúng tài khoản/dữ liệu local; đủ ảnh theo manifest và đúng tên file.
+- [ ] Ảnh có URL/lệnh, kết quả UI và đúng request/tab/field F12.
+- [ ] Cookie/token/session/chữ ký dài đã che; vulnerable và secure tách biệt.
+- [ ] Caption khớp báo cáo; không có ảnh trùng/ảnh giả/ảnh chụp tự động.
+- [ ] Không chạy lại pytest/smoke test/Docker để tạo ảnh; ảnh test cũ (nếu có) chỉ là bằng chứng tùy chọn.
+- [ ] Chỉ tạo DOCX; không tạo, cập nhật, mở hoặc render PDF.
+- [ ] Chạy `python scripts/check_screenshots.py` khi sinh viên đã tự chụp đủ ảnh, rồi `python scripts/generate_report.py` để tạo DOCX.
+
+## 8. Phụ lục hướng dẫn bộ ảnh hiện có
+
+Các tên ảnh cũ được giữ để không phá vỡ quy trình hiện có. Thực hiện theo mô tả dưới đây; ảnh test cũ là tùy chọn và ảnh report chỉ cần chứng minh DOCX.
 
 Chỉ chụp thủ công trong lab local. Lưu PNG vào `evidence/screenshots/`, tên không dấu/không khoảng trắng, kích thước tối thiểu 1024x600, chữ đọc được, không có cookie/secret/dữ liệu cá nhân. Thanh địa chỉ phải là `http://127.0.0.1:5002`; không chụp website hay IP bên ngoài. Không dùng Playwright, Selenium, OCR hoặc ảnh giả.
 
@@ -420,35 +678,35 @@ Trước mỗi ảnh UI: chạy app, mở đúng URL, thu gọn dữ liệu khô
 - **Lỗi thường gặp:** Auto Play gửi lại request hoặc chụp nhiều bước chồng nhau.
 - **Cách làm lại:** Dừng Auto Play, chọn một trace có sẵn và chụp một bước rõ ràng.
 
-## 27_pytest_passed.png
+> Bằng chứng test/coverage cũ là tùy chọn; không chạy lại để phục vụ nhiệm vụ cập nhật tài liệu này.
 
-- **Tên file:** `27_pytest_passed.png`
+> Bằng chứng test/coverage cũ là tùy chọn; không chạy lại để phục vụ nhiệm vụ cập nhật tài liệu này.
 - **Mục đích:** Ghi nhận kết quả kiểm thử tự động thật.
 - **Điều kiện ban đầu:** Môi trường WSL đã cài requirements; binary build được.
-- **URL hoặc lệnh:** `sh scripts/run_tests.sh` hoặc `pytest`.
+> Bằng chứng test/coverage cũ là tùy chọn; không chạy lại để phục vụ nhiệm vụ cập nhật tài liệu này.
 - **Dữ liệu nhập:** Bộ test của repo.
 - **Nút cần bấm:** Không.
 - **Panel cần mở:** Terminal.
 - **Bước timeline cần chọn:** Không.
-- **Nội dung bắt buộc:** Dòng tổng kết pytest của lần chạy hiện tại; không ghi cứng số test.
+> Bằng chứng test/coverage cũ là tùy chọn; không chạy lại để phục vụ nhiệm vụ cập nhật tài liệu này.
 - **Kết quả mong đợi:** Chỉ chụp trạng thái pass nếu lệnh thật sự trả exit code 0.
-- **Caption báo cáo:** Hình 27. Kết quả pytest của Lab02 trong môi trường WSL.
+> Bằng chứng test/coverage cũ là tùy chọn; không chạy lại để phục vụ nhiệm vụ cập nhật tài liệu này.
 - **Lỗi thường gặp:** Chụp log cũ hoặc che mất lỗi/exit code.
 - **Cách làm lại:** Chạy lại `sh scripts/run_tests.sh`, sửa lỗi nếu có, chỉ chụp khi toàn bộ pass.
 
 ## 28_report_files.png
 
 - **Tên file:** `28_report_files.png`
-- **Mục đích:** Chứng minh hai artifact báo cáo đã được sinh.
+- **Mục đích:** Chứng minh artifact DOCX báo cáo đã được sinh.
 - **Điều kiện ban đầu:** Đã chạy trình tạo báo cáo.
 - **URL hoặc lệnh:** `python scripts/generate_report.py` rồi `ls -lh report/`.
 - **Dữ liệu nhập:** Ảnh hiện có trong `evidence/screenshots/`; thiếu ảnh dùng placeholder mô tả.
 - **Nút cần bấm:** Không.
 - **Panel cần mở:** Terminal/file manager local.
 - **Bước timeline cần chọn:** Không.
-- **Nội dung bắt buộc:** `21127645_LeMinh_Lab02_BufferOverflow.docx` và `.pdf`, kích thước khác 0.
-- **Kết quả mong đợi:** Hai file mở được; báo cáo in danh sách ảnh còn thiếu.
-- **Caption báo cáo:** Hình 28. Hai file DOCX và PDF được tạo từ cùng dữ liệu báo cáo.
+- **Nội dung bắt buộc:** `21127645_LeMinh_21127224_NguyenVuBach_Lab02_BufferOverflow.docx`, kích thước khác 0.
+- **Kết quả mong đợi:** File DOCX mở được; báo cáo in danh sách ảnh còn thiếu.
+- **Caption báo cáo:** Hình 28. Hai file DOCX được tạo từ cùng dữ liệu báo cáo.
 - **Lỗi thường gặp:** Chụp trước khi generation hoàn tất hoặc chỉ có một định dạng.
 - **Cách làm lại:** Chạy lại script, đọc lỗi dependency nếu có, xác nhận cả hai file khác 0 rồi chụp.
 
@@ -460,3 +718,6 @@ python scripts/generate_report.py
 ```
 
 Script kiểm tra chỉ đọc metadata/PNG/hash, không OCR và không phân tích nội dung. Sau khi thay ảnh, chạy lại trình tạo báo cáo để placeholder được thay bằng ảnh thật.
+### Bằng chứng cũ tùy chọn
+
+- `27_pytest_passed.png`: giữ tên để tương thích manifest cũ; không chạy lại pytest cho nhiệm vụ này. Chỉ dùng nếu ảnh thật đã có từ trước.

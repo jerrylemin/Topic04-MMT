@@ -93,13 +93,18 @@ def test_manual_guide_has_all_28_names():
 
 def test_screenshot_checker_lists_missing():
     result=subprocess.run([sys.executable,"scripts/check_screenshots.py"],cwd=ROOT,text=True,capture_output=True,encoding="utf-8",env={**os.environ,"PYTHONIOENCODING":"utf-8"})
-    assert result.returncode==1 and "Ảnh hợp lệ theo tên: 0/28" in result.stdout and "01_home_overview.png" in result.stdout
+    from screenshot_manifest import ALL_SCREENSHOTS
+    assert result.returncode==1
+    assert f"Đúng tên trong manifest: 0/{len(ALL_SCREENSHOTS)}" in result.stdout
+    assert "01_home_overview.png" in result.stdout
 
 def test_reports_generate_with_placeholders():
     result=subprocess.run([sys.executable,"scripts/generate_report.py"],cwd=ROOT,text=True,capture_output=True,encoding="utf-8",env={**os.environ,"PYTHONIOENCODING":"utf-8"})
-    assert result.returncode==0 and "Ảnh còn thiếu (28)" in result.stdout
-    assert (ROOT/"report/21127645_LeMinh_Lab01_XSS.docx").stat().st_size>10_000
-    assert (ROOT/"report/21127645_LeMinh_Lab01_XSS.pdf").stat().st_size>10_000
+    report=ROOT/"report/21127645_LeMinh_21127224_NguyenVuBach_Lab01_XSS.docx"
+    assert result.returncode==0 and str(report) in result.stdout
+    assert report.stat().st_size>10_000
     from docx import Document
-    doc=Document(ROOT/"report/21127645_LeMinh_Lab01_XSS.docx")
-    assert "ẢNH CẦN BỔ SUNG: 01_home_overview.png" in "\n".join(cell.text for table in doc.tables for row in table.rows for cell in row.cells)
+    doc=Document(report)
+    text="\n".join(p.text for p in doc.paragraphs)+"\n"+"\n".join(cell.text for table in doc.tables for row in table.rows for cell in row.cells)
+    assert "Lê Minh" in text and "Nguyễn Vũ Bách" in text
+    assert "29_reflected_network_request.png" in text

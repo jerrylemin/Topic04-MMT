@@ -9,4 +9,4 @@ COPY static/attacker ./static/attacker
 USER labuser
 EXPOSE 9004
 HEALTHCHECK --interval=15s --timeout=3s --retries=3 CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9004/health', timeout=2)"]
-CMD ["python", "attacker_app.py"]
+CMD ["python", "-m", "flask", "--app", "attacker_app:create_app", "run", "--host=0.0.0.0", "--port=9004", "--no-reload"]

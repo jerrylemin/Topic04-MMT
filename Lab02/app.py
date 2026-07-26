@@ -70,7 +70,10 @@ def create_app(test_config: dict | None = None) -> Flask:
         if not is_local_host(request.host, app.config["LOCAL_HOSTS"], app.config["PORT"]):
             return jsonify(error="Host không được phép."), 400
         if request.method == "POST" and not is_local_origin(
-            request.headers.get("Origin"), app.config["LOCAL_HOSTS"], app.config["PORT"]
+            request.headers.get("Origin"),
+            app.config["LOCAL_HOSTS"],
+            app.config["PORT"],
+            request.host,
         ):
             return jsonify(error="Origin không được phép."), 403
         return None

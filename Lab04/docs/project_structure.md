@@ -7,5 +7,5 @@
 - `tests/`: public-behavior and submission-contract tests.
 - `scripts/`: evidence export, runtime smoke, report generation, and cleanup.
 - `evidence/`: named redacted runtime artefacts and verification logs.
-- `report/`: final DOCX and PDF generated from source and evidence.
+- `report/`: báo cáo DOCX sinh từ source và evidence.
 

@@ -1,38 +1,33 @@
-from pathlib import Path
-
-import pytest
-
-from scripts.check_screenshots import EXPECTED_FILES, png_dimensions, validate_screenshots
+from screenshot_manifest import ALL_SCREENSHOTS
+from scripts.check_screenshots import check
 
 
-def test_checker_expects_exactly_documented_thirty_six_names():
-    assert len(EXPECTED_FILES) == 36
-    assert EXPECTED_FILES[0] == "01_home_overview.png"
-    assert EXPECTED_FILES[-1] == "36_report_files.png"
-    assert len(set(EXPECTED_FILES)) == len(EXPECTED_FILES)
+def test_checker_expects_the_current_documented_manifest():
+    names = [item["filename"] for item in ALL_SCREENSHOTS]
+    assert len(names) == 50
+    assert names[0] == "01_home_overview.png"
+    assert names[-1] == "50_login_cookie_masked.png"
+    assert len(set(names)) == len(names)
 
 
-def test_empty_directory_reports_every_missing_screenshot(tmp_path):
-    errors = validate_screenshots(tmp_path)
-    assert len(errors) == 36
-    assert all(error.startswith("THIẾU:") for error in errors)
+def test_empty_directory_reports_missing_screenshots(tmp_path, capsys):
+    assert check(tmp_path, ALL_SCREENSHOTS) == 1
+    output = capsys.readouterr().out
+    assert "01_home_overview.png" in output and "Thiếu bắt buộc:" in output
 
 
-def test_checker_reports_extra_file_without_content_analysis(tmp_path):
-    (tmp_path / "unexpected.txt").write_text("not an image", encoding="utf-8")
-    errors = validate_screenshots(tmp_path)
-    assert "THỪA: unexpected.txt" in errors
+def test_checker_reports_extra_file_without_content_analysis(tmp_path, capsys):
+    folder = tmp_path / "evidence/screenshots"
+    folder.mkdir(parents=True)
+    (folder / "unexpected.txt").write_text("not an image", encoding="utf-8")
+    assert check(tmp_path, ALL_SCREENSHOTS) == 1
+    assert "Thừa: unexpected.txt" in capsys.readouterr().out
 
 
-def test_checker_rejects_invalid_expected_png(tmp_path):
-    (tmp_path / EXPECTED_FILES[0]).write_bytes(b"not-png")
-    errors = validate_screenshots(tmp_path)
-    assert any(error.startswith(f"PNG KHÔNG HỢP LỆ: {EXPECTED_FILES[0]}") for error in errors)
-
-
-def test_dimension_reader_rejects_non_png_file(tmp_path):
-    path = tmp_path / "invalid.png"
-    path.write_bytes(b"plain text")
-    with pytest.raises(ValueError, match="PNG"):
-        png_dimensions(path)
+def test_checker_rejects_invalid_expected_png(tmp_path, capsys):
+    folder = tmp_path / "evidence/screenshots"
+    folder.mkdir(parents=True)
+    (folder / "01_home_overview.png").write_bytes(b"not-png")
+    assert check(tmp_path, ALL_SCREENSHOTS) == 1
+    assert "PNG rỗng/hỏng: 01_home_overview.png" in capsys.readouterr().out
 

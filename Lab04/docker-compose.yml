@@ -6,6 +6,7 @@ services:
     environment:
       DATABASE: /app/data/lab04.db
       SESSION_COOKIE_SECURE: "false"
+      LAB04_SECRET_KEY: "${LAB04_SECRET_KEY:-lab04-local-docker-demo-key-not-for-production}"
     ports:
       - "127.0.0.1:5004:5004"
     volumes:
