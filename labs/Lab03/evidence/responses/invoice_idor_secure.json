@@ -1,0 +1,14 @@
+{
+  "status": 403,
+  "trace_id": "7c933990a5a049e38d230f0c68837d0a",
+  "decision": {
+    "tampering_type": "invoice ID / IDOR",
+    "success": false,
+    "unauthorized_resource_disclosed": false,
+    "database_changed": false,
+    "control": "object-level authorization",
+    "http_status": 403,
+    "audit_event": "invoice_access_denied"
+  },
+  "content_type": "text/html; charset=utf-8"
+}

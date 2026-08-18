@@ -1,0 +1,4 @@
+{% extends 'base.html' %}{% block content %}{% set details = result|default({}, true) %}
+<section class="error-state" role="alert"><span class="eyebrow">Handled response</span><p class="error-code">{{ status_code|default(details.get('status', 'Error'), true)|e }}</p><h1>{{ details.get('title', message|default('Không thể xử lý yêu cầu.', true))|e }}</h1><p>{{ details.get('message', details.get('reason', 'Yêu cầu đã được từ chối an toàn.'))|e }}</p><a class="button button-primary" href="/dashboard">Về Dashboard</a></section>
+{% if trace|default(false, true) %}{% include 'components/trace_panel.html' %}{% endif %}
+{% endblock %}

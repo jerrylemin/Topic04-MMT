@@ -1,0 +1,463 @@
+{
+  "trace_id": "08b2417e286b406d94c13d1094401bdc",
+  "lab_type": "CSRF",
+  "mode": "secure",
+  "action": "lab_reset",
+  "current_user": "victim",
+  "attacker_origin": "http://127.0.0.1:5004",
+  "victim_origin": "http://127.0.0.1:5004",
+  "same_origin": true,
+  "same_site": true,
+  "request_method": "POST",
+  "full_url": "http://127.0.0.1:5004/reset-lab",
+  "path": "/reset-lab",
+  "query_string": "",
+  "content_type": "application/x-www-form-urlencoded",
+  "content_length": 54,
+  "form_field_names": [
+    "csrf_token"
+  ],
+  "form_values": {
+    "csrf_token": "[REDACTED]"
+  },
+  "host": "127.0.0.1:5004",
+  "route_handler": "reset_lab",
+  "cookie_present": true,
+  "origin_header": "http://127.0.0.1:5004",
+  "referer_header": null,
+  "parsed_scheme": "http",
+  "parsed_hostname": "127.0.0.1",
+  "parsed_port": 5004,
+  "expected_origins": [
+    "http://127.0.0.1:5004",
+    "http://localhost:5004"
+  ],
+  "origin_match": true,
+  "referer_match": null,
+  "csrf_token_present": true,
+  "csrf_token_status": "valid",
+  "origin_decision": "origin_allowed",
+  "reauthentication_status": "not_required",
+  "state_before": {
+    "id": 10,
+    "username": "victim",
+    "email": "secure_success@lab.local",
+    "role": "user",
+    "demo_balance": 1000000,
+    "created_at": "2026-07-14T18:38:41.578Z",
+    "updated_at": "2026-07-14T18:38:41.995Z"
+  },
+  "state_after": {
+    "email": "victim_old@lab.local",
+    "demo_balance": 1000000
+  },
+  "http_status": 303,
+  "final_result": "allowed",
+  "request_sent": true,
+  "response_readable_by_attacker": true,
+  "steps": [
+    {
+      "step_number": 1,
+      "layer": "Victim Browser",
+      "title": "Browser prepares request",
+      "description": "The browser prepared POST /reset-lab.",
+      "technique": "Victim Browser observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/reset-lab",
+        "step": 1
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "observed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "lab_reset",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "observed",
+      "timestamp": "2026-07-14T18:38:42.367242+00:00"
+    },
+    {
+      "step_number": 2,
+      "layer": "Attacker Page",
+      "title": "Form source classified",
+      "description": "No attacker origin was observed for this request.",
+      "technique": "Attacker Page observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/reset-lab",
+        "step": 2
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "not_applicable"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "lab_reset",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "not_applicable",
+      "timestamp": "2026-07-14T18:38:42.367242+00:00"
+    },
+    {
+      "step_number": 3,
+      "layer": "Cookie Policy",
+      "title": "Session cookie inclusion observed",
+      "description": "The victim session cookie was present on the actual request.",
+      "technique": "Cookie Policy observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/reset-lab",
+        "step": 3
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "observed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "lab_reset",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "observed",
+      "timestamp": "2026-07-14T18:38:42.367242+00:00"
+    },
+    {
+      "step_number": 4,
+      "layer": "HTTP Request",
+      "title": "Request headers received",
+      "description": "Origin=http://127.0.0.1:5004; Referer=missing.",
+      "technique": "HTTP Request observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/reset-lab",
+        "step": 4
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "observed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "lab_reset",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "observed",
+      "timestamp": "2026-07-14T18:38:42.367242+00:00"
+    },
+    {
+      "step_number": 5,
+      "layer": "Flask Router",
+      "title": "Route matched",
+      "description": "Flask selected the handler for /reset-lab.",
+      "technique": "Flask Router observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/reset-lab",
+        "step": 5
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "observed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "lab_reset",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "observed",
+      "timestamp": "2026-07-14T18:38:42.367242+00:00"
+    },
+    {
+      "step_number": 6,
+      "layer": "Authentication",
+      "title": "Signed session checked",
+      "description": "Session user=victim.",
+      "technique": "Authentication observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/reset-lab",
+        "step": 6
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "allowed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "lab_reset",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "allowed",
+      "timestamp": "2026-07-14T18:38:42.367242+00:00"
+    },
+    {
+      "step_number": 7,
+      "layer": "Origin Validation",
+      "title": "Origin/Referer policy",
+      "description": "Validation result: origin_allowed.",
+      "technique": "Origin Validation observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/reset-lab",
+        "step": 7
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "allowed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "lab_reset",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "allowed",
+      "timestamp": "2026-07-14T18:38:42.367242+00:00"
+    },
+    {
+      "step_number": 8,
+      "layer": "CSRF Validation",
+      "title": "Synchronizer token policy",
+      "description": "Server-side token status: valid.",
+      "technique": "CSRF Validation observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/reset-lab",
+        "step": 8
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "allowed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "lab_reset",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "allowed",
+      "timestamp": "2026-07-14T18:38:42.367242+00:00"
+    },
+    {
+      "step_number": 9,
+      "layer": "Re-authentication",
+      "title": "Recent authentication policy",
+      "description": "Re-authentication is not required for this action.",
+      "technique": "Re-authentication observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/reset-lab",
+        "step": 9
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "not_applicable"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "lab_reset",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "not_applicable",
+      "timestamp": "2026-07-14T18:38:42.367242+00:00"
+    },
+    {
+      "step_number": 10,
+      "layer": "Input Validation",
+      "title": "Bounded input validation",
+      "description": "Input passed the route-specific validation before mutation.",
+      "technique": "Input Validation observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/reset-lab",
+        "step": 10
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "allowed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "lab_reset",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "allowed",
+      "timestamp": "2026-07-14T18:38:42.367242+00:00"
+    },
+    {
+      "step_number": 11,
+      "layer": "Business Logic",
+      "title": "Action decision",
+      "description": "Decision=allowed; reason=origin_and_token_valid.",
+      "technique": "Business Logic observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/reset-lab",
+        "step": 11
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "allowed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "lab_reset",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "allowed",
+      "timestamp": "2026-07-14T18:38:42.367242+00:00"
+    },
+    {
+      "step_number": 12,
+      "layer": "SQLite",
+      "title": "Database state",
+      "description": "A parameterized transaction changed the recorded state.",
+      "technique": "SQLite observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/reset-lab",
+        "step": 12
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "changed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "lab_reset",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "changed",
+      "timestamp": "2026-07-14T18:38:42.367242+00:00"
+    },
+    {
+      "step_number": 13,
+      "layer": "Audit Logging",
+      "title": "Security event recorded",
+      "description": "Audit event lab_reset is linked to this trace.",
+      "technique": "Audit Logging observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/reset-lab",
+        "step": 13
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "recorded"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "lab_reset",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "recorded",
+      "timestamp": "2026-07-14T18:38:42.367242+00:00"
+    },
+    {
+      "step_number": 14,
+      "layer": "HTTP Response",
+      "title": "Response produced",
+      "description": "Victim response status is 303.",
+      "technique": "HTTP Response observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/reset-lab",
+        "step": 14
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "observed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "lab_reset",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "observed",
+      "timestamp": "2026-07-14T18:38:42.367242+00:00"
+    },
+    {
+      "step_number": 15,
+      "layer": "Same-Origin Policy",
+      "title": "Attacker response readability",
+      "description": "No cross-origin attacker response read was attempted.",
+      "technique": "Same-Origin Policy observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/reset-lab",
+        "step": 15
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "not_applicable"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "lab_reset",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "not_applicable",
+      "timestamp": "2026-07-14T18:38:42.367242+00:00"
+    },
+    {
+      "step_number": 16,
+      "layer": "Final Result",
+      "title": "Security verdict",
+      "description": "allowed: origin_and_token_valid.",
+      "technique": "Final Result observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/reset-lab",
+        "step": 16
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "allowed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "lab_reset",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "allowed",
+      "timestamp": "2026-07-14T18:38:42.367242+00:00"
+    }
+  ],
+  "timestamp": "2026-07-14T18:38:42.367768+00:00",
+  "origin": "http://127.0.0.1:5004",
+  "referer": null
+}

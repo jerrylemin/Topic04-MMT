@@ -1,0 +1,8 @@
+HTTP status: 303
+Location: /
+Content-Type: text/html; charset=utf-8
+Content-Length: 189
+Trace ID: c32248bcc8cd42998063011e58c8c06e
+Decision: allowed
+CSRF status: valid
+Origin decision: origin_allowed

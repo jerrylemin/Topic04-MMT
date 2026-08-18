@@ -1,0 +1,1 @@
+<section class="code-grid">{% for snippet in code_snippets %}<article><h3>{{ snippet.function }}</h3><dl><dt>File</dt><dd>{{ snippet.file }}</dd><dt>Line start</dt><dd>{{ snippet.line_start }}</dd><dt>Line end</dt><dd>{{ snippet.line_end }}</dd></dl><pre><code>{{ snippet.code }}</code></pre><p>Extracted directly from the running source file.</p></article>{% endfor %}</section>

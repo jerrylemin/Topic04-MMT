@@ -1,0 +1,8 @@
+{
+  "method": "GET",
+  "route": "/secure/invoice",
+  "parameters": {
+    "id": 1002
+  },
+  "trace_id": "7c933990a5a049e38d230f0c68837d0a"
+}

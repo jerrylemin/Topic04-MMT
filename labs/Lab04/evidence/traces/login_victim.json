@@ -1,0 +1,454 @@
+{
+  "trace_id": "e5d30761c8a14e159f561eceab8c3933",
+  "lab_type": "CSRF",
+  "mode": "authentication",
+  "action": "login_success",
+  "current_user": "victim",
+  "attacker_origin": null,
+  "victim_origin": "http://127.0.0.1:5004",
+  "same_origin": null,
+  "same_site": null,
+  "request_method": "POST",
+  "full_url": "http://127.0.0.1:5004/login",
+  "path": "/login",
+  "query_string": "",
+  "content_type": "application/x-www-form-urlencoded",
+  "content_length": 35,
+  "form_field_names": [
+    "password",
+    "username"
+  ],
+  "form_values": {
+    "username": "victim",
+    "password": "[REDACTED]"
+  },
+  "host": "127.0.0.1:5004",
+  "route_handler": "login",
+  "cookie_present": false,
+  "origin_header": null,
+  "referer_header": null,
+  "parsed_scheme": null,
+  "parsed_hostname": null,
+  "parsed_port": null,
+  "expected_origins": [
+    "http://127.0.0.1:5004",
+    "http://localhost:5004"
+  ],
+  "origin_match": null,
+  "referer_match": null,
+  "csrf_token_present": false,
+  "csrf_token_status": "not_required",
+  "origin_decision": "not_checked",
+  "reauthentication_status": "not_required",
+  "state_before": {},
+  "state_after": {},
+  "http_status": 303,
+  "final_result": "allowed",
+  "request_sent": true,
+  "response_readable_by_attacker": true,
+  "steps": [
+    {
+      "step_number": 1,
+      "layer": "Victim Browser",
+      "title": "Browser prepares request",
+      "description": "The browser prepared POST /login.",
+      "technique": "Victim Browser observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/login",
+        "step": 1
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "observed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "login_success",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "observed",
+      "timestamp": "2026-07-14T18:38:41.711120+00:00"
+    },
+    {
+      "step_number": 2,
+      "layer": "Attacker Page",
+      "title": "Form source classified",
+      "description": "No attacker origin was observed for this request.",
+      "technique": "Attacker Page observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/login",
+        "step": 2
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "not_applicable"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "login_success",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "not_applicable",
+      "timestamp": "2026-07-14T18:38:41.711120+00:00"
+    },
+    {
+      "step_number": 3,
+      "layer": "Cookie Policy",
+      "title": "Session cookie inclusion observed",
+      "description": "No victim session cookie was present.",
+      "technique": "Cookie Policy observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/login",
+        "step": 3
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "observed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "login_success",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "observed",
+      "timestamp": "2026-07-14T18:38:41.711120+00:00"
+    },
+    {
+      "step_number": 4,
+      "layer": "HTTP Request",
+      "title": "Request headers received",
+      "description": "Origin=missing; Referer=missing.",
+      "technique": "HTTP Request observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/login",
+        "step": 4
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "observed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "login_success",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "observed",
+      "timestamp": "2026-07-14T18:38:41.711120+00:00"
+    },
+    {
+      "step_number": 5,
+      "layer": "Flask Router",
+      "title": "Route matched",
+      "description": "Flask selected the handler for /login.",
+      "technique": "Flask Router observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/login",
+        "step": 5
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "observed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "login_success",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "observed",
+      "timestamp": "2026-07-14T18:38:41.711120+00:00"
+    },
+    {
+      "step_number": 6,
+      "layer": "Authentication",
+      "title": "Signed session checked",
+      "description": "Session user=victim.",
+      "technique": "Authentication observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/login",
+        "step": 6
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "allowed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "login_success",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "allowed",
+      "timestamp": "2026-07-14T18:38:41.711120+00:00"
+    },
+    {
+      "step_number": 7,
+      "layer": "Origin Validation",
+      "title": "Origin/Referer policy",
+      "description": "This vulnerable or non-secure flow does not enforce Origin/Referer.",
+      "technique": "Origin Validation observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/login",
+        "step": 7
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "not_applicable"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "login_success",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "not_applicable",
+      "timestamp": "2026-07-14T18:38:41.711120+00:00"
+    },
+    {
+      "step_number": 8,
+      "layer": "CSRF Validation",
+      "title": "Synchronizer token policy",
+      "description": "This flow does not require a CSRF token.",
+      "technique": "CSRF Validation observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/login",
+        "step": 8
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "not_applicable"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "login_success",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "not_applicable",
+      "timestamp": "2026-07-14T18:38:41.711120+00:00"
+    },
+    {
+      "step_number": 9,
+      "layer": "Re-authentication",
+      "title": "Recent authentication policy",
+      "description": "Re-authentication is not required for this action.",
+      "technique": "Re-authentication observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/login",
+        "step": 9
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "not_applicable"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "login_success",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "not_applicable",
+      "timestamp": "2026-07-14T18:38:41.711120+00:00"
+    },
+    {
+      "step_number": 10,
+      "layer": "Input Validation",
+      "title": "Bounded input validation",
+      "description": "Input passed the route-specific validation before mutation.",
+      "technique": "Input Validation observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/login",
+        "step": 10
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "allowed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "login_success",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "allowed",
+      "timestamp": "2026-07-14T18:38:41.711120+00:00"
+    },
+    {
+      "step_number": 11,
+      "layer": "Business Logic",
+      "title": "Action decision",
+      "description": "Decision=allowed; reason=credentials_valid.",
+      "technique": "Business Logic observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/login",
+        "step": 11
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "allowed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "login_success",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "allowed",
+      "timestamp": "2026-07-14T18:38:41.711120+00:00"
+    },
+    {
+      "step_number": 12,
+      "layer": "SQLite",
+      "title": "Database state",
+      "description": "No state change was committed.",
+      "technique": "SQLite observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/login",
+        "step": 12
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "unchanged"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "login_success",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "unchanged",
+      "timestamp": "2026-07-14T18:38:41.711120+00:00"
+    },
+    {
+      "step_number": 13,
+      "layer": "Audit Logging",
+      "title": "Security event recorded",
+      "description": "Audit event login_success is linked to this trace.",
+      "technique": "Audit Logging observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/login",
+        "step": 13
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "recorded"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "login_success",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "recorded",
+      "timestamp": "2026-07-14T18:38:41.711120+00:00"
+    },
+    {
+      "step_number": 14,
+      "layer": "HTTP Response",
+      "title": "Response produced",
+      "description": "Victim response status is 303.",
+      "technique": "HTTP Response observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/login",
+        "step": 14
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "observed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "login_success",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "observed",
+      "timestamp": "2026-07-14T18:38:41.711120+00:00"
+    },
+    {
+      "step_number": 15,
+      "layer": "Same-Origin Policy",
+      "title": "Attacker response readability",
+      "description": "No cross-origin attacker response read was attempted.",
+      "technique": "Same-Origin Policy observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/login",
+        "step": 15
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "not_applicable"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "login_success",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "not_applicable",
+      "timestamp": "2026-07-14T18:38:41.711120+00:00"
+    },
+    {
+      "step_number": 16,
+      "layer": "Final Result",
+      "title": "Security verdict",
+      "description": "allowed: credentials_valid.",
+      "technique": "Final Result observation and policy decision",
+      "input_data": {
+        "method": "POST",
+        "path": "/login",
+        "step": 16
+      },
+      "output_data": {
+        "decision": "allowed",
+        "http_status": 303,
+        "step_status": "allowed"
+      },
+      "code_reference": {
+        "file": "victim_app.py",
+        "function": "login_success",
+        "line": "runtime"
+      },
+      "security_meaning": "Observed request data and server-side decision; no secret values are stored.",
+      "status": "allowed",
+      "timestamp": "2026-07-14T18:38:41.711120+00:00"
+    }
+  ],
+  "timestamp": "2026-07-14T18:38:41.711120+00:00",
+  "origin": null,
+  "referer": null
+}

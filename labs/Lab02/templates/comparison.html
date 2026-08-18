@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}So sánh mã - Lab 02{% endblock %}
+{% block content %}
+<section class="page-header page-section">
+  <span class="status-badge status-info">TRƯỚC VÀ SAU BẢN VÁ</span>
+  <h1>So sánh ba cách xử lý buffer</h1>
+  <p>Điểm khác biệt chính là kiểm soát số byte được ghi và xử lý rõ ràng trường hợp input quá dài.</p>
+</section>
+
+<section class="page-section">
+  {% include "components/code_comparison.html" %}
+</section>
+
+<section class="page-section" aria-labelledby="behavior-title">
+  <h2 id="behavior-title">So sánh hành vi</h2>
+  <div class="table-scroll" tabindex="0" aria-label="Bảng so sánh hành vi trước và sau bản vá">
+    <table>
+      <thead><tr><th>Tiêu chí</th><th>Vulnerable</th><th>Length check</th><th>snprintf</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Hàm copy</th><td><code>strcpy</code></td><td>Copy có kiểm soát</td><td><code>snprintf</code></td></tr>
+        <tr><th scope="row">Giới hạn</th><td>Không biết kích thước đích</td><td>Tối đa 31 byte</td><td><code>sizeof(name)</code></td></tr>
+        <tr><th scope="row">Input dài</th><td>Ghi vượt buffer</td><td>Từ chối trước copy</td><td>Phát hiện truncate rồi từ chối</td></tr>
+        <tr><th scope="row">Null terminator</th><td>Copy đến null, kể cả ngoài buffer</td><td>Đặt null trong buffer</td><td>Có null khi size lớn hơn 0</td></tr>
+        <tr><th scope="row">Kết quả</th><td>Có thể ASan abort hoặc crash</td><td>Exit code có kiểm soát</td><td>Exit code có kiểm soát</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

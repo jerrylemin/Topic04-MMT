@@ -1,0 +1,13 @@
+[
+  {
+    "domain": "host-only",
+    "httponly": true,
+    "masked_value": "",
+    "max_age": "0",
+    "name": "lab06_session",
+    "path": "/",
+    "samesite": "Lax",
+    "secure": false,
+    "value_fingerprint": "e3b0c44298fc"
+  }
+]

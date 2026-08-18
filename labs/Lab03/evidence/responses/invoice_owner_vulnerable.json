@@ -1,0 +1,13 @@
+{
+  "status": 200,
+  "trace_id": "1e9a9759a9f147e9a3810443ba3d8639",
+  "decision": {
+    "tampering_type": "invoice ID / IDOR",
+    "success": false,
+    "unauthorized_resource_disclosed": false,
+    "database_changed": false,
+    "missing_check": "object-level authorization",
+    "audit_event": "vulnerable_action_completed"
+  },
+  "content_type": "text/html; charset=utf-8"
+}

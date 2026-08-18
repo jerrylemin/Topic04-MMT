@@ -1,0 +1,130 @@
+LAB 6 - COOKIE POISONING
+REQUIREMENTS REVIEW
+Student ID: 21127645
+Student: Lê Minh
+Review date: 2026-07-15
+
+STATUS AND PURPOSE
+This file records the requirements extracted from the supplied course material and the full Codex request. It is a requirements baseline, not evidence that Lab06 has been implemented, executed, tested, or accepted. Test counts, coverage, runtime traces, screenshots, DOCX/PDF output, and Docker behavior must be reported only after they are produced and verified.
+
+SOURCES REVIEWED
+1. BaiTapTopic04.docx, paragraphs 419-512 (1-based paragraph indexes), read with python-docx 1.2.0. The source file was not modified.
+2. Topic04_Lo-Hong-Bao-Mat-Ung-Dung-Web.pptx, slides 35-39 (1-based slide indexes), read with python-pptx 1.0.3. The source file was not modified.
+3. The attached UTF-8 Codex request in pasted-text.txt, sections 1-59, including the numbering ambiguity described below.
+
+COURSE DOCX: PARAGRAPHS 419-512
+- P419-P424 define Lab 6 and its learning goals: Cookie Poisoning changes cookie content to alter application behavior; sensitive client-side cookie data is risky; learners must distinguish plain, signed, and encrypted cookies; defenses include server-side sessions, signatures, encryption, and integrity checks.
+- P426-P437 propose a local user/admin application with a role cookie and admin page. The deliberately vulnerable version stores role=user or is_admin=false. DevTools is suggested; Burp Suite Community or OWASP ZAP is also mentioned.
+- P439-P445 define the vulnerable scenario: after login the application creates username=student and role=user; /admin grants access when the cookie role equals admin. The root cause is trusting client-controlled data.
+- P447-P460 require observation of Name, Value, Domain, Path, HttpOnly, Secure, and SameSite in Browser DevTools.
+- P462-P467 require changing role=user to role=admin, reloading /admin, observing the decision, and explaining the broken access control.
+- P469-P478 require decoding a Base64 cookie, inspecting JSON, changing role in the lab, encoding it again, and testing server acceptance. P478 explicitly states that Base64 is representation/encoding, not encryption.
+- P480-P486 require proposing safe alternatives: do not store role in a client cookie; store only a random session ID; keep role in the server/database; sign client-side data when it must be stored there; encrypt sensitive data and check integrity.
+- P488-P498 provide five analysis questions and definitions. Cookie Poisoning modifies a cookie to make the server behave incorrectly; a signed cookie provides an integrity signature; an encrypted cookie hides content; a Session ID identifies a login session and normally points to server-side state.
+- P500-P512 require distrust of client cookies; prohibit direct storage of role, is_admin, balance, or permission; require server-side sessions, HttpOnly/Secure/SameSite, authorization on every request, signed cookies where client data is unavoidable, rotation after login, and server-side session invalidation on logout.
+
+COURSE PPTX: SLIDES 35-39
+- Slide 35 introduces Chapter 7, Cookie Poisoning.
+- Slide 36 defines Cookie Poisoning as unauthorized modification of browser cookie contents before they return to the server. The vulnerable condition is plaintext sensitive data without integrity protection, combined with a server that trusts the cookie instead of checking its database. The stated impact is privilege escalation.
+- Slide 37 gives examples: member to moderator, false to true for premium status, and changing a user ID to access another identity. Lab06 must explain these as anti-patterns only; its executable scope is limited to fixed local demo data and role escalation.
+- Slide 38 lists defenses: keep only a random Session ID in the cookie and store role/UserID/balance server-side; use HMAC so modifications invalidate the signature; encrypt cookie values where confidentiality is required; use HttpOnly, Secure, and SameSite flags. Flags have separate purposes and do not themselves provide content integrity.
+- Slide 39 distinguishes Cookie Stealing through XSS (steal an existing cookie to hijack a session), Cookie Poisoning (change cookie content to alter logic or privileges), and Session Fixation (force a victim to use a known Session ID and later share the authenticated session).
+
+HOW THE ATTACHED REQUEST NARROWS THE COURSE MATERIAL
+- Runtime scope is strictly http://127.0.0.1:5006 with host binding to 127.0.0.1. No real website, Internet runtime access, cross-site cookie reading, arbitrary host/URL/domain/port/cookie-name input, proxy, extension, replay tool, browser automation, or general cookie editor is allowed.
+- The course document mentions Burp Suite or ZAP, but the attached request prohibits creating or using a proxy-like workflow. Lab06 therefore documents manual Browser DevTools editing only.
+- No document.cookie or other JavaScript cookie reading/sending is allowed. Cookies are set and read by Flask HTTP request/response handling only.
+- No XSS, Session Hijacking, credential theft, Session ID theft, or executable Session Fixation flow is allowed. These topics are explanatory comparisons only.
+- Cookie edits must be manual, limited to fixed Lab06 cookie names, fixed routes, and fixed demo values. There must be no server endpoint or button that changes role to admin and no arbitrary cookie API.
+- Do not display secrets, password hashes, full signed/encrypted cookies in logs, or full session tokens. Inspector output must mask sensitive values and use fingerprints where appropriate.
+
+REQUIRED FIVE-MODE MODEL
+1. Plain Cookie vulnerable
+   Cookie names: lab06_username and lab06_role.
+   Fixed student values: student and user.
+   /vulnerable/plain/admin deliberately trusts request.cookies['lab06_role'], does not query the database role, denies user, and allows manually changed admin. It must log an audit event and create a real trace. Plain demo cookies use Path=/, SameSite=Lax, configurable Secure, and HttpOnly=False for observation. The UI must state that HttpOnly=False is lab-only and that HttpOnly is not a Cookie Poisoning fix.
+
+2. Base64 Cookie vulnerable
+   Cookie name: lab06_profile_b64.
+   Payload: {"username":"student","role":"user"}, URL-safe Base64 encoded without signing or encryption.
+   /vulnerable/base64/admin decodes, parses, extracts role, and deliberately trusts it. The guide may show only the two fixed user/admin JSON and Base64 states. There is no free-form editor or automatic cookie setter.
+
+3. Signed Cookie
+   Cookie name: lab06_signed_profile.
+   Payload fields: user_id, username, role, issued_at, purpose; never password or secret.
+   Use itsdangerous.URLSafeSerializer or HMAC-SHA256. Verify before using/deserializing data; reject missing, malformed, payload-modified, or signature-modified cookies. Flags: HttpOnly=True, SameSite=Lax, configurable Secure, Path=/. Signing provides integrity and authenticity, not confidentiality, immediate revocation, or a substitute for server-side authorization.
+
+4. Encrypted Cookie demonstration
+   Route: /secure/encrypted-demo.
+   Use Fernet authenticated encryption with a read-only payload containing user_id, display_name, preference, and issued_at. Do not use role for authorization and do not put a real password or Session ID in it. Show masked token, server decrypt result, tamper rejection, confidentiality/integrity status, and "Server environment only" for key location. Never show the key.
+
+5. Server-side Session secure
+   Cookie name: lab06_session; value is secrets.token_urlsafe(32).
+   Store only SHA-256(token), user_id, timestamps, expiry, active/revoked state, and rotation reason server-side. The cookie must not contain role or user_id. Resolve user and role from the database on every protected request. Require active, unexpired sessions. Rotate after login; revoke the old record. Logout must revoke server state and expire the browser cookie. A previously used token must fail after rotation or logout.
+
+FIXED ACCOUNTS
+- Student: id 10, username student, display name Sinh vien Demo, student@lab.local, role user, password Student123!.
+- Administrator: id 1, username admin_lab, display name Quan tri Lab, admin@lab.local, role admin, password AdminLab123!.
+- Passwords are demo input only. The database must store Werkzeug PBKDF2-SHA256 hashes with 600000 iterations and verify with check_password_hash. Audit/UI/database inspectors must not expose password plaintext or hashes.
+
+REQUIRED ROUTES
+- Common: GET /; GET|POST /login; POST /logout; GET /dashboard; POST /reset-lab; GET /comparison; GET /security-controls; GET /audit-logs; GET /api/trace/<trace_id>; POST /api/trace/clear; GET /health.
+- Plain: GET /vulnerable/plain/profile; GET /vulnerable/plain/admin.
+- Base64: GET /vulnerable/base64/profile; GET /vulnerable/base64/admin.
+- Signed: GET /secure/signed/profile; GET /secure/signed/admin.
+- Encrypted: GET /secure/encrypted-demo.
+- Server session: GET /secure/session/profile; GET /secure/session/admin; POST /secure/session/logout.
+
+DATABASE REQUIREMENTS
+- SQLite with parameterized queries.
+- users: id, username, display_name, email, password_hash, role, active, created_at, updated_at.
+- server_sessions: id, session_token_hash, user_id, created_at, expires_at, last_seen_at, active, revoked_at, rotation_reason.
+- audit_logs: id, timestamp, user_id, username, action, route, mode, cookie_name, cookie_status, submitted_role, database_role, authorization_decision, reason, trace_id.
+- cookie_events: id, timestamp, mode, cookie_name, operation, value_fingerprint, signature_status, encryption_status, decision, trace_id.
+- session_events: id, timestamp, user_id, event_type, old_session_fingerprint, new_session_fingerprint, reason, trace_id.
+
+REQUIRED OBSERVABILITY AND UI
+- Cookie Inspector; Cookie Attribute Inspector; Cookie Transformation/Diff Inspector; Base64 Inspector; Signature Inspector; Encryption Inspector; Server Session Inspector; Authorization Inspector; Database Inspector; Request Inspector; Code Comparison; Security Control Panel; Action Timeline; Final Security Verdict; Audit Log; trace JSON; request/response/cookie/session/database evidence.
+- Timeline events must be based on real execution and carry step_number, timestamp, layer, title, description, technique, input_data, output_data, code_reference, security_meaning, and status.
+- Inspector data must come from the actual request/config/database/verification result, not hard-coded verdicts. Sensitive values must be masked.
+- Presentation Mode must support previous/next step, progress, keyboard navigation, active-step explanation, and synchronized Inspector/highlight state using local HTML/CSS/JavaScript only.
+
+SECURITY CONTROLS
+- Flask debug disabled; request body limited; no wildcard CORS; no CDN; no unsafe-eval.
+- Headers: Content-Security-Policy, X-Content-Type-Options: nosniff, X-Frame-Options: DENY, Referrer-Policy: strict-origin-when-cross-origin, Permissions-Policy, and appropriate no-store/private caching for login/admin responses.
+- Cookie flags shown by UI must reflect real configuration. HttpOnly addresses script access, Secure limits transport to HTTPS, and SameSite reduces cross-site request risk; none of them validates the cookie payload.
+- No hard-coded production secret or secret in the image. Use environment configuration and provide only non-secret examples in .env.example.
+
+EVIDENCE AND REPORTING
+- Export real trace JSON and real request/response/cookie/session/audit/database evidence. Never fabricate or hard-code evidence, decisions, test results, or coverage.
+- Save real pytest, coverage, and runtime smoke logs under evidence/logs only after commands run.
+- Runtime smoke must start the actual app, wait for health, exercise fixed local flows, export results, stop cleanly, and fail clearly on errors.
+- Reports: report/21127645_LeMinh_Lab06_CookiePoisoning.docx and .pdf. Target 18-25 substantive pages, 35 specified chapters, appendices, 15 trace tables, five-model comparison matrix, diagrams, evidence, and answers to the 22 listed questions. Reports must remain complete without manual screenshots; no blank screenshot appendix or placeholder image is permitted.
+- generate_report.py must read actual source/evidence/logs, create DOCX and PDF, and fail clearly if PDF generation is unavailable. It must not claim tests or coverage that were not run.
+- The manual guide names 48 PNG captures. Screenshots must be taken by a person in Browser DevTools, are not automatically created, and are explicitly not a Codex completion gate. check_screenshots.py may validate files and hashes but must not OCR or synthesize content.
+
+TESTING AND QUALITY GATES
+- At least 80 meaningful automated tests across routes, database, seed, password hashing, all five models, authorization, rotation, logout invalidation, flags, audit, traces, inspectors, controls, headers, runtime restrictions, evidence, reports, screenshot guide, and cleanup.
+- pytest-cov target: at least 90 percent for database.py, auth_service.py, cookie_service.py, base64_cookie_service.py, signed_cookie_service.py, encrypted_cookie_service.py, server_session_service.py, authorization_service.py, audit_service.py, and trace_service.py.
+- Tests must verify the explicit positive and negative cases in request section 51, including no document.cookie, no arbitrary host/URL/target input, no Playwright/Selenium, no Internet runtime call, non-root Docker user, truthful logs, and report output or clear failure.
+- Do not leave TODO, FIXME, skeleton, placeholder source, fake evidence, stale generated files, or claims unsupported by a real command result.
+
+OPERATING AND SUBMISSION REQUIREMENTS
+- Python 3.11 or newer; Flask, SQLite, Jinja2, Werkzeug hashing, secrets/hashlib/hmac, itsdangerous, cryptography/Fernet, pytest/pytest-cov, requests, python-docx, ReportLab or LibreOffice, local HTML/CSS/JS, Docker/Compose.
+- Provide Windows, Linux, and quick-run scripts; seed/reset/demo/smoke/evidence/report/screenshot-check/cleanup scripts; README and manual screenshot guide.
+- clean_submission.py may remove caches, bytecode, old coverage/htmlcov, temporary render/test DB files, but must preserve source, required demo DB, final evidence, tests, report, README, and screenshot guide.
+
+AMBIGUITIES AND CONFLICTS
+1. Docker binding contradiction: the request says the application must bind only 127.0.0.1 and never 0.0.0.0, while also requiring Docker Compose publishing 127.0.0.1:5006:5006. A process bound to 127.0.0.1 inside a normal container is not reachable through Docker's forwarded container interface. Binding the container process to 0.0.0.0 and publishing only to host 127.0.0.1 is operationally normal and externally local-only, but violates the literal no-0.0.0.0 rule. Documentation and tests must disclose this; they must not claim both properties are simultaneously verified. Security-first default is direct host execution bound to 127.0.0.1 until the user chooses whether container-internal 0.0.0.0 is acceptable.
+2. Secure cookie on HTTP: Secure cookies are not normally returned over plain http://127.0.0.1. COOKIE_SECURE therefore needs an explicit local-development value (normally false) while production guidance remains true. The UI must show the actual value, not state that Secure is active when it is not.
+3. Course tool versus narrowed scope: the DOCX suggests Burp/ZAP, but the attached request prohibits proxies and mandates DevTools-only manual editing. The attached request is the controlling, safer constraint.
+4. Encrypted-cookie wording: DOCX P497 describes encryption as making content unreadable, but confidentiality alone does not guarantee tamper detection. The request correctly requires Fernet authenticated encryption; the implementation/report must explain both confidentiality and integrity.
+5. Signed-cookie authorization: the request includes role in the signed demo payload but simultaneously states that server-side authorization remains primary. The signed mode may demonstrate signature verification, but it must not be presented as equivalent to database-backed, immediately revocable authorization.
+6. Route naming: the course uses /admin, while the attached request defines mode-specific routes. The mode-specific fixed routes control Lab06.
+7. Numbering defect: after request section 47, the heading for generate_report.py is incorrectly numbered 22, then numbering resumes at 49. Treat generate_report.py as the missing section 48; do not omit it.
+8. Report page count and generated evidence cannot be guaranteed before rendering/execution. README and final status must label them pending until measured.
+9. A local HTTP request to 127.0.0.1 is allowed; any external network call is prohibited. Dependency installation is a setup action, not application runtime, and should be described separately.
+10. Base64 sample schema: DOCX P471 decodes to a compact JSON object using the key `user`, while the attached request mandates the payload key `username`. The attached request is more specific and controls the implementation; generated fixed Base64 values must be derived from the actual `username` payload and kept consistent across UI, tests, evidence, and documentation.
+
+ACCEPTANCE PRINCIPLE
+Only report a requirement as complete after the corresponding artifact exists and the exact relevant command has been run successfully. Manual screenshots are optional evidence gathered by the student and are excluded from the Codex completion gate. All other implementation, automated test, coverage, smoke, evidence, report generation, and cleanup claims require real verification.

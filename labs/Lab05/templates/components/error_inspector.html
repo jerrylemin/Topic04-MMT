@@ -1,0 +1,4 @@
+{% set data = (error_info|default(trace.get('error_inspector', trace.get('error', trace.get('inspectors', {}).get('error', {}))), true)) or {} %}
+<article class="inspector" aria-labelledby="error-title"><header><span class="eyebrow">Safe Failure</span><h3 id="error-title">Error Inspector</h3><p>Không hiển thị traceback hoặc đường dẫn tuyệt đối.</p></header>
+  <dl class="data-grid"><dt>Error ID</dt><dd><code>{{ data.get('error_id', '—')|e }}</code></dd><dt>Category</dt><dd>{{ data.get('category', data.get('error_category', 'none'))|e }}</dd><dt>Handled</dt><dd>{{ data.get('handled', true)|string|e }}</dd><dt>Thông báo người dùng</dt><dd>{{ data.get('user_message', data.get('message', 'Không thể xử lý yêu cầu.'))|e }}</dd><dt>Log nội bộ</dt><dd><code>{{ data.get('internal_log_location', 'evidence/errors/')|e }}</code></dd></dl>
+</article>

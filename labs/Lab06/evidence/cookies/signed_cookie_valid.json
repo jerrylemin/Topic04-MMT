@@ -1,0 +1,12 @@
+[
+  {
+    "domain": "127.0.0.1",
+    "httponly": true,
+    "masked_value": ".eJw…9XbM",
+    "name": "lab06_signed_profile",
+    "path": "/",
+    "samesite": "Lax",
+    "secure": false,
+    "value_fingerprint": "f7bce6694a5a"
+  }
+]

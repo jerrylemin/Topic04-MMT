@@ -1,0 +1,8 @@
+HTTP status: 200
+Location: -
+Content-Type: text/html; charset=utf-8
+Content-Length: 43821
+Trace ID: 2c5ff7b9f9dc439b879796c9bdc636ce
+Decision: allowed
+CSRF status: not_required
+Origin decision: not_checked

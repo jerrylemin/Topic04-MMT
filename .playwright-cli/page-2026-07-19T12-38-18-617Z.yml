@@ -1,0 +1,75 @@
+- generic [active] [ref=f1e1]:
+  - link "Bỏ qua điều hướng" [ref=f1e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=f1e3]:
+    - link "Trang chủ Lab 03" [ref=f1e4] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f1e5]: LAB 03
+      - text: Parameter Tampering
+    - navigation "Điều hướng chính" [ref=f1e6]:
+      - link "Sản phẩm" [ref=f1e7] [cursor=pointer]:
+        - /url: /products
+      - link "Giỏ hàng" [ref=f1e8] [cursor=pointer]:
+        - /url: /cart
+      - link "So sánh mã" [ref=f1e9] [cursor=pointer]:
+        - /url: /comparison
+      - link "Kiểm soát" [ref=f1e10] [cursor=pointer]:
+        - /url: /security-controls
+      - link "Audit log" [ref=f1e11] [cursor=pointer]:
+        - /url: /audit-logs
+    - generic [ref=f1e12]:
+      - generic [ref=f1e13]: user_a
+      - generic [ref=f1e14]: user
+      - button "Đăng xuất" [ref=f1e16] [cursor=pointer]
+  - main [ref=f1e17]:
+    - generic [ref=f1e18]:
+      - paragraph [ref=f1e19]: Giá đáng tin cậy
+      - heading "Sản phẩm từ SQLite" [level=1] [ref=f1e20]
+      - paragraph [ref=f1e21]: Giá hiển thị là dữ liệu server. Khi checkout, server secure phải truy vấn lại giá này.
+    - region "Danh sách sản phẩm" [ref=f1e22]:
+      - article [ref=f1e23]:
+        - generic [ref=f1e24]: ID 5
+        - heading "USB Security Key" [level=2] [ref=f1e25]
+        - paragraph [ref=f1e26]: Khóa bảo mật USB dùng cho dữ liệu mô phỏng.
+        - strong [ref=f1e27]: 100,000 VND
+        - generic [ref=f1e28]: "Tồn kho: 20"
+        - generic [ref=f1e29]:
+          - generic [ref=f1e30]: Số lượng
+          - spinbutton "Số lượng" [ref=f1e31]: "1"
+          - button "Thêm vào giỏ" [ref=f1e32] [cursor=pointer]
+      - article [ref=f1e33]:
+        - generic [ref=f1e34]: ID 6
+        - heading "Wireless Mouse" [level=2] [ref=f1e35]
+        - paragraph [ref=f1e36]: Chuột không dây dùng trong phòng lab.
+        - strong [ref=f1e37]: 250,000 VND
+        - generic [ref=f1e38]: "Tồn kho: 15"
+        - generic [ref=f1e39]:
+          - generic [ref=f1e40]: Số lượng
+          - spinbutton "Số lượng" [ref=f1e41]: "1"
+          - button "Thêm vào giỏ" [ref=f1e42] [cursor=pointer]
+      - article [ref=f1e43]:
+        - generic [ref=f1e44]: ID 7
+        - heading "Mechanical Keyboard" [level=2] [ref=f1e45]
+        - paragraph [ref=f1e46]: Bàn phím cơ dữ liệu mẫu.
+        - strong [ref=f1e47]: 1,200,000 VND
+        - generic [ref=f1e48]: "Tồn kho: 10"
+        - generic [ref=f1e49]:
+          - generic [ref=f1e50]: Số lượng
+          - spinbutton "Số lượng" [ref=f1e51]: "1"
+          - button "Thêm vào giỏ" [ref=f1e52] [cursor=pointer]
+      - article [ref=f1e53]:
+        - generic [ref=f1e54]: ID 8
+        - heading "Lab Laptop" [level=2] [ref=f1e55]
+        - paragraph [ref=f1e56]: Máy tính giả lập, không có giao dịch thật.
+        - strong [ref=f1e57]: 15,000,000 VND
+        - generic [ref=f1e58]: "Tồn kho: 5"
+        - generic [ref=f1e59]:
+          - generic [ref=f1e60]: Số lượng
+          - spinbutton "Số lượng" [ref=f1e61]: "1"
+          - button "Thêm vào giỏ" [ref=f1e62] [cursor=pointer]
+  - contentinfo [ref=f1e63]:
+    - generic [ref=f1e64]: Nhóm sinh viên thực hiện
+    - generic [ref=f1e65]: Lê Minh — 21127645
+    - generic [ref=f1e66]: Nguyễn Vũ Bách — 21127224
+    - generic [ref=f1e67]: Chỉ chạy trên 127.0.0.1:5003
+    - generic [ref=f1e68]: Dữ liệu và giao dịch đều là giả lập

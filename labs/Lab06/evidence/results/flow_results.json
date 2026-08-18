@@ -1,0 +1,87 @@
+{
+  "admin_allowed": {
+    "decision": "allow",
+    "status_code": 200,
+    "trace_id": "959504f05030b41ef0babf76"
+  },
+  "base64_cookie_login": {
+    "decision": "cookie_issued",
+    "status_code": 302,
+    "trace_id": "3c2d0912a00e73c8c5e1806e"
+  },
+  "base64_modified": {
+    "decision": "allow",
+    "status_code": 200,
+    "trace_id": "cf8e8fa94d2c8a87cfdbe9e1"
+  },
+  "base64_original": {
+    "decision": "deny",
+    "status_code": 403,
+    "trace_id": "087cb77f64d1a5b2069a9221"
+  },
+  "encrypted_cookie_valid_and_tampered": {
+    "decision": "read_only_demo",
+    "status_code": 200,
+    "trace_id": "a122a3d98992547bf27a7afc"
+  },
+  "logout_invalidation": {
+    "decision": "logout",
+    "status_code": 200,
+    "trace_id": "0e4839a53210b3e11b407f8a"
+  },
+  "old_session_rejection": {
+    "decision": "deny",
+    "status_code": 401,
+    "trace_id": "7ea89c7bb70d9ed00290915d"
+  },
+  "plain_admin_denied": {
+    "decision": "deny",
+    "status_code": 403,
+    "trace_id": "6d32991cceac7a0329ab3718"
+  },
+  "plain_cookie_login": {
+    "decision": "cookie_issued",
+    "status_code": 302,
+    "trace_id": "14a30b55a322a9de7a7bebe9"
+  },
+  "plain_cookie_modified": {
+    "decision": "allow",
+    "status_code": 200,
+    "trace_id": "08e2634f3f33323a84e9d520"
+  },
+  "server_session_admin_login": {
+    "decision": "session_created",
+    "status_code": 302,
+    "trace_id": "f1214dadb7574d2118202e69"
+  },
+  "server_session_student_login": {
+    "decision": "session_created",
+    "status_code": 302,
+    "trace_id": "a7cfecd1bf20d1eae8510c45"
+  },
+  "session_rotation": {
+    "decision": "session_created",
+    "status_code": 302,
+    "trace_id": "203b442fe636c0187d871560"
+  },
+  "signed_cookie_invalid": {
+    "decision": "deny",
+    "status_code": 400,
+    "trace_id": "636fa7a587223f83be5994f7"
+  },
+  "signed_cookie_login": {
+    "decision": "cookie_issued",
+    "status_code": 302,
+    "trace_id": "7907fb79eff09cbadd3d32a4"
+  },
+  "signed_cookie_valid": {
+    "decision": "allow",
+    "status_code": 200,
+    "trace_id": "78365904d428593a977fb9ad"
+  },
+  "student_admin_denied": {
+    "decision": "deny",
+    "status_code": 403,
+    "trace_id": "40f58cf768a51ed2ac0cabd2"
+  }
+}

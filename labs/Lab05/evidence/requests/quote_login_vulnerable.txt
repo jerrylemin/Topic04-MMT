@@ -1,0 +1,11 @@
+Method: POST
+Full URL: http://127.0.0.1:5005/vulnerable/login
+Path: /vulnerable/login
+Query string: -
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 21
+Form field names: ["password", "username"]
+Form values: {"username": "'", "password": "[REDACTED]"}
+Session present: False
+Route handler: vulnerable_login_route
+Timestamp: 2026-07-14T19:34:19.500379+00:00

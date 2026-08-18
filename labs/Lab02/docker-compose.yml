@@ -1,0 +1,31 @@
+services:
+  web:
+    build: .
+    ports:
+      - "127.0.0.1:5002:5002"
+    volumes:
+      - ./evidence:/lab/evidence
+      - ./report:/lab/report
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5002/health', timeout=2).read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    restart: "no"
+
+  gdb:
+    profiles: ["gdb"]
+    build: .
+    command: ["gdb", "-q", "-x", "gdb/inspect_normal.gdb"]
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp=unconfined
+    volumes:
+      - ./evidence:/lab/evidence
+      - ./report:/lab/report
+    network_mode: none
+    stdin_open: true
+    tty: true
+    restart: "no"

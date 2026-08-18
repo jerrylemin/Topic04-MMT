@@ -1,0 +1,8 @@
+HTTP status: 200
+Content-Type: text/html; charset=utf-8
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; connect-src 'self'
+Trace ID: 2dc5d5fe0bb24141a94e17da83b5587f
+Decision: authenticated
+Result count: 1
+Error category: none
+Prepared statement: false

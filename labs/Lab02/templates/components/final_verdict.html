@@ -1,0 +1,20 @@
+{% set t = trace|default({}, true) %}
+{% set result = t.get('final_result', {}) %}
+{% set overflow = result.get('overflow', t.get('overflow_bytes', 0)|int > 0) %}
+{% set crash = result.get('crash', t.get('crash_detected', false)) %}
+{% set asan_detected = result.get('asan_detected', t.get('asan_detected', false)) %}
+<aside class="final-verdict {{ 'verdict-danger' if overflow or crash else 'verdict-safe' }}" aria-labelledby="verdict-title">
+  <div>
+    <span class="status-badge status-{{ 'danger' if overflow or crash else 'safe' }}">FINAL SECURITY VERDICT</span>
+    <h3 id="verdict-title">{{ result.get('verdict', 'Kết quả trace') }}</h3>
+  </div>
+  <dl class="verdict-grid">
+    <div><dt>Overflow</dt><dd>{{ 'Có' if overflow else 'Không' }}</dd></div>
+    <div><dt>Crash</dt><dd>{{ 'Có' if crash else 'Không' }}</dd></div>
+    <div><dt>ASan detection</dt><dd>{{ 'Có' if asan_detected else 'Không' }}</dd></div>
+    <div><dt>Exit code</dt><dd>{{ result.get('exit_code', t.get('exit_code', 'Chưa có dữ liệu')) }}</dd></div>
+    <div><dt>Nguyên nhân</dt><dd>{{ result.get('cause', result.get('reason', 'Chưa có dữ liệu')) }}</dd></div>
+    <div><dt>Tác động</dt><dd>{{ result.get('impact', 'Chưa có dữ liệu') }}</dd></div>
+    <div><dt>Bản vá đề xuất</dt><dd>{{ result.get('recommended_fix', result.get('patch', 'Kiểm tra độ dài hoặc dùng API giới hạn và kiểm tra return value.')) }}</dd></div>
+  </dl>
+</aside>

@@ -1,0 +1,13 @@
+{
+  "content_length": 0,
+  "content_type": null,
+  "form_field_names": [],
+  "form_values": {},
+  "host": "127.0.0.1:5006",
+  "method": "POST",
+  "observed_at": "2026-07-14T20:23:03.257691+00:00",
+  "path": "/secure/session/logout",
+  "query_string": "",
+  "scheme": "http",
+  "trace_id": "0e4839a53210b3e11b407f8a"
+}

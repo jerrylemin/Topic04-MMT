@@ -1,0 +1,24 @@
+[
+  {
+    "query_template": "SELECT id, username, display_name, role, password_hash FROM users WHERE username = ? AND active = 1 LIMIT 1",
+    "construction_type": "parameter_binding",
+    "final_query_masked": "SELECT id, username, display_name, role, password_hash FROM users WHERE username = ? AND active = 1 LIMIT 1",
+    "parameters_masked": [
+      "[BOUND VALUE]"
+    ],
+    "rows_returned": 0,
+    "error_category": null,
+    "trace_id": "8a4e0745249948a196da1014e26512c9"
+  },
+  {
+    "query_template": "SELECT id, username, display_name, role, password_hash FROM users WHERE username = ? AND active = 1 LIMIT 1",
+    "construction_type": "parameter_binding",
+    "final_query_masked": "SELECT id, username, display_name, role, password_hash FROM users WHERE username = ? AND active = 1 LIMIT 1",
+    "parameters_masked": [
+      "[BOUND VALUE]"
+    ],
+    "rows_returned": 1,
+    "error_category": null,
+    "trace_id": "3b987d64e0464cbb8d8092e4c40067d5"
+  }
+]

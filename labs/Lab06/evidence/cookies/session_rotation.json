@@ -1,0 +1,23 @@
+[
+  {
+    "domain": "host-only",
+    "httponly": true,
+    "masked_value": "9CXJ…Ebr0",
+    "max_age": "1800",
+    "name": "lab06_session",
+    "path": "/",
+    "samesite": "Lax",
+    "secure": false,
+    "value_fingerprint": "2daca90d0cde"
+  },
+  {
+    "domain": "127.0.0.1",
+    "httponly": true,
+    "masked_value": "9CXJ…Ebr0",
+    "name": "lab06_session",
+    "path": "/",
+    "samesite": "Lax",
+    "secure": false,
+    "value_fingerprint": "2daca90d0cde"
+  }
+]

@@ -1,0 +1,65 @@
+{% set current_trace = trace|default({}, true) %}
+<section class="workbench page-section" aria-labelledby="workbench-title">
+  <div class="workbench-intro">
+    <span class="status-badge status-{{ workbench_tone|default('info') }}">{{ workbench_badge|default('THỰC HÀNH') }}</span>
+    <h1 id="workbench-title">{{ workbench_title|default('Buffer Overflow Workbench') }}</h1>
+    <p>{{ workbench_summary|default('Nhập dữ liệu và quan sát trace của tiến trình native.') }}</p>
+    {% if workbench_note|default('') %}<p class="inline-note">{{ workbench_note }}</p>{% endif %}
+  </div>
+
+  <form class="lab-form" method="post" action="{{ workbench_action|default('/submit') }}" data-lab-form novalidate>
+    {% if workbench_mode_options|default([]) %}
+    <div class="field-group">
+      <label for="mode">Build profile</label>
+      <select id="mode" name="mode">
+        {% for value, label in workbench_mode_options %}
+        <option value="{{ value }}" {% if current_trace.get('mode', workbench_mode|default('')) == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <small>Mode được kiểm tra lại bằng allowlist tại Flask.</small>
+    </div>
+    {% else %}
+    <input type="hidden" name="mode" value="{{ workbench_mode|default('') }}">
+    {% endif %}
+
+    <div class="field-group">
+      <label for="name-input">Trường name</label>
+      <textarea id="name-input" name="name" rows="4" maxlength="256" required spellcheck="false" autocomplete="name" data-name-input data-max-bytes="256">{{ current_trace.get('input_value', '') }}</textarea>
+      <div class="input-meta" aria-live="polite">
+        <span><b data-char-count>0</b> ký tự</span>
+        <span><b data-byte-count>0</b> byte UTF-8</span>
+        <span>Tối đa 256 byte trong UI</span>
+      </div>
+      <p class="field-error" data-byte-error hidden>Input vượt giới hạn 256 byte UTF-8.</p>
+    </div>
+
+    <fieldset class="sample-fieldset">
+      <legend>Input mẫu</legend>
+      <div class="sample-buttons">
+        <button type="button" class="chip" data-sample-text="Le Minh">Le Minh</button>
+        <button type="button" class="chip" data-sample-text="Lê Minh">Lê Minh, Unicode</button>
+        <button type="button" class="chip" data-sample-length="31">A × 31</button>
+        <button type="button" class="chip" data-sample-length="32">A × 32</button>
+        <button type="button" class="chip" data-sample-length="64">A × 64</button>
+        <button type="button" class="chip" data-sample-length="128">A × 128</button>
+        <button type="button" class="chip" data-sample-length="256">A × 256</button>
+        <button type="button" class="chip chip-muted" data-sample-clear>Xóa</button>
+      </div>
+    </fieldset>
+
+    {% if error|default('') %}<p class="form-error" role="alert">{{ error }}</p>{% endif %}
+    <div class="form-actions">
+      <button class="button {% if workbench_tone|default('') == 'danger' %}button-danger{% endif %}" type="submit" data-submit>Gửi đến tiến trình C</button>
+      <span class="submit-status" data-submit-status aria-live="polite"></span>
+    </div>
+  </form>
+</section>
+
+{% if trace|default(none) %}
+  {% include "components/trace_panel.html" %}
+{% else %}
+<section class="empty-state page-section" aria-live="polite">
+  <h2>Chưa có trace</h2>
+  <p>Chọn input mẫu hoặc nhập văn bản, sau đó gửi form để xem từng bước thật.</p>
+</section>
+{% endif %}

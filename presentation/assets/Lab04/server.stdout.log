@@ -1,0 +1,7 @@
+Victim: http://127.0.0.1:5004
+Attacker same-site: http://127.0.0.1:9004
+Attacker cross-site: http://localhost:9004
+ * Serving Flask app 'victim_app'
+ * Serving Flask app 'attacker_app'
+ * Debug mode: off
+ * Debug mode: off

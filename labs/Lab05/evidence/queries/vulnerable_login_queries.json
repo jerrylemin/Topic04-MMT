@@ -1,0 +1,29 @@
+[
+  {
+    "query_template": "SELECT id, username, display_name, role FROM users WHERE username = '<username_input>' AND legacy_password_digest = '<password_digest>'",
+    "construction_type": "string_concatenation",
+    "final_query_masked": "SELECT id, username, display_name, role FROM users WHERE username = 'admin_lab' AND legacy_password_digest = '[REDACTED]'",
+    "parameters_masked": [],
+    "rows_returned": 1,
+    "error_category": null,
+    "trace_id": "2dc5d5fe0bb24141a94e17da83b5587f"
+  },
+  {
+    "query_template": "SELECT id, username, display_name, role FROM users WHERE username = '<username_input>' AND legacy_password_digest = '<password_digest>'",
+    "construction_type": "string_concatenation",
+    "final_query_masked": "SELECT id, username, display_name, role FROM users WHERE username = ''' AND legacy_password_digest = '[REDACTED]'",
+    "parameters_masked": [],
+    "rows_returned": 0,
+    "error_category": "sql_syntax_error",
+    "trace_id": "2b08975c1bc14729893a3248ce13af54"
+  },
+  {
+    "query_template": "SELECT id, username, display_name, role FROM users WHERE username = '<username_input>' AND legacy_password_digest = '<password_digest>'",
+    "construction_type": "string_concatenation",
+    "final_query_masked": "SELECT id, username, display_name, role FROM users WHERE username = 'admin_lab' -- ' AND legacy_password_digest = '[REDACTED]'",
+    "parameters_masked": [],
+    "rows_returned": 1,
+    "error_category": null,
+    "trace_id": "55c89316764146ae9e43f5c4efcabaa0"
+  }
+]

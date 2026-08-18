@@ -1,0 +1,269 @@
+{
+  "trace_id": "73bc773b806e40ec994b87b141417400",
+  "mode": "secure",
+  "feature": "user_detail",
+  "request_inspector": {
+    "timestamp": "2026-07-14T19:34:20.794038+00:00",
+    "method": "GET",
+    "full_url": "http://127.0.0.1:5005/secure/user?id=1",
+    "path": "/secure/user",
+    "query_string": "id=1",
+    "content_type": null,
+    "content_length": 0,
+    "form_field_names": [],
+    "form_values": {},
+    "session_present": false,
+    "route_handler": "secure_user_route"
+  },
+  "input_inspector": {
+    "raw_input": "1",
+    "normalized_input": "1",
+    "source": "request.args",
+    "validation_result": "accepted",
+    "length": 1,
+    "single_quote_detected": false,
+    "comment_marker_detected": false,
+    "boolean_expression_detected": false,
+    "trust_level": "untrusted"
+  },
+  "query_inspector": {
+    "feature": "user_detail",
+    "mode": "secure",
+    "query_template": "SELECT id, username, display_name, role, active FROM users WHERE id = ? LIMIT 1",
+    "construction_method": "parameter_binding",
+    "final_query_masked": "SELECT id, username, display_name, role, active FROM users WHERE id = ? LIMIT 1",
+    "placeholder_count": 1,
+    "parameters_masked": [
+      "[BOUND VALUE]"
+    ],
+    "prepared": true,
+    "duration_ms": 0.802,
+    "raw_input": "1",
+    "normalized_input": "1",
+    "input_interpreted_as": "data",
+    "operation": "SELECT",
+    "read_only": true
+  },
+  "execution_inspector": {
+    "operation": "SELECT",
+    "prepared_statement": true,
+    "parameters_bound": 1,
+    "rows_returned": 1,
+    "rows_changed": 0,
+    "error_category": null,
+    "transaction_status": "read_only",
+    "rollback_status": "not_needed",
+    "database_label": "Lab05 local SQLite"
+  },
+  "decision_inspector": {
+    "mode": "secure",
+    "rows_returned": 1,
+    "session_created": false,
+    "final_decision": "found",
+    "password_verification_executed": false
+  },
+  "database_inspector": {
+    "table": "users",
+    "operation": "SELECT",
+    "rows_returned": 1,
+    "rows_changed": 0,
+    "read_only": true,
+    "result_ids": [
+      1
+    ]
+  },
+  "error_inspector": null,
+  "final_verdict": {
+    "feature": "user_detail",
+    "mode": "secure",
+    "input_category": "normal",
+    "query_construction": "parameter_binding",
+    "sql_structure_changed": false,
+    "prepared_statement_used": true,
+    "authentication_bypassed": false,
+    "unexpected_rows_returned": false,
+    "database_error_occurred": false,
+    "database_modified": false,
+    "sensitive_data_exposed": false,
+    "session_created": false,
+    "root_cause": "none observed",
+    "primary_fix": "Parameterized query and PBKDF2 verification",
+    "remaining_risk": "Local educational demonstration only",
+    "audit_event": "user_detail_requested"
+  },
+  "steps": [
+    {
+      "step_number": 1,
+      "layer": "HTTP Request",
+      "title": "Request received",
+      "description": "Flask received the real request",
+      "technique": "HTTP parsing",
+      "input_data": {
+        "value": "1"
+      },
+      "output_data": {
+        "decision": "found",
+        "error_category": null
+      },
+      "code_reference": "secure_queries.py",
+      "security_meaning": "Input remains data",
+      "status": "observed",
+      "timestamp": "2026-07-14T19:34:20.794038+00:00"
+    },
+    {
+      "step_number": 2,
+      "layer": "Input Validation",
+      "title": "Boundary checked",
+      "description": "Input type and range policy applied",
+      "technique": "trust-boundary validation",
+      "input_data": {
+        "value": "[observed]"
+      },
+      "output_data": {
+        "decision": "found",
+        "error_category": null
+      },
+      "code_reference": "secure_queries.py",
+      "security_meaning": "Input remains data",
+      "status": "observed",
+      "timestamp": "2026-07-14T19:34:20.794038+00:00"
+    },
+    {
+      "step_number": 3,
+      "layer": "Query Construction",
+      "title": "Query prepared",
+      "description": "parameter_binding",
+      "technique": "query construction",
+      "input_data": {
+        "value": "1"
+      },
+      "output_data": {
+        "decision": "found",
+        "error_category": null
+      },
+      "code_reference": "secure_queries.py",
+      "security_meaning": "Input remains data",
+      "status": "observed",
+      "timestamp": "2026-07-14T19:34:20.794038+00:00"
+    },
+    {
+      "step_number": 4,
+      "layer": "SQLite Execution",
+      "title": "Read-only flow",
+      "description": "Returned 1 row(s)",
+      "technique": "local SQLite SELECT",
+      "input_data": {
+        "value": "1"
+      },
+      "output_data": {
+        "decision": "found",
+        "error_category": null
+      },
+      "code_reference": "secure_queries.py",
+      "security_meaning": "Input remains data",
+      "status": "observed",
+      "timestamp": "2026-07-14T19:34:20.794038+00:00"
+    },
+    {
+      "step_number": 5,
+      "layer": "Result Set",
+      "title": "Decision made",
+      "description": "found",
+      "technique": "result evaluation",
+      "input_data": {
+        "value": "[observed]"
+      },
+      "output_data": {
+        "decision": "found",
+        "error_category": null
+      },
+      "code_reference": "secure_queries.py",
+      "security_meaning": "Input remains data",
+      "status": "observed",
+      "timestamp": "2026-07-14T19:34:20.794038+00:00"
+    },
+    {
+      "step_number": 6,
+      "layer": "Audit Logging",
+      "title": "Evidence linked",
+      "description": "Audit event shares this trace",
+      "technique": "structured logging",
+      "input_data": {
+        "value": "[observed]"
+      },
+      "output_data": {
+        "decision": "found",
+        "error_category": null
+      },
+      "code_reference": "secure_queries.py",
+      "security_meaning": "Input remains data",
+      "status": "observed",
+      "timestamp": "2026-07-14T19:34:20.794038+00:00"
+    },
+    {
+      "step_number": 7,
+      "layer": "Final Result",
+      "title": "Security verdict",
+      "description": "found",
+      "technique": "security verdict",
+      "input_data": {
+        "value": "[observed]"
+      },
+      "output_data": {
+        "decision": "found",
+        "error_category": null
+      },
+      "code_reference": "secure_queries.py",
+      "security_meaning": "Input remains data",
+      "status": "observed",
+      "timestamp": "2026-07-14T19:34:20.794038+00:00"
+    }
+  ],
+  "timestamp": "2026-07-14T19:34:20.794038+00:00",
+  "result_set_inspector": {
+    "expected_filter": "1",
+    "rows_expected": null,
+    "rows_returned": 1,
+    "result_ids": [
+      1
+    ],
+    "result_names": [],
+    "unexpected_data": false,
+    "other_table_accessed": false,
+    "database_modified": false,
+    "final_decision": "found"
+  },
+  "code_comparison": {
+    "vulnerable_file": "error_service.py",
+    "vulnerable_function": "error_inspector",
+    "vulnerable_lines": "23-43",
+    "vulnerable_code": "def error_inspector(error: Exception, *, secure: bool) -> dict:\n    error_id = uuid.uuid4().hex[:12]\n    category = categorize_database_error(error)\n    if secure:\n        return {\n            \"error_id\": error_id,\n            \"category\": category,\n            \"handled\": True,\n            \"user_message\": \"Không thể xử lý yêu cầu.\",\n            \"internal_log_location\": \"evidence/logs/errors.log\",\n        }\n    shortened = HEX_DIGEST_PATTERN.sub(\"[DIGEST REDACTED]\", PATH_PATTERN.sub(\"[PATH REDACTED]\", str(error)))[:160]\n    return {\n        \"error_id\": error_id,\n        \"category\": category,\n        \"exception_class\": type(error).__name__,\n        \"shortened_message\": shortened,\n        \"handled\": True,\n        \"user_message\": \"Lỗi truy vấn đã được xử lý trong Lab05 local.\",\n        \"database_modified\": False,\n    }",
+    "vulnerable_explanation": "Nhánh vulnerable chỉ hiển thị chẩn đoán local đã rút gọn.",
+    "secure_file": "error_service.py",
+    "secure_function": "error_inspector",
+    "secure_lines": "23-43",
+    "secure_code": "def error_inspector(error: Exception, *, secure: bool) -> dict:\n    error_id = uuid.uuid4().hex[:12]\n    category = categorize_database_error(error)\n    if secure:\n        return {\n            \"error_id\": error_id,\n            \"category\": category,\n            \"handled\": True,\n            \"user_message\": \"Không thể xử lý yêu cầu.\",\n            \"internal_log_location\": \"evidence/logs/errors.log\",\n        }\n    shortened = HEX_DIGEST_PATTERN.sub(\"[DIGEST REDACTED]\", PATH_PATTERN.sub(\"[PATH REDACTED]\", str(error)))[:160]\n    return {\n        \"error_id\": error_id,\n        \"category\": category,\n        \"exception_class\": type(error).__name__,\n        \"shortened_message\": shortened,\n        \"handled\": True,\n        \"user_message\": \"Lỗi truy vấn đã được xử lý trong Lab05 local.\",\n        \"database_modified\": False,\n    }",
+    "secure_explanation": "Nhánh secure chỉ trả thông báo chung và error ID."
+  },
+  "audit_inspector": {
+    "action": "user_detail_requested",
+    "route": "/secure/user",
+    "mode": "secure",
+    "input_summary": {
+      "signals": {
+        "length": 1,
+        "single_quote_detected": false,
+        "comment_marker_detected": false,
+        "boolean_expression_detected": false,
+        "trust_level": "untrusted"
+      },
+      "feature": "user_detail"
+    },
+    "query_construction": "parameter_binding",
+    "decision": "found",
+    "reason": "integer_validated_and_bound",
+    "result_count": 1,
+    "error_category": null,
+    "trace_id": "73bc773b806e40ec994b87b141417400"
+  }
+}

@@ -1,0 +1,12 @@
+{% extends 'base.html' %}{% block content %}
+<section class="hero"><div><span class="eyebrow">Local security laboratory</span><h1>Đừng tin dữ liệu phân quyền nằm trong cookie.</h1><p>Lab06 theo dõi cùng một quyết định qua năm mô hình: cookie thường, Base64, signed cookie, encrypted cookie và server-side session.</p><div class="button-row"><a class="button button-primary" href="/login">Bắt đầu flow cố định</a><a class="button button-secondary" href="/comparison">Xem ma trận so sánh</a></div></div><aside class="scope-card" aria-label="Phạm vi an toàn"><strong>Phạm vi cố định</strong><ul><li>Chỉ <code>127.0.0.1:5006</code></li><li>Dữ liệu và tài khoản giả lập</li><li>Không đọc hoặc gửi cookie bằng JavaScript</li><li>Chỉnh sửa demo chỉ làm thủ công trong DevTools</li></ul></aside></section>
+<section class="page-section" aria-labelledby="models-title"><header class="section-heading"><span class="eyebrow">Five trust models</span><h2 id="models-title">Dữ liệu giống nhau, mức bảo vệ khác nhau</h2><p>Encoding thay đổi biểu diễn; signing kiểm tra toàn vẹn; encryption bảo vệ bí mật và toàn vẹn; server-side session đưa quyết định về server.</p></header><div class="model-rail">
+{% for item in [
+  {'n':'01','title':'Plain Cookie','tag':'Vulnerable','text':'Server tin trực tiếp username và role từ cookie.'},
+  {'n':'02','title':'Base64 Cookie','tag':'Vulnerable','text':'JSON được encode nhưng không có chữ ký hoặc mã hóa.'},
+  {'n':'03','title':'Signed Cookie','tag':'Integrity','text':'Payload bị sửa làm chữ ký không hợp lệ.'},
+  {'n':'04','title':'Encrypted Cookie','tag':'Read-only','text':'Fernet minh họa authenticated encryption.'},
+  {'n':'05','title':'Server Session','tag':'Secure','text':'Cookie chỉ giữ ID; role được tải từ database.'}
+] %}<article class="model-card"><span class="model-number">{{ item.n }}</span><div><span class="status-chip">{{ item.tag }}</span><h3>{{ item.title }}</h3><p>{{ item.text }}</p></div></article>{% endfor %}</div></section>
+<section class="teaching-note"><div><span class="eyebrow">Ranh giới khái niệm</span><h2>Cookie Poisoning không phải Session Hijacking</h2></div><p>Cookie Poisoning thay đổi dữ liệu mà server tin. Session Hijacking chiếm một Session ID hợp lệ. Lab này không tạo công cụ đánh cắp, replay hay sửa cookie tự động.</p></section>
+{% endblock %}

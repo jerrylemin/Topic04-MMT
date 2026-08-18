@@ -1,0 +1,11 @@
+Method: POST
+Full URL: http://127.0.0.1:5005/secure/login
+Path: /secure/login
+Query string: -
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 49
+Form field names: ["password", "username"]
+Form values: {"username": "admin_lab' -- ", "password": "[REDACTED]"}
+Session present: False
+Route handler: secure_login_route
+Timestamp: 2026-07-14T19:34:19.607529+00:00

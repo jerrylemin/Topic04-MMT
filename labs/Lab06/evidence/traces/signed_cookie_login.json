@@ -1,0 +1,47 @@
+{
+  "decision": "cookie_issued",
+  "mode": "signed",
+  "route": "/login",
+  "status": "completed",
+  "steps": [
+    {
+      "code_reference": "app.py:request_boundary",
+      "description": "Flask reads only the cookies attached to this local request.",
+      "input_data": {
+        "cookie_names": []
+      },
+      "layer": "HTTP Request",
+      "output_data": {
+        "mode": "signed",
+        "route": "/login"
+      },
+      "security_meaning": "Cookie input crosses the browser-to-server trust boundary.",
+      "status": "observed",
+      "step_number": 1,
+      "technique": "request.cookies",
+      "timestamp": "2026-07-14T20:23:02.031511+00:00",
+      "title": "Receive fixed Lab06 cookie input"
+    },
+    {
+      "code_reference": "signed_cookie_service.py:sign_profile",
+      "description": "Observed the fixed signed flow at /login.",
+      "input_data": {
+        "cookie_name": "lab06_signed_profile",
+        "cookie_present": false
+      },
+      "layer": "Authentication/Authorization",
+      "output_data": {
+        "decision": "cookie_issued",
+        "mode": "signed"
+      },
+      "security_meaning": "A server-held key lets later requests detect payload modification.",
+      "status": "cookie_issued",
+      "step_number": 2,
+      "technique": "HMAC-backed serialization",
+      "timestamp": "2026-07-14T20:23:02.031511+00:00",
+      "title": "Signed profile issuance"
+    }
+  ],
+  "timestamp": "2026-07-14T20:23:02.031511+00:00",
+  "trace_id": "7907fb79eff09cbadd3d32a4"
+}

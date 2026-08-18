@@ -1,0 +1,60 @@
+{
+  "decision": "read_only_demo",
+  "inspectors": {
+    "encryption": {
+      "algorithm": "Fernet authenticated encryption",
+      "authorization_used": false,
+      "confidentiality": true,
+      "decrypt_result": "authenticated_decryption_succeeded",
+      "integrity": true,
+      "key_location": "server environment only",
+      "masked_token": "gAAA…tzQ=",
+      "tamper_detection_result": "authenticated_decryption_failed",
+      "token_fingerprint": "30bf687a00c2"
+    }
+  },
+  "mode": "encrypted",
+  "route": "/secure/encrypted-demo",
+  "status": "completed",
+  "steps": [
+    {
+      "code_reference": "app.py:request_boundary",
+      "description": "Flask reads only the cookies attached to this local request.",
+      "input_data": {
+        "cookie_names": []
+      },
+      "layer": "HTTP Request",
+      "output_data": {
+        "mode": "encrypted",
+        "route": "/secure/encrypted-demo"
+      },
+      "security_meaning": "Cookie input crosses the browser-to-server trust boundary.",
+      "status": "observed",
+      "step_number": 1,
+      "technique": "request.cookies",
+      "timestamp": "2026-07-14T20:23:02.081317+00:00",
+      "title": "Receive fixed Lab06 cookie input"
+    },
+    {
+      "code_reference": "encrypted_cookie_service.py:decrypt_demo_profile",
+      "description": "Observed the fixed encrypted flow at /secure/encrypted-demo.",
+      "input_data": {
+        "cookie_name": "lab06_encrypted_profile",
+        "cookie_present": false
+      },
+      "layer": "Authentication/Authorization",
+      "output_data": {
+        "decision": "read_only_demo",
+        "mode": "encrypted"
+      },
+      "security_meaning": "Confidentiality and integrity are demonstrated without payload authorization.",
+      "status": "read_only_demo",
+      "step_number": 2,
+      "technique": "Fernet authenticated decryption",
+      "timestamp": "2026-07-14T20:23:02.081317+00:00",
+      "title": "Authenticated decryption"
+    }
+  ],
+  "timestamp": "2026-07-14T20:23:02.081317+00:00",
+  "trace_id": "a122a3d98992547bf27a7afc"
+}

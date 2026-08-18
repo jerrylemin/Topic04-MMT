@@ -1,0 +1,5 @@
+{% extends 'base.html' %}{% block content %}{% set outcome = result|default({}, true) %}{% set current_user = user|default({}, true) %}
+<section class="result-banner is-denied"><span class="result-icon">403</span><div><span class="eyebrow">Server-side denial</span><h1>{{ outcome.get('title', 'Database role không cho phép truy cập.')|e }}</h1><p>{{ outcome.get('message', 'Session hợp lệ xác định user, nhưng role hiện tại trong database không thỏa policy admin.')|e }}</p></div></section>
+<section class="profile-layout"><article class="profile-card"><h2>{{ current_user.get('display_name', current_user.get('username', 'Student'))|e }}</h2><dl><dt>Session</dt><dd>Valid</dd><dt>Database role</dt><dd>{{ current_user.get('role', 'user')|e }}</dd><dt>Decision</dt><dd>Denied</dd></dl><p>Thay đổi role ở cookie không ảnh hưởng quyết định vì secure route không đọc role từ cookie.</p></article><div>{% include 'components/authorization_inspector.html' %}</div></section>
+{% include 'components/trace_panel.html' %}
+{% endblock %}

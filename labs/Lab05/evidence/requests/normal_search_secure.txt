@@ -1,0 +1,11 @@
+Method: GET
+Full URL: http://127.0.0.1:5005/secure/search?keyword=USB
+Path: /secure/search
+Query string: keyword=USB
+Content-Type: -
+Content-Length: 0
+Form field names: []
+Form values: {}
+Session present: False
+Route handler: secure_search_route
+Timestamp: 2026-07-14T19:34:20.698266+00:00

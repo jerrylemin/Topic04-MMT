@@ -1,0 +1,42 @@
+[
+  {
+    "event_type": "server_session_created",
+    "id": 24,
+    "new_session_fingerprint": "4fe41ab5064d",
+    "old_session_fingerprint": null,
+    "reason": "login_rotation",
+    "timestamp": "2026-07-14T20:23:02.619546Z",
+    "trace_id": "a7cfecd1bf20d1eae8510c45",
+    "user_id": 10
+  },
+  {
+    "event_type": "server_session_rotated",
+    "id": 25,
+    "new_session_fingerprint": "2daca90d0cde",
+    "old_session_fingerprint": "4fe41ab5064d",
+    "reason": "login_rotation",
+    "timestamp": "2026-07-14T20:23:03.232007Z",
+    "trace_id": "203b442fe636c0187d871560",
+    "user_id": 10
+  },
+  {
+    "event_type": "logout_invalidated_session",
+    "id": 26,
+    "new_session_fingerprint": null,
+    "old_session_fingerprint": "2daca90d0cde",
+    "reason": "user_logout",
+    "timestamp": "2026-07-14T20:23:03.257691Z",
+    "trace_id": "0e4839a53210b3e11b407f8a",
+    "user_id": 10
+  },
+  {
+    "event_type": "server_session_created",
+    "id": 27,
+    "new_session_fingerprint": "e778d066d86e",
+    "old_session_fingerprint": null,
+    "reason": "login_rotation",
+    "timestamp": "2026-07-14T20:23:03.831754Z",
+    "trace_id": "f1214dadb7574d2118202e69",
+    "user_id": 1
+  }
+]

@@ -1,0 +1,12 @@
+{
+  "decision": "cookie_issued",
+  "headers": {
+    "Content-Type": "text/html; charset=utf-8",
+    "Location": "/secure/signed/profile"
+  },
+  "set_cookie_names": [
+    "lab06_signed_profile"
+  ],
+  "status_code": 302,
+  "trace_id": "7907fb79eff09cbadd3d32a4"
+}

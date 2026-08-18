@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Topic04 Official2 — Sáu lab bảo mật ứng dụng web</title>
+  <style>
+    /* ================================================================
+       THEME TOKENS — Broadside: ink on fire
+       The requested font families are named first. Installed Unicode
+       fallbacks keep Vietnamese readable without a CDN or font files.
+       ================================================================ */
+    :root {
+      --ink: #111111;
+      --ink-alt: #1A1A18;
+      --orange: #E85D26;
+      --cream: #F0ECE5;
+      --muted: #888880;
+      --hint: #505048;
+      --border: #282826;
+      --orange-ink-muted: rgba(17, 17, 17, 0.75);
+      --orange-ink-hint: rgba(17, 17, 17, 0.55);
+      --orange-border: rgba(17, 17, 17, 0.20);
+      --font-display: "Barlow", "Noto Sans", "Segoe UI", sans-serif;
+      --font-mono: "IBM Plex Mono", "Noto Sans", "Segoe UI", sans-serif;
+      --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+      --duration-enter: 500ms;
+      --stage-bg: #080808;
+      --slide-bg: var(--ink);
+    }
+
+    * { box-sizing: border-box; }
+
+    /* ===========================================
+       FIXED 16:9 STAGE: MANDATORY BASE STYLES
+       Include this ENTIRE file in every presentation.
+       Slides are authored at 1920×1080 and scaled as a whole.
+       =========================================== */
+
+    /* 1. Lock the browser viewport */
+    html,
+    body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: var(--stage-bg, #000);
+    }
+
+    /* 2. Full-window deck viewport */
+    .deck-viewport {
+        position: fixed;
+        inset: 0;
+        overflow: hidden;
+        background: var(--stage-bg, #000);
+    }
+
+    /* 3. Fixed 16:9 design canvas.
+       JavaScript sets transform: translate(...) scale(...). */
+    .deck-stage {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        transform-origin: 0 0;
+        background: var(--slide-bg, #fff);
+    }
+
+    /* 4. Slides stack inside the fixed stage.
+       Content must be laid out at 1920×1080, not reflowed per device. */
+    .slide {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        display: block;
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+        background: var(--slide-bg, #fff);
+    }
+
+    .slide.active,
+    .slide.visible {
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+        z-index: 1;
+    }
+
+    /* 5. Keep media inside authored slide bounds */
+    img,
+    video,
+    canvas,
+    svg {
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    /* 6. Presentation chrome stays outside the slide design system */
+    .deck-controls {
+        position: fixed;
+        left: 50%;
+        bottom: 22px;
+        transform: translateX(-50%);
+        z-index: 1000;
+    }
+
+    /* 7. Print one fixed-size slide per page */
+    @media print {
+        html,
+        body {
+            width: 1920px;
+            height: auto;
+            overflow: visible;
+            background: #fff;
+        }
+
+        .deck-viewport {
+            position: static;
+            overflow: visible;
+            background: #fff;
+        }
+
+        .deck-stage {
+            position: static;
+            width: auto;
+            height: auto;
+            transform: none !important;
+            background: none;
+        }
+
+        .slide {
+            position: relative;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            width: 1920px;
+            height: 1080px;
+            break-after: page;
+            page-break-after: always;
+        }
+
+        .slide:last-child {
+            break-after: auto;
+            page-break-after: auto;
+        }
+
+        .deck-controls {
+            display: none !important;
+        }
+    }
+
+    /* 8. Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.2s !important;
+        }
+    }
+
+    /* ================================================================
+       TYPOGRAPHY AND SLIDE FRAME
+       ================================================================ */
+    body {
+      color: var(--cream);
+      font-family: var(--font-display);
+    }
+
+    h1, h2, h3, p, ul, ol, figure, table, pre { margin: 0; }
+
+    .slide--dark { background: var(--ink); color: var(--cream); }
+    .slide--orange { background: var(--orange); color: var(--ink); }
+
+    .frame {
+      position: absolute;
+      inset: 60px 106px 50px;
+      display: grid;
+      grid-template-rows: 42px 154px 1fr 38px;
+      min-height: 0;
+    }
+
+    .declarative-frame {
+      position: absolute;
+      inset: 72px 106px 72px;
+      min-height: 0;
+    }
+
+    .chrome,
+    .foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .chrome { border-bottom: 1px solid var(--border); padding-bottom: 14px; }
+    .foot { border-top: 1px solid var(--border); padding-top: 14px; color: var(--muted); }
+
+    .slide--dark .chrome .lab-label { color: var(--orange); }
+    .slide--orange .chrome,
+    .slide--orange .foot { border-color: var(--orange-border); color: var(--orange-ink-hint); }
+
+    .headline {
+      align-self: center;
+      font-size: 74px;
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 0.98;
+      max-width: 1640px;
+    }
+
+    .headline.small { font-size: 66px; }
+    .headline .accent { color: var(--orange); }
+
+    .content {
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mono {
+      font-family: var(--font-mono);
+      letter-spacing: 0.04em;
+    }
+
+    .kicker {
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .body { font-size: 27px; line-height: 1.38; }
+    .body-small { font-size: 23px; line-height: 1.34; }
+    .muted { color: var(--muted); }
+    .orange-text { color: var(--orange); }
+    .ink-muted { color: var(--orange-ink-muted); }
+
+    .slash-list { list-style: none; padding: 0; }
+    .slash-list li {
+      position: relative;
+      padding-left: 32px;
+      font-size: 26px;
+      line-height: 1.32;
+    }
+    .slash-list li + li { margin-top: 14px; }
+    .slash-list li::before {
+      content: "/";
+      position: absolute;
+      left: 0;
+      color: var(--orange);
+      font-family: var(--font-mono);
+      font-weight: 700;
+    }
+
+    .slide--orange .slash-list li::before { color: var(--orange-ink-hint); }
+
+    /* ================================================================
+       MOTION — one editorial entrance system
+       ================================================================ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity var(--duration-enter) var(--ease-enter),
+                  transform var(--duration-enter) var(--ease-enter);
+    }
+
+    .slide.visible .reveal {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .slide.visible .reveal[data-delay="1"] { transition-delay: 80ms; }
+    .slide.visible .reveal[data-delay="2"] { transition-delay: 160ms; }
+    .slide.visible .reveal[data-delay="3"] { transition-delay: 240ms; }
+    .slide.visible .reveal[data-delay="4"] { transition-delay: 320ms; }
+
+    .export-settle .reveal,
+    .export-settle .slide.visible .reveal {
+      opacity: 1 !important;
+      transform: none !important;
+      transition: none !important;
+    }
+
+    /* ================================================================
+       BROADSIDE COMPONENTS — flat, square, hairline-divided
+       ================================================================ */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      border: 1px solid var(--orange);
+      padding: 6px 12px;
+      color: var(--orange);
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .slide--orange .tag { border-color: var(--orange-border); color: var(--orange-ink-hint); }
+
+    .rule-stub { width: 48px; height: 3px; background: var(--orange); }
+    .slide--orange .rule-stub { background: var(--ink); }
+
+    .panel {
+      border-top: 1px solid var(--border);
+      padding-top: 18px;
+      min-height: 0;
+    }
+
+    .panel-title {
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--orange);
+      margin-bottom: 12px;
+    }
+
+    .slide--orange .panel { border-color: var(--orange-border); }
+    .slide--orange .panel-title { color: var(--orange-ink-hint); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 46px; height: 100%; }
+    .two-col.wide-left { grid-template-columns: 1.15fr 0.85fr; }
+    .two-col.wide-right { grid-template-columns: 0.86fr 1.14fr; }
+    .three-col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; height: 100%; }
+
+    .flow-row {
+      display: grid;
+      grid-template-columns: 225px 1fr;
+      align-items: center;
+      min-height: 142px;
+      border-top: 1px solid var(--border);
+    }
+    .flow-row:last-child { border-bottom: 1px solid var(--border); }
+
+    .flow-label {
+      font-size: 31px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .flow-label small {
+      display: block;
+      margin-top: 8px;
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+
+    .node-flow {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 1fr);
+      align-items: center;
+      gap: 50px;
+      min-width: 0;
+    }
+
+    .node {
+      position: relative;
+      min-height: 88px;
+      border: 1px solid var(--border);
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      font-size: 25px;
+      line-height: 1.18;
+      min-width: 0;
+    }
+
+    .node strong { font-size: 27px; }
+    .node small { margin-top: 5px; color: var(--muted); font-size: 22px; }
+    .node.accent { border-color: var(--orange); }
+    .node.danger { background: var(--orange); color: var(--ink); border-color: var(--orange); }
+    .node:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      width: 28px;
+      height: 1px;
+      background: var(--orange);
+      right: -40px;
+      top: 50%;
+    }
+    .node:not(:last-child)::before {
+      content: "";
+      position: absolute;
+      right: -41px;
+      top: calc(50% - 5px);
+      border-left: 9px solid var(--orange);
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+    }
+
+    .code-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    .code-box {
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+      min-height: 0;
+    }
+    .code-box pre {
+      font-family: var(--font-mono);
+      font-size: 22px;
+      line-height: 1.34;
+      white-space: pre-wrap;
+      color: var(--cream);
+    }
+    .code-box.secure { border-color: var(--orange); }
+    .code-box .code-label {
+      display: block;
+      margin-bottom: 10px;
+      font-family: var(--font-mono);
+      font-size: 22px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .code-box.secure .code-label { color: var(--orange); }
+
+    .matrix {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    .matrix th,
+    .matrix td {
+      border-top: 1px solid var(--border);
+      padding: 13px 14px 12px 0;
+      text-align: left;
+      vertical-align: top;
+      font-size: 22px;
+      line-height: 1.24;
+      overflow-wrap: break-word;
+    }
+    .matrix th {
+      color: var(--orange);
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .matrix td strong { color: var(--cream); font-size: 23px; }
+    .matrix tr:last-child td { border-bottom: 1px solid var(--border); }
+    .matrix.compact th, .matrix.compact td { padding-top: 10px; padding-bottom: 9px; font-size: 22px; }
+
+    .takeaways {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+    }
+    .takeaway {
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+      font-size: 23px;
+      line-height: 1.28;
+    }
+    .takeaway strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--orange);
+      font-family: var(--font-mono);
+      font-size: 22px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .layer-stack { display: grid; gap: 10px; }
+    .layer {
+      min-height: 62px;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 58px 160px 1fr;
+      align-items: center;
+      gap: 16px;
+      font-size: 23px;
+    }
+    .layer-num { color: var(--orange); font-family: var(--font-mono); font-size: 23px; }
+    .layer strong { font-size: 25px; }
+
+    /* ================================================================
+       DECLARATIVE SLIDES
+       ================================================================ */
+    .catalogue {
+      position: absolute;
+      top: 0;
+      left: 0;
+      font-family: var(--font-mono);
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: var(--orange-ink-hint);
+    }
+
+    .cover-meta {
+      position: absolute;
+      top: 0;
+      right: 0;
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--orange-ink-hint);
+    }
+
+    .cover-title {
+      position: absolute;
+      left: 0;
+      top: 126px;
+      max-width: 1420px;
+      font-size: 151px;
+      font-weight: 900;
+      letter-spacing: -0.055em;
+      line-height: 0.87;
+    }
+
+    .cover-subtitle {
+      position: absolute;
+      left: 0;
+      bottom: 142px;
+      max-width: 1120px;
+      font-size: 34px;
+      line-height: 1.28;
+      color: var(--orange-ink-muted);
+    }
+
+    .cover-authors {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: space-between;
+      border-top: 1px solid var(--orange-border);
+      padding-top: 18px;
+      font-family: var(--font-mono);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--orange-ink-hint);
+    }
+
+    .chapter-title {
+      position: absolute;
+      left: 0;
+      top: 98px;
+      max-width: 1590px;
+      font-size: 130px;
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      line-height: 0.9;
+    }
+
+    .chapter-sub {
+      position: absolute;
+      left: 0;
+      bottom: 38px;
+      font-size: 32px;
+      color: var(--orange-ink-muted);
+    }
+
+    .three-questions {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 125px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 34px;
+    }
+    .question {
+      border-top: 1px solid var(--orange-border);
+      padding-top: 16px;
+      padding-bottom: 4px;
+      font-size: 29px;
+      line-height: 1.18;
+    }
+    .question strong {
+      display: block;
+      margin-bottom: 8px;
+      font-family: var(--font-mono);
+      font-size: 23px;
+      letter-spacing: 0.1em;
+      color: var(--orange-ink-hint);
+      text-transform: uppercase;
+    }
+
+    /* ================================================================
+       SPECIALIZED VISUALS
+       ================================================================ */
+    .xss-content { display: grid; grid-template-rows: repeat(3, 1fr) 58px; height: 100%; }
+    .xss-note { display: flex; align-items: center; color: var(--muted); font-size: 23px; }
+
+    .xss-defense { display: grid; grid-template-rows: 1fr 150px; gap: 22px; height: 100%; }
+    .comparison-strip { display: grid; grid-template-columns: 170px 1fr 1fr; }
+    .comparison-strip > div { border-top: 1px solid var(--border); padding: 13px 14px 10px 0; font-size: 23px; line-height: 1.22; }
+    .comparison-strip .head { font-family: var(--font-mono); font-size: 22px; color: var(--orange); text-transform: uppercase; letter-spacing: .07em; }
+    .comparison-strip .row-label { font-weight: 800; font-size: 25px; }
+
+    .pipeline-five { display: grid; grid-template-columns: repeat(5, 1fr); gap: 42px; align-items: center; }
+    .pipeline-five .node { min-height: 106px; text-align: center; align-items: center; }
+
+    .memory-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 44px; height: 100%; }
+    .memory-card { display: grid; grid-template-rows: 46px 1fr; min-height: 0; }
+    .memory-title { font-family: var(--font-mono); font-size: 22px; color: var(--orange); letter-spacing: .1em; text-transform: uppercase; }
+    .stack { display: grid; grid-template-rows: 0.8fr 2.2fr 0.8fr 0.8fr 0.8fr; min-height: 0; border: 1px solid var(--border); }
+    .stack-cell { border-top: 1px solid var(--border); display: grid; grid-template-columns: 220px 1fr; align-items: center; padding: 8px 18px; font-size: 23px; }
+    .stack-cell:first-child { border-top: 0; }
+    .stack-cell strong { font-size: 25px; }
+    .stack-cell small { color: var(--muted); font-size: 22px; }
+    .stack-cell.buffer { border-left: 8px solid var(--orange); }
+    .stack.overflow .stack-cell.buffer,
+    .stack.overflow .stack-cell.canary,
+    .stack.overflow .stack-cell.frame-slot { background: var(--orange); color: var(--ink); border-color: var(--ink); }
+    .stack.overflow .stack-cell small { color: var(--orange-ink-muted); }
+
+    .tamper-map { position: relative; height: 100%; display: grid; grid-template-columns: 1fr 100px 1fr; gap: 22px; }
+    .trust-boundary { border-left: 1px solid var(--orange); border-right: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+    .trust-boundary span { writing-mode: vertical-rl; transform: rotate(180deg); font-family: var(--font-mono); font-size: 22px; letter-spacing: .1em; color: var(--orange); text-transform: uppercase; }
+    .tamper-side { display: grid; grid-template-rows: repeat(3, 1fr); gap: 16px; }
+    .tamper-item { border-top: 1px solid var(--border); padding-top: 14px; display: grid; align-content: center; }
+    .tamper-item .mini-label { font-family: var(--font-mono); font-size: 22px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+    .tamper-item .big { font-size: 34px; font-weight: 800; margin-top: 6px; }
+    .tamper-item .desc { font-size: 23px; line-height: 1.25; margin-top: 7px; color: var(--muted); }
+    .tamper-side.server .big { color: var(--orange); }
+
+    .sequence {
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      column-gap: 64px;
+      position: relative;
+    }
+    .actor { position: relative; border-top: 1px solid var(--border); padding-top: 16px; }
+    .actor::after { content: ""; position: absolute; left: 50%; top: 70px; bottom: 24px; border-left: 1px solid var(--border); }
+    .actor h3 { position: relative; z-index: 2; background: var(--ink); font-size: 29px; line-height: 1.05; }
+    .actor p { position: relative; z-index: 2; margin-top: 8px; background: var(--ink); color: var(--muted); font-size: 22px; }
+    .message { position: absolute; height: 52px; border-top: 1px solid var(--orange); font-size: 22px; padding-top: 7px; z-index: 3; }
+    .message::after { content: ""; position: absolute; right: -1px; top: -6px; border-left: 10px solid var(--orange); border-top: 5px solid transparent; border-bottom: 5px solid transparent; }
+    .message.reverse::after { right: auto; left: -1px; transform: rotate(180deg); }
+    .m1 { left: 16.5%; width: 33%; top: 142px; }
+    .m2 { left: 16.5%; width: 66.5%; top: 260px; }
+    .m3 { left: 50%; width: 33%; top: 390px; }
+    .m4 { left: 50%; width: 33%; top: 522px; }
+    .sequence-note { position: absolute; left: 0; bottom: 0; right: 0; border-top: 1px solid var(--border); padding-top: 12px; font-size: 23px; color: var(--muted); z-index: 5; background: var(--ink); }
+
+    .csrf-gate { display: grid; grid-template-rows: 170px 1fr; gap: 28px; height: 100%; }
+    .request-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; min-height: 0; }
+    .request-card { border-top: 1px solid var(--border); padding-top: 14px; }
+    .request-card h3 { font-size: 31px; margin-bottom: 12px; }
+    .request-lines { display: grid; grid-template-columns: 170px 1fr; font-size: 23px; line-height: 1.35; }
+    .request-lines div { border-top: 1px solid var(--border); padding: 8px 0; }
+    .request-lines .key { color: var(--muted); font-family: var(--font-mono); }
+    .decision { margin-top: 14px; font-size: 28px; font-weight: 800; color: var(--orange); }
+
+    .sql-content { display: grid; grid-template-rows: 142px 1fr; gap: 28px; height: 100%; }
+    .sql-branches { display: grid; grid-template-columns: 1fr 1fr; gap: 42px; }
+    .sql-branch { border-top: 1px solid var(--border); padding-top: 14px; }
+    .sql-branch h3 { font-size: 31px; margin-bottom: 12px; }
+    .sql-code { font-family: var(--font-mono); font-size: 22px; line-height: 1.34; color: var(--cream); }
+    .sql-result { margin-top: 14px; color: var(--orange); font-size: 25px; font-weight: 700; }
+
+    .cookie-cycle { display: grid; grid-template-columns: repeat(4, 1fr); gap: 46px; align-items: center; }
+    .cookie-cycle .node { min-height: 118px; text-align: center; align-items: center; }
+    .base64-line { margin-top: 30px; border-top: 1px solid var(--border); padding-top: 18px; display: grid; grid-template-columns: 220px 1fr; align-items: center; gap: 24px; }
+    .base64-line h3 { font-size: 29px; }
+
+    .root-matrix th:nth-child(1) { width: 13%; }
+    .root-matrix th:nth-child(2) { width: 25%; }
+    .root-matrix th:nth-child(3) { width: 28%; }
+    .root-matrix th:nth-child(4) { width: 34%; }
+
+    .workflow { display: grid; grid-template-rows: 178px 1fr; gap: 30px; height: 100%; }
+    .seven-flow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 34px; align-items: center; }
+    .seven-flow .node { min-height: 105px; padding: 12px; text-align: center; align-items: center; font-size: 22px; }
+    .report-map { display: grid; grid-template-columns: 1.15fr .85fr; gap: 46px; min-height: 0; }
+    .four-blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 26px; }
+    .report-block { border-top: 1px solid var(--border); padding-top: 12px; }
+    .report-block strong { display: block; color: var(--orange); font-family: var(--font-mono); font-size: 22px; letter-spacing: .07em; text-transform: uppercase; }
+    .report-block p { margin-top: 8px; font-size: 23px; line-height: 1.25; }
+
+    .closing-title {
+      position: absolute;
+      left: 0;
+      top: 118px;
+      max-width: 1550px;
+      font-size: 155px;
+      font-weight: 900;
+      letter-spacing: -0.055em;
+      line-height: 0.88;
+    }
+    .closing-principles {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 115px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 36px;
+    }
+    .principle { border-top: 1px solid var(--orange-border); padding: 16px 0 4px; font-size: 28px; line-height: 1.22; }
+    .principle strong { display: block; margin-bottom: 8px; font-family: var(--font-mono); font-size: 23px; color: var(--orange-ink-hint); letter-spacing: .1em; }
+
+    /* ================================================================
+       OUTSIDE-STAGE CONTROLS AND INLINE EDITING
+       ================================================================ */
+    .deck-controls {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid rgba(240, 236, 229, 0.25);
+      background: rgba(17, 17, 17, 0.92);
+      color: var(--cream);
+      padding: 9px 14px;
+      font-family: var(--font-mono);
+      font-size: clamp(12px, 1.2vw, 16px);
+    }
+    .progress-track { width: clamp(120px, 20vw, 260px); height: 2px; background: var(--hint); }
+    .progress-fill { height: 100%; width: 0; background: var(--orange); }
+
+    .edit-hotzone { position: fixed; top: 0; left: 0; width: 80px; height: 80px; z-index: 10000; cursor: pointer; }
+    .edit-toggle {
+      position: fixed;
+      top: 14px;
+      left: 14px;
+      z-index: 10001;
+      opacity: 0;
+      pointer-events: none;
+      border: 1px solid var(--orange);
+      background: var(--ink);
+      color: var(--cream);
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      font-size: 14px;
+      transition: opacity 0.3s ease;
+    }
+    .edit-toggle.show, .edit-toggle.active { opacity: 1; pointer-events: auto; }
+    .capture-mode .deck-controls,
+    .capture-mode .edit-hotzone,
+    .capture-mode .edit-toggle { visibility: hidden !important; }
+    .editing [data-editable] { outline: 2px solid var(--orange); outline-offset: 4px; cursor: text; }
+    .editing .deck-viewport { cursor: text; }
+  
+
+    /* Topic04 Official2: dense but collision-safe extension */
+    .frame--keywords { grid-template-rows: 42px 126px minmax(0,1fr) 118px 34px; }
+    .headline.dense { font-size: 58px; line-height: .98; max-width: 1710px; }
+    .dense-content { display: grid; grid-template-rows: minmax(0,1fr) auto; gap: 18px; padding-bottom: 8px; }
+    .keyword-strip {
+      display: grid; grid-template-columns: 120px repeat(auto-fit,minmax(0,1fr)); gap: 18px;
+      align-items: start; min-height: 0; padding: 13px 0 8px; border-top: 1px solid var(--border); overflow: hidden;
+    }
+    .slide--orange .keyword-strip { border-color: var(--orange-border); }
+    .declarative-frame > .keyword-strip { position:absolute; left:0; right:0; bottom:58px; min-height:104px; }
+    .keyword-label { font: 700 18px/1 var(--font-mono); letter-spacing:.12em; color:var(--orange); }
+    .slide--orange .keyword-label { color:var(--orange-ink-hint); }
+    .keyword-item { min-width:0; }
+    .keyword-item strong { display:block; margin-bottom:5px; font:700 20px/1.05 var(--font-display); color:var(--orange); }
+    .slide--orange .keyword-item strong { color:var(--ink); }
+    .keyword-item span { display:block; font-size:18px; line-height:1.18; color:var(--muted); }
+    .slide--orange .keyword-item span { color:var(--orange-ink-muted); }
+    .flow-table { display:grid; align-content:stretch; border-top:1px solid var(--border); min-height:0; overflow:hidden; }
+    .flow-table-row { display:grid; grid-template-columns:140px repeat(4,minmax(0,1fr)); min-height:84px; border-bottom:1px solid var(--border); }
+    .flow-table-row > div { display:flex; align-items:center; padding:10px 18px; border-right:1px solid var(--border); font-size:23px; line-height:1.18; }
+    .flow-table-row > div:last-child { border-right:0; color:var(--orange); font-weight:700; }
+    .flow-key { font:700 20px/1.1 var(--font-mono)!important; letter-spacing:.06em; text-transform:uppercase; color:var(--orange); }
+    .wide-callout { padding:13px 0 0 34px; border-top:1px solid var(--border); color:var(--cream); font-size:22px; line-height:1.24; position:relative; }
+    .wide-callout::before { content:"/"; position:absolute; left:0; color:var(--orange); font:700 24px/1 var(--font-mono); }
+    .experiment-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:34px; min-height:0; }
+    .experiment { min-width:0; border-top:1px solid var(--border); padding-top:14px; }
+    .experiment-num { font:600 18px/1 var(--font-mono); color:var(--orange); letter-spacing:.12em; }
+    .experiment h3 { margin:8px 0 10px; font-size:31px; line-height:1; }
+    .experiment dl { display:grid; grid-template-columns:86px 1fr; gap:8px 12px; margin:0; }
+    .experiment dt { font:700 17px/1.2 var(--font-mono); color:var(--orange); text-transform:uppercase; }
+    .experiment dd { margin:0; font-size:21px; line-height:1.23; color:var(--cream); }
+    .dense-matrix { width:100%; height:100%; border-collapse:collapse; table-layout:fixed; }
+    .dense-matrix th { padding:10px 12px; border-top:1px solid var(--border); border-bottom:1px solid var(--border); text-align:left; font:700 18px/1.12 var(--font-mono); color:var(--orange); text-transform:uppercase; }
+    .dense-matrix td { padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:middle; font-size:21px; line-height:1.18; overflow-wrap:anywhere; }
+    .dense-matrix .matrix-key { font-weight:800; color:var(--cream); }
+    .takeaway-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:30px; }
+    .takeaway-flat { border-top:1px solid var(--border); padding-top:10px; }
+    .takeaway-flat strong { display:block; margin-bottom:4px; color:var(--orange); font:700 18px/1 var(--font-mono); text-transform:uppercase; }
+    .takeaway-flat span { font-size:20px; line-height:1.18; color:var(--muted); }
+    .overview-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(2,minmax(0,1fr)); gap:28px 34px; height:100%; }
+    .overview-block { border-top:1px solid var(--border); padding-top:12px; min-width:0; }
+    .overview-block > span { font:600 18px/1 var(--font-mono); color:var(--orange); letter-spacing:.12em; }
+    .overview-block h3 { margin:8px 0 8px; font-size:28px; line-height:1.02; }
+    .overview-block p { font-size:21px; line-height:1.24; color:var(--muted); }
+    .overview-on-orange .overview-block { border-color:var(--orange-border); }
+    .overview-on-orange .overview-block > span { color:var(--orange-ink-hint); }
+    .overview-on-orange .overview-block p { color:var(--orange-ink-muted); }
+    .declarative-frame--overview { display:grid; grid-template-rows:42px 164px minmax(0,1fr) 112px; }
+    .declarative-frame--overview > .catalogue { position:static; }
+    .declarative-frame--overview > .cover-meta { position:absolute; top:0; right:0; }
+    .chapter-title--official { position:static; align-self:end; max-width:1500px; font-size:68px; line-height:.92; }
+    .orange-overview-content { min-height:0; padding-top:18px; }
+    .declarative-frame--overview > .keyword-strip { position:static; }
+    .cover-title--official { font-size:128px; max-width:1450px; line-height:.88; top:150px; }
+    .cover-topic-line { position:absolute; left:0; right:0; top:545px; display:grid; grid-template-columns:repeat(6,1fr); border-top:1px solid var(--orange-border); border-bottom:1px solid var(--orange-border); }
+    .cover-topic-line span { padding:13px 10px; border-right:1px solid var(--orange-border); text-align:center; font:700 18px/1.1 var(--font-mono); letter-spacing:.05em; text-transform:uppercase; }
+    .cover-topic-line span:last-child { border-right:0; }
+    .cover-subtitle { max-width:1120px; top:438px; }
+    .cover-authors { bottom:184px; }
+    .closing-title--official { font-size:118px; top:118px; }
+    .closing-principles--four { grid-template-columns:repeat(4,1fr); bottom:212px; }
+    .deck-controls { opacity:.22; }
+    .capture-mode .deck-controls { display:none!important; }
+  </style>
+</head>
+<body>
+  <div class="deck-viewport" aria-live="polite">
+    <main class="deck-stage" id="deckStage" aria-label="Bài trình bày Topic04 gồm 24 slide">
+      <section class="slide slide--orange active visible" aria-label="Slide 1: Sáu lỗ hổng, một ranh giới niềm tin">
+      <div class="declarative-frame">
+        <div class="catalogue reveal">01 / 24</div>
+        <div class="cover-meta reveal" data-delay="1">Topic04 / Teaching deck</div>
+        <h1 class="cover-title cover-title--official reveal" data-delay="1" data-editable>Sáu lỗ hổng, một ranh giới niềm tin</h1>
+        <p class="cover-subtitle reveal" data-delay="2" data-editable>Thử nghiệm kỹ thuật khai thác lỗ hổng bảo mật ứng dụng web trong môi trường local có kiểm soát.</p>
+        <div class="cover-topic-line reveal" data-delay="2"><span>XSS</span><span>Buffer Overflow</span><span>Parameter Tampering</span><span>CSRF</span><span>SQL Injection</span><span>Cookie Poisoning</span></div>
+        <div class="cover-authors reveal" data-delay="3"><span>Lê Minh · 21127645</span><span>Nguyễn Vũ Bách · 21127224</span></div>
+        <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Lỗ hổng</strong><span>Điểm yếu làm hệ thống xử lý ngoài ý muốn.</span></div><div class="keyword-item"><strong>Trust boundary</strong><span>Ranh giới giữa vùng ít tin cậy và vùng ra quyết định.</span></div><div class="keyword-item"><strong>Payload</strong><span>Dữ liệu kiểm thử dùng để làm lộ hành vi sai.</span></div><div class="keyword-item"><strong>Root fix</strong><span>Bản vá loại bỏ nguyên nhân gốc, không chỉ giảm triệu chứng.</span></div>
+  </div>
+      </div>
+    </section>
+<section class="slide slide--orange" aria-label="Slide 2: Phạm vi an toàn và chu trình đánh giá">
+    <div class="declarative-frame declarative-frame--overview">
+      <div class="catalogue reveal">02 / 24</div>
+      <div class="cover-meta reveal" data-delay="1">Khung chung / Đề bài</div>
+      <h1 class="chapter-title chapter-title--official reveal" data-delay="1">Phạm vi an toàn và chu trình đánh giá</h1>
+      <div class="orange-overview-content"><div class="overview-grid overview-on-orange reveal" data-delay="1">
+    <article class="overview-block" data-overlap-check><span>01</span><h3>Chỉ môi trường hợp pháp</h3><p>Máy local/VM/Docker; ứng dụng cố tình có lỗi; không website thật, không dữ liệu thật.</p></article><article class="overview-block" data-overlap-check><span>02</span><h3>Không mở rộng khai thác</h3><p>Không reverse shell, malware, persistence, botnet, keylogger, shellcode hay ROP.</p></article><article class="overview-block" data-overlap-check><span>03</span><h3>Chu trình bắt buộc</h3><p>Nhận diện → khai thác local → quan sát → phân tích → đánh giá → vá → retest.</p></article><article class="overview-block" data-overlap-check><span>04</span><h3>Bài nộp</h3><p>PDF, ảnh từng bước, nguyên nhân, ảnh hưởng, phòng chống và mã vá minh họa.</p></article><article class="overview-block" data-overlap-check><span>05</span><h3>Khung đọc</h3><p>Source ở đâu? Dữ liệu được diễn giải tại đâu? Ai giữ quyết định cuối?</p></article><article class="overview-block" data-overlap-check><span>06</span><h3>Nguyên tắc chứng cứ</h3><p>Không biến source code hoặc hướng dẫn thành kết quả runtime; chỉ kết luận điều đã quan sát.</p></article>
+  </div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Localhost</strong><span>Máy hiện tại; thường dùng 127.0.0.1 để giới hạn truy cập.</span></div><div class="keyword-item"><strong>Invariant</strong><span>Điều kiện phải luôn đúng, ví dụ input tối đa 31 byte.</span></div><div class="keyword-item"><strong>Retest</strong><span>Chạy lại đúng ca kiểm thử sau khi vá để chứng minh lỗi bị chặn.</span></div><div class="keyword-item"><strong>Evidence</strong><span>Ảnh, request, response, log, trace hoặc debugger xác nhận hành vi.</span></div>
+  </div>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 3: XSS là luồng dữ liệu từ source đến sink">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab01 / XSS / Cơ chế</span><span>03 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>XSS là luồng dữ liệu từ source đến sink</h2>
+      <div class="content dense-content"><div class="flow-table reveal" data-delay="1" data-overlap-check>
+    <div class="flow-table-row"><div class="flow-key">Reflected</div><div class="">URL query q</div><div class="">Markup(q) trong response</div><div class="">Browser parse</div><div class="">Một URL/một request</div></div><div class="flow-table-row"><div class="flow-key">Stored</div><div class="">Comment form</div><div class="">SQLite comments.body</div><div class="">Markup(body)</div><div class="">Phát lại cho mọi viewer</div></div><div class="flow-table-row"><div class="flow-key">DOM-based</div><div class="">location.hash</div><div class="">JS phía client</div><div class="">innerHTML</div><div class="">Server không thấy fragment</div></div>
+  </div>
+  <div class="wide-callout reveal" data-delay="2" data-overlap-check>Lab01 triển khai cặp route vulnerable/secure cho search, comments và DOM search; trace chỉ rõ source → biến đổi → sink → verdict.</div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Source</strong><span>Nơi dữ liệu không tin cậy đi vào luồng xử lý.</span></div><div class="keyword-item"><strong>Sink</strong><span>Nơi dữ liệu được diễn giải thành HTML, DOM hoặc mã.</span></div><div class="keyword-item"><strong>Reflected XSS</strong><span>Payload đi trong request và phản chiếu ngay ở response.</span></div><div class="keyword-item"><strong>Stored XSS</strong><span>Payload được lưu rồi phát lại ở các lượt xem sau.</span></div><div class="keyword-item"><strong>DOM XSS</strong><span>Source và sink nằm trong JavaScript phía browser.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 03</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 4: Ba ca thử XSS cho thấy ba phạm vi ảnh hưởng">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab01 / XSS / Thực hành</span><span>04 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Ba ca thử XSS cho thấy ba phạm vi ảnh hưởng</h2>
+      <div class="content dense-content"><div class="experiment-grid reveal" data-delay="1">
+    <article class="experiment" data-overlap-check>
+      <div class="experiment-num">01</div>
+      <h3>Reflected</h3>
+      <dl><dt>Thao tác</dt><dd>Mở `/vulnerable/search?q=...`; thử text thường rồi payload alert an toàn.</dd><dt>Quan sát</dt><dd>Payload nằm trong HTML response; nạn nhân phải mở URL đã gắn dữ liệu.</dd><dt>Ý nghĩa</dt><dd>Rò dữ liệu theo origin, đổi DOM, hành động thay nạn nhân.</dd></dl>
+    </article><article class="experiment" data-overlap-check>
+      <div class="experiment-num">02</div>
+      <h3>Stored</h3>
+      <dl><dt>Thao tác</dt><dd>Gửi comment thường rồi payload; reload hoặc xem lại bằng phiên khác.</dd><dt>Quan sát</dt><dd>Payload còn trong SQLite và được phát lại ở mỗi lần render.</dd><dt>Ý nghĩa</dt><dd>Lan tới mọi viewer; mức độ và thời gian tồn tại cao hơn.</dd></dl>
+    </article><article class="experiment" data-overlap-check>
+      <div class="experiment-num">03</div>
+      <h3>DOM-based</h3>
+      <dl><dt>Thao tác</dt><dd>Mở `/vulnerable/dom-search#...`; kiểm tra file JS và DOM trước/sau.</dd><dt>Quan sát</dt><dd>`location.hash → innerHTML`; không cần server phản chiếu fragment.</dd><dt>Ý nghĩa</dt><dd>Tác động ngay ở client; log server có thể thiếu source.</dd></dl>
+    </article>
+  </div>
+  <div class="wide-callout reveal" data-delay="2" data-overlap-check>Cookie không có HttpOnly có thể bị script đọc; HttpOnly giảm hậu quả đọc cookie nhưng không ngăn XSS sửa trang hoặc gửi request.</div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Autoescape</strong><span>Jinja mã hóa ký tự đặc biệt khi đưa dữ liệu vào HTML.</span></div><div class="keyword-item"><strong>HTML parser</strong><span>Bộ phân tích biến chuỗi markup thành cây DOM.</span></div><div class="keyword-item"><strong>Event handler</strong><span>Thuộc tính như onerror có thể chạy JavaScript khi sự kiện xảy ra.</span></div><div class="keyword-item"><strong>Origin</strong><span>Bộ ba scheme, host và port xác định phạm vi bảo mật của trang.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 04</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 5: Vá XSS tại đúng context; CSP chỉ là lớp bổ sung">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab01 / XSS / Bản vá</span><span>05 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Vá XSS tại đúng context; CSP chỉ là lớp bổ sung</h2>
+      <div class="content dense-content"><table class="dense-matrix reveal" data-delay="1" data-overlap-check>
+    <thead><tr><th>Biến thể</th><th>Sink lỗi</th><th>Root fix trong Lab01</th><th>Vì sao hiệu quả</th></tr></thead>
+    <tbody><tr><td class="matrix-key">Reflected</td><td class="">Markup(q)</td><td class="">Jinja autoescape / output encoding</td><td class="">Browser nhận text thay vì markup</td></tr><tr><td class="matrix-key">Stored</td><td class="">Markup(body)</td><td class="">bleach.clean allowlist trước khi render</td><td class="">Loại tag/attribute không được phép</td></tr><tr><td class="matrix-key">DOM</td><td class="">innerHTML</td><td class="">textContent</td><td class="">Tạo text node, không tạo element/event</td></tr><tr><td class="matrix-key">Mọi route</td><td class="">Input không tin cậy</td><td class="">Validate server-side</td><td class="">Giới hạn kiểu/độ dài nhưng không thay encoding</td></tr><tr><td class="matrix-key">Defense in depth</td><td class="">Script còn lọt</td><td class="">CSP + cookie flags + headers</td><td class="">Giảm khả năng và hậu quả, không sửa sink</td></tr></tbody>
+  </table>
+  <div class="takeaway-row reveal" data-delay="2">
+    <div class="takeaway-flat" data-overlap-check><strong>Contextual encoding</strong><span>HTML text, attribute, URL và JavaScript cần cách encode khác nhau.</span></div><div class="takeaway-flat" data-overlap-check><strong>CSP</strong><span>Policy giới hạn nguồn/thực thi script; không biến `innerHTML` thành API an toàn.</span></div><div class="takeaway-flat" data-overlap-check><strong>Cookie flags</strong><span>HttpOnly, Secure, SameSite bảo vệ phiên theo các hướng khác nhau.</span></div>
+  </div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Sanitization</strong><span>Lọc nội dung theo allowlist khi vẫn cần cho phép một phần HTML.</span></div><div class="keyword-item"><strong>CSP</strong><span>Content Security Policy — chính sách giới hạn nguồn và cách thực thi tài nguyên.</span></div><div class="keyword-item"><strong>HttpOnly</strong><span>Cookie không thể được đọc qua JavaScript.</span></div><div class="keyword-item"><strong>Secure</strong><span>Cookie chỉ được gửi qua HTTPS.</span></div><div class="keyword-item"><strong>SameSite</strong><span>Giới hạn tình huống cookie được gửi trong request cross-site.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 05</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 6: HTTP hợp lệ vẫn có thể chạm vùng nhớ stack">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab02 / Buffer Overflow / Cơ chế</span><span>06 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>HTTP hợp lệ vẫn có thể chạm vùng nhớ stack</h2>
+      <div class="content dense-content"><div class="flow-table reveal" data-delay="1" data-overlap-check>
+    <div class="flow-table-row"><div class="flow-key">01</div><div class="">Browser</div><div class="">Input text local</div><div class="">POST /submit</div><div class="">HTTP hợp lệ</div></div><div class="flow-table-row"><div class="flow-key">02</div><div class="">Flask</div><div class="">Giới hạn request</div><div class="">subprocess.run</div><div class="">shell=False</div></div><div class="flow-table-row"><div class="flow-key">03</div><div class="">C backend</div><div class="">char name[32]</div><div class="">strcpy(name,input)</div><div class="">Không biết capacity</div></div><div class="flow-table-row"><div class="flow-key">04</div><div class="">OS</div><div class="">Exit code/signal</div><div class="">Flask chuẩn hóa</div><div class="">Trace + response</div></div>
+  </div>
+  <div class="wide-callout reveal" data-delay="2" data-overlap-check>Buffer 32 byte chỉ chứa tối đa 31 byte dữ liệu chuỗi C vì cần byte kết thúc `\0`; input 32 byte đã vượt capacity dù chưa chắc crash ngay.</div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Buffer</strong><span>Vùng nhớ có kích thước hữu hạn dùng để chứa dữ liệu.</span></div><div class="keyword-item"><strong>Stack</strong><span>Vùng nhớ cho frame hàm, biến cục bộ và control data.</span></div><div class="keyword-item"><strong>Capacity</strong><span>Số byte tối đa vùng đích có thể chứa an toàn.</span></div><div class="keyword-item"><strong>Null terminator</strong><span>Byte 0 kết thúc chuỗi kiểu C.</span></div><div class="keyword-item"><strong>Memory corruption</strong><span>Dữ liệu ghi sai làm hỏng vùng nhớ lân cận.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 06</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 7: Crash phải được đo, không suy từ source">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab02 / Buffer Overflow / Thực hành</span><span>07 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Crash phải được đo, không suy từ source</h2>
+      <div class="content dense-content"><div class="experiment-grid reveal" data-delay="1">
+    <article class="experiment" data-overlap-check>
+      <div class="experiment-num">01</div>
+      <h3>Baseline</h3>
+      <dl><dt>Thao tác</dt><dd>Gửi tên ngắn và 31 byte.</dd><dt>Quan sát</dt><dd>Binary in PID/length/buffer size rồi exit bình thường.</dd><dt>Ý nghĩa</dt><dd>Xác nhận pipeline hoạt động trước khi thử overflow.</dd></dl>
+    </article><article class="experiment" data-overlap-check>
+      <div class="experiment-num">02</div>
+      <h3>Overflow có kiểm soát</h3>
+      <dl><dt>Thao tác</dt><dd>Gửi 32, 64, 128 byte A/B qua `vulnerable_asan`.</dd><dt>Quan sát</dt><dd>ASan có thể báo stack-buffer-overflow; process dừng có kiểm soát.</dd><dt>Ý nghĩa</dt><dd>Ghi write size, frame, line `strcpy`, exit/signal.</dd></dl>
+    </article><article class="experiment" data-overlap-check>
+      <div class="experiment-num">03</div>
+      <h3>GDB</h3>
+      <dl><dt>Thao tác</dt><dd>Chạy script normal/overflow/hardened local.</dd><dt>Quan sát</dt><dd>Xem backtrace, frame, stack bytes và điểm dừng.</dd><dt>Ý nghĩa</dt><dd>Phân biệt first-over-capacity, first-ASan và first-crash.</dd></dl>
+    </article>
+  </div>
+  <div class="wide-callout reveal" data-delay="2" data-overlap-check>Lab không viết shellcode, không sửa return address, không ROP, không reverse shell; mục tiêu chỉ là crash và phân tích memory corruption.</div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>ASan</strong><span>AddressSanitizer — công cụ runtime phát hiện truy cập bộ nhớ sai.</span></div><div class="keyword-item"><strong>GDB</strong><span>Debugger dùng để dừng chương trình và quan sát frame, stack, backtrace.</span></div><div class="keyword-item"><strong>Undefined behavior</strong><span>Chuẩn C không quy định kết quả sau thao tác không hợp lệ.</span></div><div class="keyword-item"><strong>Backtrace</strong><span>Chuỗi lời gọi hàm tại thời điểm chương trình dừng.</span></div><div class="keyword-item"><strong>Signal</strong><span>Cơ chế hệ điều hành báo sự kiện như lỗi truy cập bộ nhớ.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 07</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 8: Source fix trước; compiler và OS hardening sau">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab02 / Buffer Overflow / Bản vá</span><span>08 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Source fix trước; compiler và OS hardening sau</h2>
+      <div class="content dense-content"><table class="dense-matrix reveal" data-delay="1" data-overlap-check>
+    <thead><tr><th>Lớp</th><th>Triển khai trong Lab02</th><th>Bảo vệ gì</th><th>Giới hạn</th></tr></thead>
+    <tbody><tr><td class="matrix-key">Source #1</td><td class="">strnlen(input,33); reject nếu &gt;31</td><td class="">Giữ invariant trước copy</td><td class="">Phải tính theo byte</td></tr><tr><td class="matrix-key">Source #2</td><td class="">snprintf(name,32,"%s",input) + check return</td><td class="">Bounded write và phát hiện truncation</td><td class="">Không bỏ qua return value</td></tr><tr><td class="matrix-key">HTTP</td><td class="">MAX_CONTENT_LENGTH=4096; input lab ≤256</td><td class="">Giảm request quá lớn</td><td class="">Không biết capacity từng buffer</td></tr><tr><td class="matrix-key">Compiler</td><td class="">stack protector, FORTIFY, PIE</td><td class="">Phát hiện/giảm khai thác</td><td class="">Không thay code an toàn</td></tr><tr><td class="matrix-key">Loader/OS</td><td class="">RELRO, ASLR, NX/DEP</td><td class="">Bảo vệ relocation, layout, execution</td><td class="">Defense in depth</td></tr></tbody>
+  </table>
+  <div class="takeaway-row reveal" data-delay="2">
+    <div class="takeaway-flat" data-overlap-check><strong>Firewall</strong><span>Không thấy invariant nội bộ; request có thể hoàn toàn hợp lệ.</span></div><div class="takeaway-flat" data-overlap-check><strong>Memory-safe</strong><span>Ưu tiên thư viện/ngôn ngữ quản lý biên khi phù hợp.</span></div><div class="takeaway-flat" data-overlap-check><strong>Retest</strong><span>Input dài phải bị từ chối rõ ràng, process không crash.</span></div>
+  </div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Stack Canary</strong><span>Giá trị bảo vệ phát hiện ghi đè stack trước khi return.</span></div><div class="keyword-item"><strong>ASLR</strong><span>Ngẫu nhiên hóa vị trí vùng nhớ giữa các lần chạy.</span></div><div class="keyword-item"><strong>PIE</strong><span>Executable độc lập vị trí để ASLR áp dụng cho code chính.</span></div><div class="keyword-item"><strong>RELRO</strong><span>Làm vùng relocation khó hoặc không thể ghi sau khi nạp.</span></div><div class="keyword-item"><strong>NX/DEP</strong><span>Đánh dấu vùng dữ liệu không được thực thi như mã.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 08</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 9: Client gửi tham số; server phải giữ policy">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab03 / Parameter Tampering / Cơ chế</span><span>09 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Client gửi tham số; server phải giữ policy</h2>
+      <div class="content dense-content"><div class="flow-table reveal" data-delay="1" data-overlap-check>
+    <div class="flow-table-row"><div class="flow-key">Checkout</div><div class="">price=1</div><div class="">Hidden field bị sửa</div><div class="">Server tin giá</div><div class="">Invoice total sai</div></div><div class="flow-table-row"><div class="flow-key">Invoice</div><div class="">id=1002</div><div class="">Đổi object ID</div><div class="">Không check owner</div><div class="">Lộ hóa đơn user B</div></div><div class="flow-table-row"><div class="flow-key">Profile</div><div class="">role=admin</div><div class="">Mass assignment</div><div class="">Update role từ form</div><div class="">Privilege escalation</div></div>
+  </div>
+  <div class="wide-callout reveal" data-delay="2" data-overlap-check>Lab03 vẫn dùng parameterized SQL; lỗi nằm ở business logic và authorization, chứng minh parameter binding không tự sửa giá, IDOR hay mass assignment.</div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Parameter Tampering</strong><span>Thay đổi tham số request để làm server xử lý ngoài policy.</span></div><div class="keyword-item"><strong>Hidden field</strong><span>Trường chỉ ẩn trong giao diện; client vẫn đọc và sửa được.</span></div><div class="keyword-item"><strong>IDOR</strong><span>Đổi tham chiếu object để truy cập tài nguyên không thuộc quyền.</span></div><div class="keyword-item"><strong>Mass assignment</strong><span>Tự động gán nhiều field client vào object/database.</span></div><div class="keyword-item"><strong>Authorization</strong><span>Kiểm tra chủ thể có quyền thực hiện hành động trên object hay không.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 09</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 10: Ba retest xác định đúng nguồn authoritative">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab03 / Parameter Tampering / Thực hành</span><span>10 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Ba retest xác định đúng nguồn authoritative</h2>
+      <div class="content dense-content"><div class="experiment-grid reveal" data-delay="1">
+    <article class="experiment" data-overlap-check>
+      <div class="experiment-num">01</div>
+      <h3>Giá checkout</h3>
+      <dl><dt>Thao tác</dt><dd>User A thêm product 5; đổi `price=100000` thành `1`.</dd><dt>Quan sát</dt><dd>Vulnerable lưu unit_price=1; secure bỏ giá client và dùng DB=100000.</dd><dt>Ý nghĩa</dt><dd>Audit: `checkout_price_mismatch`.</dd></dl>
+    </article><article class="experiment" data-overlap-check>
+      <div class="experiment-num">02</div>
+      <h3>Invoice IDOR</h3>
+      <dl><dt>Thao tác</dt><dd>User A đổi `/invoice?id=1001` thành `1002`.</dd><dt>Quan sát</dt><dd>Vulnerable trả invoice User B; secure owner-or-admin trả HTTP 403.</dd><dt>Ý nghĩa</dt><dd>Audit: `invoice_access_denied`.</dd></dl>
+    </article><article class="experiment" data-overlap-check>
+      <div class="experiment-num">03</div>
+      <h3>Role tampering</h3>
+      <dl><dt>Thao tác</dt><dd>Đổi `role=user` thành `role=admin` trong profile.</dd><dt>Quan sát</dt><dd>Vulnerable cập nhật DB+session; secure chỉ cập nhật email và giữ role.</dd><dt>Ý nghĩa</dt><dd>Audit: `sensitive_field_submitted`.</dd></dl>
+    </article>
+  </div>
+  <div class="wide-callout reveal" data-delay="2" data-overlap-check>Secure result đúng không chỉ là “request thất bại”: phải chỉ ra quyết định, nguồn identity, database write có/không và state trước/sau.</div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Authoritative source</strong><span>Nguồn được server công nhận là sự thật để ra quyết định.</span></div><div class="keyword-item"><strong>Object-level authz</strong><span>Kiểm quyền trên đúng bản ghi/tài nguyên đang được yêu cầu.</span></div><div class="keyword-item"><strong>Field allowlist</strong><span>Chỉ nhận tập field được phép cập nhật.</span></div><div class="keyword-item"><strong>HTTP 403</strong><span>Server hiểu request nhưng từ chối vì thiếu quyền.</span></div><div class="keyword-item"><strong>Audit event</strong><span>Bản ghi có cấu trúc về hành động, quyết định và lý do.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 10</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 11: Identity, object, field và value đều cần policy phía server">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab03 / Parameter Tampering / Bản vá</span><span>11 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Identity, object, field và value đều cần policy phía server</h2>
+      <div class="content dense-content"><table class="dense-matrix reveal" data-delay="1" data-overlap-check>
+    <thead><tr><th>Ranh giới</th><th>Không tin</th><th>Nguồn server</th><th>Control</th></tr></thead>
+    <tbody><tr><td class="matrix-key">Identity</td><td class="">user_id trong form</td><td class="">Session đã xác thực</td><td class="">Không cho client chọn subject</td></tr><tr><td class="matrix-key">Value</td><td class="">price hidden field</td><td class="">Product trong SQLite</td><td class="">Tính lại total server-side</td></tr><tr><td class="matrix-key">Object</td><td class="">invoice id</td><td class="">Owner + role hiện tại</td><td class="">Owner-or-admin mỗi request</td></tr><tr><td class="matrix-key">Property</td><td class="">role/is_admin/balance</td><td class="">Schema/policy cập nhật</td><td class="">Allowlist email</td></tr><tr><td class="matrix-key">Detection</td><td class="">Input bất thường</td><td class="">Audit + trace_id</td><td class="">Log mismatch/denial/rejected field</td></tr></tbody>
+  </table>
+  <div class="takeaway-row reveal" data-delay="2">
+    <div class="takeaway-flat" data-overlap-check><strong>OWASP</strong><span>IDOR là Broken Access Control; với API thường gọi BOLA.</span></div><div class="takeaway-flat" data-overlap-check><strong>Khác SQLi</strong><span>Tampering giữ query hợp lệ nhưng làm sai policy/value.</span></div><div class="takeaway-flat" data-overlap-check><strong>Deny early</strong><span>Từ chối trước đọc/ghi dữ liệu nhạy cảm.</span></div>
+  </div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Authentication</strong><span>Xác minh danh tính của chủ thể.</span></div><div class="keyword-item"><strong>Broken Access Control</strong><span>Nhóm lỗi cho phép hành động hoặc tài nguyên trái quyền.</span></div><div class="keyword-item"><strong>BOLA</strong><span>Broken Object Level Authorization — thiếu quyền trên object cụ thể.</span></div><div class="keyword-item"><strong>Privilege escalation</strong><span>Tăng quyền từ user lên mức cao hơn trái phép.</span></div><div class="keyword-item"><strong>Least fields</strong><span>Chỉ tiếp nhận và trả các field thực sự cần cho nghiệp vụ.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 11</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 12: Session chứng minh danh tính, không chứng minh ý định">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab04 / CSRF / Cơ chế</span><span>12 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Session chứng minh danh tính, không chứng minh ý định</h2>
+      <div class="content dense-content"><div class="flow-table reveal" data-delay="1" data-overlap-check>
+    <div class="flow-table-row"><div class="flow-key">01</div><div class="">Victim login :5004</div><div class="">Session cookie</div><div class="">Browser lưu</div><div class="">Đã xác thực</div></div><div class="flow-table-row"><div class="flow-key">02</div><div class="">Mở Demo Page :9004</div><div class="">Cross-origin form</div><div class="">POST change-email</div><div class="">Không cần đọc cookie</div></div><div class="flow-table-row"><div class="flow-key">03</div><div class="">Browser gửi request</div><div class="">Cookie có thể tự kèm</div><div class="">Server chỉ tin session</div><div class="">Thiếu proof of intent</div></div><div class="flow-table-row"><div class="flow-key">04</div><div class="">Vulnerable route</div><div class="">Không token/origin check</div><div class="">UPDATE SQLite</div><div class="">Email bị đổi</div></div>
+  </div>
+  <div class="wide-callout reveal" data-delay="2" data-overlap-check>SOP có thể chặn attacker đọc response nhưng không ngăn HTML form gửi request; CORS không phải bản vá CSRF.</div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>CSRF</strong><span>Ép browser đã đăng nhập gửi request thay đổi trạng thái ngoài ý muốn.</span></div><div class="keyword-item"><strong>Session cookie</strong><span>Cookie gắn request với phiên đăng nhập phía server.</span></div><div class="keyword-item"><strong>SOP</strong><span>Same-Origin Policy — hạn chế script truy cập dữ liệu khác origin.</span></div><div class="keyword-item"><strong>Cross-origin</strong><span>Khác scheme, host hoặc port.</span></div><div class="keyword-item"><strong>Proof of intent</strong><span>Bằng chứng request được tạo từ UI/phiên hợp lệ với ý định người dùng.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 12</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 13: Deny phải xảy ra trước mutation">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab04 / CSRF / Thực hành</span><span>13 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Deny phải xảy ra trước mutation</h2>
+      <div class="content dense-content"><div class="experiment-grid reveal" data-delay="1">
+    <article class="experiment" data-overlap-check>
+      <div class="experiment-num">01</div>
+      <h3>Vulnerable email</h3>
+      <dl><dt>Thao tác</dt><dd>Victim login; mở `/attack/vulnerable-email`; xác nhận gửi form.</dd><dt>Quan sát</dt><dd>POST có session, không token/Origin check; email đổi trong SQLite.</dd><dt>Ý nghĩa</dt><dd>State history ghi before/after.</dd></dl>
+    </article><article class="experiment" data-overlap-check>
+      <div class="experiment-num">02</div>
+      <h3>Secure bị tấn công</h3>
+      <dl><dt>Thao tác</dt><dd>Gửi thiếu token hoặc token giả từ Demo Page.</dd><dt>Quan sát</dt><dd>Exact Origin/Referer hoặc token check thất bại; HTTP 403.</dd><dt>Ý nghĩa</dt><dd>Email giữ nguyên; audit+trace denial.</dd></dl>
+    </article><article class="experiment" data-overlap-check>
+      <div class="experiment-num">03</div>
+      <h3>Secure hợp lệ</h3>
+      <dl><dt>Thao tác</dt><dd>Gửi từ form victim có token gắn session và Origin hợp lệ.</dd><dt>Quan sát</dt><dd>Server validate, UPDATE, rồi rotate token.</dd><dt>Ý nghĩa</dt><dd>State đổi đúng; token cũ không tái dùng.</dd></dl>
+    </article>
+  </div>
+  <div class="wide-callout reveal" data-delay="2" data-overlap-check>Đổi mật khẩu và chuyển số dư còn yêu cầu re-authentication; logout/reset cũng dùng POST và token thay vì GET.</div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Mutation</strong><span>Thao tác làm thay đổi state như UPDATE, transfer hoặc đổi mật khẩu.</span></div><div class="keyword-item"><strong>Synchronizer token</strong><span>Token ngẫu nhiên lưu trong session và nhúng vào form hợp lệ.</span></div><div class="keyword-item"><strong>403 Forbidden</strong><span>Request bị từ chối trước khi thực hiện thao tác.</span></div><div class="keyword-item"><strong>Token rotation</strong><span>Phát token mới sau sự kiện để giảm tái sử dụng.</span></div><div class="keyword-item"><strong>Re-authentication</strong><span>Yêu cầu xác minh lại mật khẩu cho thao tác nhạy cảm.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 13</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 14: Token là lớp chính; Origin, SameSite và re-auth hỗ trợ">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab04 / CSRF / Bản vá</span><span>14 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Token là lớp chính; Origin, SameSite và re-auth hỗ trợ</h2>
+      <div class="content dense-content"><table class="dense-matrix reveal" data-delay="1" data-overlap-check>
+    <thead><tr><th>Gate</th><th>Cách Lab04 làm</th><th>Chặn gì</th><th>Giới hạn</th></tr></thead>
+    <tbody><tr><td class="matrix-key">Method</td><td class="">POST cho mutation</td><td class="">GET vô tình thay state</td><td class="">Không xác minh nguồn</td></tr><tr><td class="matrix-key">Origin/Referer</td><td class="">Parse + exact allowlist</td><td class="">Nguồn ngoài dự kiến</td><td class="">Header có thể thiếu</td></tr><tr><td class="matrix-key">CSRF token</td><td class="">32-byte URL-safe; session-bound; constant-time compare</td><td class="">Form giả thiếu secret theo phiên</td><td class="">Phải bảo vệ XSS</td></tr><tr><td class="matrix-key">SameSite</td><td class="">Lax/Strict theo môi trường</td><td class="">Giảm cookie cross-site</td><td class="">Không bao phủ mọi browser/flow</td></tr><tr><td class="matrix-key">Sensitive action</td><td class="">Re-authentication</td><td class="">Phiên bị bỏ quên/chiếm dụng</td><td class="">Tăng ma sát</td></tr></tbody>
+  </table>
+  <div class="takeaway-row reveal" data-delay="2">
+    <div class="takeaway-flat" data-overlap-check><strong>CAPTCHA</strong><span>Có thể tăng ma sát nhưng không phải control chính.</span></div><div class="takeaway-flat" data-overlap-check><strong>XSS vs CSRF</strong><span>XSS chạy code trong origin; CSRF ép browser gửi request.</span></div><div class="takeaway-flat" data-overlap-check><strong>CORS</strong><span>Không thay synchronizer token.</span></div>
+  </div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Origin header</strong><span>Nguồn request gồm scheme, host và port.</span></div><div class="keyword-item"><strong>Referer header</strong><span>URL trang tạo request; dùng fallback thận trọng.</span></div><div class="keyword-item"><strong>SameSite=Lax</strong><span>Giảm cookie trong nhiều request cross-site, vẫn cho một số top-level navigation.</span></div><div class="keyword-item"><strong>Constant-time compare</strong><span>So sánh tránh rò khác biệt thời gian theo vị trí sai.</span></div><div class="keyword-item"><strong>Defense in depth</strong><span>Nhiều control độc lập giảm rủi ro còn lại.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 14</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 15: Nối chuỗi làm dữ liệu trở thành cú pháp SQL">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab05 / SQL Injection / Cơ chế</span><span>15 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Nối chuỗi làm dữ liệu trở thành cú pháp SQL</h2>
+      <div class="content dense-content"><div class="flow-table reveal" data-delay="1" data-overlap-check>
+    <div class="flow-table-row"><div class="flow-key">01</div><div class="">Input</div><div class="">username/keyword</div><div class="">Validation scenario</div><div class="">Dữ liệu client</div></div><div class="flow-table-row"><div class="flow-key">02</div><div class="">Concatenation</div><div class="">f-string/ghép chuỗi</div><div class="">Final SQL text</div><div class="">Ranh giới code-data mất</div></div><div class="flow-table-row"><div class="flow-key">03</div><div class="">SQL parser</div><div class="">Đọc quote/comment/boolean</div><div class="">AST/logic khác</div><div class="">WHERE bị đổi</div></div><div class="flow-table-row"><div class="flow-key">04</div><div class="">Execution</div><div class="">SELECT local</div><div class="">Auth/rows ngoài dự kiến</div><div class="">Trace + audit</div></div>
+  </div>
+  <div class="wide-callout reveal" data-delay="2" data-overlap-check>Lab05 giới hạn ba chuỗi kiểm thử cố định và SELECT-only; không UNION, blind/time-based, stacked query, schema enumeration hay đọc file.</div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>SQL Injection</strong><span>Input được SQL parser hiểu như một phần cú pháp truy vấn.</span></div><div class="keyword-item"><strong>Concatenation</strong><span>Ghép input trực tiếp vào chuỗi SQL.</span></div><div class="keyword-item"><strong>SQL parser</strong><span>Thành phần phân tích câu SQL thành cấu trúc thực thi.</span></div><div class="keyword-item"><strong>Comment marker</strong><span>Cú pháp làm phần còn lại của câu SQL bị bỏ qua.</span></div><div class="keyword-item"><strong>Result set</strong><span>Tập hàng truy vấn trả về.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 15</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 16: Cùng input, vulnerable đổi logic; secure giữ cấu trúc">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab05 / SQL Injection / Thực hành</span><span>16 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Cùng input, vulnerable đổi logic; secure giữ cấu trúc</h2>
+      <div class="content dense-content"><div class="experiment-grid reveal" data-delay="1">
+    <article class="experiment" data-overlap-check>
+      <div class="experiment-num">01</div>
+      <h3>Quote detection</h3>
+      <dl><dt>Thao tác</dt><dd>Nhập `'` vào login/search.</dd><dt>Quan sát</dt><dd>Vulnerable SQLite báo lỗi đã phân loại; secure bind như literal.</dd><dt>Ý nghĩa</dt><dd>Error Inspector không lộ traceback/path.</dd></dl>
+    </article><article class="experiment" data-overlap-check>
+      <div class="experiment-num">02</div>
+      <h3>Auth bypass local</h3>
+      <dl><dt>Thao tác</dt><dd>Username cố định `admin_lab' -- `; password bất kỳ.</dd><dt>Quan sát</dt><dd>Vulnerable bỏ điều kiện digest; secure không match username literal.</dd><dt>Ý nghĩa</dt><dd>Session chỉ tạo ở vulnerable demo.</dd></dl>
+    </article><article class="experiment" data-overlap-check>
+      <div class="experiment-num">03</div>
+      <h3>Expanded search</h3>
+      <dl><dt>Thao tác</dt><dd>Keyword cố định `%' OR 1=1 -- `.</dd><dt>Quan sát</dt><dd>Vulnerable trả nhiều products hơn baseline; secure tìm literal, tối đa 50.</dd><dt>Ý nghĩa</dt><dd>Không đọc bảng khác, không ghi DB.</dd></dl>
+    </article>
+  </div>
+  <div class="wide-callout reveal" data-delay="2" data-overlap-check>Request, query construction, SQL execution, authentication/result set và audit đều liên kết bằng trace_id; password/hash/cookie được che.</div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Authentication bypass</strong><span>Vượt bước xác minh thông tin đăng nhập.</span></div><div class="keyword-item"><strong>Error-based signal</strong><span>Dùng phản ứng lỗi để suy ra input đã chạm parser.</span></div><div class="keyword-item"><strong>Read-only demo</strong><span>Kịch bản chỉ đọc dữ liệu, không DDL/DML ghi.</span></div><div class="keyword-item"><strong>Trace ID</strong><span>Mã nối request, query, audit và kết quả của cùng một flow.</span></div><div class="keyword-item"><strong>Baseline</strong><span>Kết quả bình thường dùng để so sánh hành vi bất thường.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 16</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 17: Parameter binding khóa cấu trúc; password hash bảo vệ credential">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab05 / SQL Injection / Bản vá</span><span>17 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Parameter binding khóa cấu trúc; password hash bảo vệ credential</h2>
+      <div class="content dense-content"><table class="dense-matrix reveal" data-delay="1" data-overlap-check>
+    <thead><tr><th>Control</th><th>Triển khai</th><th>Tác dụng</th><th>Không thay thế</th></tr></thead>
+    <tbody><tr><td class="matrix-key">Parameterized query</td><td class="">WHERE username=?; LIKE ?; tuple params</td><td class="">Input luôn là data</td><td class="">Authorization</td></tr><tr><td class="matrix-key">Password hashing</td><td class="">PBKDF2-SHA256 600k + salt; check_password_hash</td><td class="">Chống lộ plaintext/offline cracking</td><td class="">SQL binding</td></tr><tr><td class="matrix-key">Validation</td><td class="">Username/keyword/id theo kiểu và độ dài</td><td class="">Giảm input sai</td><td class="">Prepared statement</td></tr><tr><td class="matrix-key">Safe errors</td><td class="">Generic response + Error ID nội bộ</td><td class="">Không lộ query/schema/path</td><td class="">Logging nội bộ</td></tr><tr><td class="matrix-key">Least privilege</td><td class="">Fixed local SELECT, result limit, non-root</td><td class="">Giới hạn blast radius</td><td class="">Root fix</td></tr></tbody>
+  </table>
+  <div class="takeaway-row reveal" data-delay="2">
+    <div class="takeaway-flat" data-overlap-check><strong>ORM</strong><span>An toàn khi dùng binding; raw SQL/interpolation vẫn có thể lỗi.</span></div><div class="takeaway-flat" data-overlap-check><strong>Escaping</strong><span>Thủ công phụ thuộc DB/context, dễ thiếu trường hợp.</span></div><div class="takeaway-flat" data-overlap-check><strong>WAF</strong><span>Chỉ hỗ trợ phát hiện/chặn mẫu; không sửa query construction.</span></div>
+  </div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Prepared statement</strong><span>Cấu trúc SQL được chuẩn bị tách biệt khỏi dữ liệu tham số.</span></div><div class="keyword-item"><strong>Parameterized query</strong><span>Truyền input qua placeholder thay vì nối chuỗi.</span></div><div class="keyword-item"><strong>ORM</strong><span>Lớp ánh xạ object với bảng; không tự an toàn khi dùng raw query sai.</span></div><div class="keyword-item"><strong>PBKDF2</strong><span>Hàm dẫn xuất khóa lặp nhiều vòng dùng để hash mật khẩu.</span></div><div class="keyword-item"><strong>Least privilege</strong><span>Chỉ cấp quyền và khả năng tối thiểu cần thiết.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 17</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 18: Cookie quay lại server như dữ liệu do client kiểm soát">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab06 / Cookie Poisoning / Cơ chế</span><span>18 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Cookie quay lại server như dữ liệu do client kiểm soát</h2>
+      <div class="content dense-content"><div class="flow-table reveal" data-delay="1" data-overlap-check>
+    <div class="flow-table-row"><div class="flow-key">01</div><div class="">Server Set-Cookie</div><div class="">role=user</div><div class="">Browser lưu</div><div class="">Name/value/flags</div></div><div class="flow-table-row"><div class="flow-key">02</div><div class="">DevTools</div><div class="">Client sửa</div><div class="">role=admin</div><div class="">Cookie header mới</div></div><div class="flow-table-row"><div class="flow-key">03</div><div class="">Vulnerable route</div><div class="">Đọc `lab06_role`</div><div class="">So sánh admin</div><div class="">Không DB check</div></div><div class="flow-table-row"><div class="flow-key">04</div><div class="">Authorization</div><div class="">Tin role client</div><div class="">Allow trái phép</div><div class="">Broken Access Control</div></div>
+  </div>
+  <div class="wide-callout reveal" data-delay="2" data-overlap-check>HttpOnly ngăn JavaScript đọc cookie nhưng không ngăn chính người dùng sửa cookie bằng DevTools; cookie flags không thay server-side authorization.</div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Cookie Poisoning</strong><span>Sửa nội dung cookie để làm server đưa ra quyết định sai.</span></div><div class="keyword-item"><strong>Cookie attribute</strong><span>Thuộc tính Path, Domain, HttpOnly, Secure, SameSite.</span></div><div class="keyword-item"><strong>Integrity</strong><span>Khả năng phát hiện dữ liệu đã bị thay đổi.</span></div><div class="keyword-item"><strong>Authorization source</strong><span>Nguồn role/permission dùng cho quyết định truy cập.</span></div><div class="keyword-item"><strong>Client-controlled</strong><span>Dữ liệu nằm ở phía người dùng và có thể bị thay đổi.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 18</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 19: Base64, signing, encryption và session bảo vệ thuộc tính khác nhau">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab06 / Cookie Poisoning / So sánh</span><span>19 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Base64, signing, encryption và session bảo vệ thuộc tính khác nhau</h2>
+      <div class="content dense-content"><table class="dense-matrix reveal" data-delay="1" data-overlap-check>
+    <thead><tr><th>Mô hình</th><th>Đọc nội dung</th><th>Phát hiện sửa</th><th>Confidentiality</th><th>Nguồn role / revoke</th></tr></thead>
+    <tbody><tr><td class="matrix-key">Plain</td><td class="">Có</td><td class="">Không</td><td class="">Không</td><td class="">Client role — sai / không revoke</td></tr><tr><td class="matrix-key">Base64 JSON</td><td class="">Có</td><td class="">Không</td><td class="">Không</td><td class="">Decoded role — sai / không revoke</td></tr><tr><td class="matrix-key">Signed cookie</td><td class="">Có</td><td class="">Có — SHA-256 signature</td><td class="">Không</td><td class="">Verify rồi DB role / revoke hạn chế</td></tr><tr><td class="matrix-key">Fernet encrypted</td><td class="">Không</td><td class="">Có — authenticated encryption</td><td class="">Có</td><td class="">Demo read-only; không mang role động</td></tr><tr><td class="matrix-key">Server session</td><td class="">Opaque ID</td><td class="">Hash lookup server</td><td class="">State ở server</td><td class="">Current DB role / revoke tức thời</td></tr></tbody>
+  </table>
+  <div class="takeaway-row reveal" data-delay="2">
+    <div class="takeaway-flat" data-overlap-check><strong>Base64</strong><span>Encoding bytes thành text; không có secret, không integrity.</span></div><div class="takeaway-flat" data-overlap-check><strong>Signing</strong><span>Integrity/authenticity; payload vẫn đọc được.</span></div><div class="takeaway-flat" data-overlap-check><strong>Encryption</strong><span>Confidentiality + integrity nếu dùng authenticated encryption.</span></div>
+  </div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Base64</strong><span>Cách biểu diễn bytes bằng ký tự; có thể đảo ngược, không phải mã hóa.</span></div><div class="keyword-item"><strong>Signed cookie</strong><span>Payload kèm chữ ký để phát hiện sửa đổi.</span></div><div class="keyword-item"><strong>Encrypted cookie</strong><span>Payload được mã hóa; cần thêm kiểm tra toàn vẹn.</span></div><div class="keyword-item"><strong>Fernet</strong><span>Cơ chế authenticated encryption dùng trong demo.</span></div><div class="keyword-item"><strong>Opaque ID</strong><span>Mã không tự mang ý nghĩa role/user cho client.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 19</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 20: Server-side session tách token khỏi state và quyền">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Lab06 / Cookie Poisoning / Bản vá</span><span>20 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Server-side session tách token khỏi state và quyền</h2>
+      <div class="content dense-content"><div class="flow-table reveal" data-delay="1" data-overlap-check>
+    <div class="flow-table-row"><div class="flow-key">Create / rotate</div><div class="">secrets.token_urlsafe(32)</div><div class="">Cookie nhận raw token</div><div class="">DB lưu SHA-256 hash</div><div class="">Revoke token cũ</div></div><div class="flow-table-row"><div class="flow-key">Resolve</div><div class="">Hash token request</div><div class="">Lookup active session</div><div class="">Check expiry/user active</div><div class="">Đọc role mới từ DB</div></div><div class="flow-table-row"><div class="flow-key">Authorize</div><div class="">Policy current role=admin</div><div class="">Không tin payload cookie</div><div class="">Allow/deny</div><div class="">Audit + trace</div></div><div class="flow-table-row"><div class="flow-key">Logout</div><div class="">Mark inactive/revoked</div><div class="">Expire browser cookie</div><div class="">Token cũ bị từ chối</div><div class="">Session lifecycle đóng</div></div>
+  </div>
+  <div class="wide-callout reveal" data-delay="2" data-overlap-check>Cookie secure flow dùng HttpOnly và SameSite=Lax; `Secure=false` là cấu hình đúng cho HTTP local, phải bật khi triển khai HTTPS.</div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Session ID</strong><span>Mã ngẫu nhiên trỏ đến state phiên lưu phía server.</span></div><div class="keyword-item"><strong>Rotation</strong><span>Đổi token và thu hồi token cũ khi login/đổi ngữ cảnh.</span></div><div class="keyword-item"><strong>Revocation</strong><span>Đánh dấu phiên không còn hợp lệ trước khi hết hạn.</span></div><div class="keyword-item"><strong>Expiry</strong><span>Thời điểm phiên tự hết hiệu lực.</span></div><div class="keyword-item"><strong>Fingerprint</strong><span>Giá trị rút gọn để đối chiếu token mà không lộ token thô.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 20</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 21: Điểm gãy khác nhau; root fix luôn gần quyết định nhất">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Tổng hợp / Ma trận root cause</span><span>21 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Điểm gãy khác nhau; root fix luôn gần quyết định nhất</h2>
+      <div class="content dense-content"><table class="dense-matrix reveal" data-delay="1" data-overlap-check>
+    <thead><tr><th>Lab</th><th>Dữ liệu bị tin sai</th><th>Điểm gãy</th><th>Root fix</th></tr></thead>
+    <tbody><tr><td class="matrix-key">XSS</td><td class="">URL/form/storage</td><td class="">HTML/DOM sink</td><td class="">Encode/sanitize đúng context; safe DOM API</td></tr><tr><td class="matrix-key">Overflow</td><td class="">HTTP input vào C</td><td class="">Capacity buffer</td><td class="">Length invariant + bounded write</td></tr><tr><td class="matrix-key">Tampering</td><td class="">Price/ID/role</td><td class="">Business/access policy</td><td class="">DB + session + object authz + allowlist</td></tr><tr><td class="matrix-key">CSRF</td><td class="">Request có cookie</td><td class="">Ý định trước mutation</td><td class="">Token + Origin/Referer + deny-before-write</td></tr><tr><td class="matrix-key">SQLi</td><td class="">Input ghép query</td><td class="">SQL parser</td><td class="">Parameterized query; tách code/data</td></tr><tr><td class="matrix-key">Cookie</td><td class="">Role/state client</td><td class="">Authorization source</td><td class="">Server session + current DB role + revoke</td></tr></tbody>
+  </table>
+  <div class="takeaway-row reveal" data-delay="2">
+    <div class="takeaway-flat" data-overlap-check><strong>Source</strong><span>Biết dữ liệu đến từ đâu.</span></div><div class="takeaway-flat" data-overlap-check><strong>Interpreter</strong><span>Biết thành phần nào tạo ngữ nghĩa.</span></div><div class="takeaway-flat" data-overlap-check><strong>Decision</strong><span>Giữ policy ở phía server gần tài nguyên.</span></div>
+  </div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Interpreter</strong><span>Thành phần đọc dữ liệu thành HTML, SQL, lệnh hoặc thao tác bộ nhớ.</span></div><div class="keyword-item"><strong>Policy</strong><span>Quy tắc cho phép/từ chối hành động.</span></div><div class="keyword-item"><strong>Primary control</strong><span>Control trực tiếp ngăn nguyên nhân gốc.</span></div><div class="keyword-item"><strong>Residual risk</strong><span>Rủi ro còn lại sau khi control chính đã áp dụng.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 21</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 22: Phân biệt lỗi bằng thứ bị giả mạo hoặc diễn giải sai">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Tổng hợp / Các cặp dễ nhầm</span><span>22 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Phân biệt lỗi bằng thứ bị giả mạo hoặc diễn giải sai</h2>
+      <div class="content dense-content"><table class="dense-matrix reveal" data-delay="1" data-overlap-check>
+    <thead><tr><th>Cặp</th><th>Lỗi thứ nhất</th><th>Lỗi thứ hai</th><th>Câu hỏi phân biệt</th></tr></thead>
+    <tbody><tr><td class="matrix-key">XSS ↔ CSRF</td><td class="">Script chạy trong origin</td><td class="">Browser gửi request ngoài ý muốn</td><td class="">Có thực thi code trong trang không?</td></tr><tr><td class="matrix-key">Tampering ↔ SQLi</td><td class="">Đổi value để phá policy</td><td class="">Đổi syntax của query</td><td class="">Parser SQL có đọc input như code không?</td></tr><tr><td class="matrix-key">Cookie poisoning ↔ hijacking</td><td class="">Sửa nội dung/state</td><td class="">Đánh cắp/replay token hợp lệ</td><td class="">Token bị sửa hay bị chiếm?</td></tr><tr><td class="matrix-key">Overflow ↔ Injection</td><td class="">Ghi vượt vùng nhớ</td><td class="">Data đổi cú pháp/ý nghĩa</td><td class="">Biên memory hay interpreter bị phá?</td></tr><tr><td class="matrix-key">Authn ↔ Authz</td><td class="">Bạn là ai</td><td class="">Bạn được làm gì trên object</td><td class="">Identity đúng đã đủ quyền chưa?</td></tr></tbody>
+  </table>
+  <div class="takeaway-row reveal" data-delay="2">
+    <div class="takeaway-flat" data-overlap-check><strong>Credential</strong><span>Bằng chứng danh tính; không tự là bằng chứng ý định.</span></div><div class="takeaway-flat" data-overlap-check><strong>Intent</strong><span>Hành động được người dùng chủ động tạo từ flow hợp lệ.</span></div><div class="takeaway-flat" data-overlap-check><strong>Object</strong><span>Tài nguyên cụ thể cần kiểm quyền từng request.</span></div>
+  </div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Authentication</strong><span>Xác minh danh tính.</span></div><div class="keyword-item"><strong>Authorization</strong><span>Kiểm quyền hành động trên tài nguyên.</span></div><div class="keyword-item"><strong>Credential</strong><span>Thông tin hoặc token dùng để chứng minh danh tính/phiên.</span></div><div class="keyword-item"><strong>Intent</strong><span>Ý định thực hiện thao tác cụ thể.</span></div><div class="keyword-item"><strong>Replay</strong><span>Dùng lại token/request hợp lệ ở thời điểm hoặc ngữ cảnh khác.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 22</span></footer>
+    </div>
+  </section>
+<section class="slide slide--dark" aria-label="Slide 23: Báo cáo tốt nối bước thử với nguyên nhân và bản vá">
+    <div class="frame frame--keywords">
+      <header class="chrome"><span class="lab-label">Tổng hợp / Bài nộp</span><span>23 / 24</span></header>
+      <h2 class="headline dense reveal" data-editable>Báo cáo tốt nối bước thử với nguyên nhân và bản vá</h2>
+      <div class="content dense-content"><div class="overview-grid  reveal" data-delay="1">
+    <article class="overview-block" data-overlap-check><span>01</span><h3>01 / Bối cảnh</h3><p>Tên lab, mục tiêu, môi trường, route, tài khoản/dữ liệu giả lập, phạm vi an toàn.</p></article><article class="overview-block" data-overlap-check><span>02</span><h3>02 / Thực hành</h3><p>Các bước, input, request/response, state trước/sau, kết quả quan sát.</p></article><article class="overview-block" data-overlap-check><span>03</span><h3>03 / Phân tích</h3><p>Source, sink/decision, nguyên nhân kỹ thuật, ảnh hưởng, mức độ và giới hạn.</p></article><article class="overview-block" data-overlap-check><span>04</span><h3>04 / Bản vá</h3><p>Before/after code, control chính, defense in depth, lý do hiệu quả.</p></article><article class="overview-block" data-overlap-check><span>05</span><h3>05 / Retest</h3><p>Cùng input trên secure flow; expected result; không side effect ngoài ý muốn.</p></article><article class="overview-block" data-overlap-check><span>06</span><h3>06 / Phụ lục</h3><p>Ảnh thủ công, log, trace, audit, ASan/GDB, test và cấu hình liên quan.</p></article>
+  </div></div>
+      <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Reproducibility</strong><span>Người khác có thể lặp lại ca thử và thu được kết quả tương đương.</span></div><div class="keyword-item"><strong>Traceability</strong><span>Mỗi kết luận lần ngược được tới evidence và source.</span></div><div class="keyword-item"><strong>Before/after</strong><span>Đối chiếu hành vi hoặc code trước và sau bản vá.</span></div><div class="keyword-item"><strong>Limitation</strong><span>Phần chưa đo hoặc điều kiện khiến kết luận không áp dụng rộng hơn.</span></div>
+  </div>
+      <footer class="foot"><span>Luồng hoạt động · Cơ chế · Retest</span><span>Topic04 / 23</span></footer>
+    </div>
+  </section>
+<section class="slide slide--orange" aria-label="Slide 24: Đặt niềm tin đúng chỗ">
+      <div class="declarative-frame">
+        <div class="catalogue reveal">24 / 24</div>
+        <div class="cover-meta reveal" data-delay="1">Kết luận</div>
+        <h1 class="closing-title closing-title--official reveal" data-delay="1">Đặt niềm tin đúng chỗ</h1>
+        <div class="closing-principles closing-principles--four"><div class="principle reveal" data-delay="1" data-overlap-check><strong>01 / Data</strong><span>Mọi dữ liệu từ client đều không đáng tin cậy.</span></div><div class="principle reveal" data-delay="2" data-overlap-check><strong>02 / Interpreter</strong><span>Tách dữ liệu khỏi HTML, SQL và vùng nhớ thực thi.</span></div><div class="principle reveal" data-delay="3" data-overlap-check><strong>03 / Decision</strong><span>Identity, authorization, intent và state thuộc về server.</span></div><div class="principle reveal" data-delay="4" data-overlap-check><strong>04 / Evidence</strong><span>Chỉ kết luận điều đã quan sát và retest.</span></div></div>
+        <div class="cover-authors reveal" data-delay="4"><span>Lê Minh · 21127645</span><span>Nguyễn Vũ Bách · 21127224</span></div>
+        <div class="keyword-strip reveal" data-delay="4" data-overlap-check>
+    <div class="keyword-label">TỪ KHÓA</div>
+    <div class="keyword-item"><strong>Secure by design</strong><span>Đưa control vào thiết kế và luồng chính ngay từ đầu.</span></div><div class="keyword-item"><strong>Fail closed</strong><span>Khi thiếu bằng chứng hoặc lỗi kiểm tra, mặc định từ chối.</span></div><div class="keyword-item"><strong>Server authoritative</strong><span>Server giữ nguồn dữ liệu và policy quyết định cuối.</span></div><div class="keyword-item"><strong>Verification</strong><span>Kiểm tra có hệ thống rằng yêu cầu đã được đáp ứng.</span></div>
+  </div>
+      </div>
+    </section>
+    </main>
+  </div>
+  <nav class="deck-controls" aria-label="Điều khiển trình chiếu">
+    <span id="slideCounter">01 / 24</span>
+    <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+    <span>← → / Space</span>
+  </nav>
+  <div class="edit-hotzone" aria-hidden="true"></div>
+  <button class="edit-toggle" id="editToggle" type="button" title="Chế độ chỉnh sửa (E)">Edit · E</button>
+  <script>
+    /* ================================================================
+       PRESENTATION CONTROLLER
+       Keyboard, wheel, touch, stage scaling and active/visible switching.
+       ================================================================ */
+    class SlidePresentation {
+      constructor() {
+        this.slides = Array.from(document.querySelectorAll('.slide'));
+        this.currentSlide = 0;
+        this.stage = document.getElementById('deckStage');
+        this.counter = document.getElementById('slideCounter');
+        this.progress = document.getElementById('progressFill');
+        this.wheelLocked = false;
+        this.touchStartX = null;
+        this.touchStartY = null;
+        this.setupStageScale();
+        this.setupKeyboardNav();
+        this.setupWheelNav();
+        this.setupTouchNav();
+        this.setupIntersectionObserver();
+        this.showSlide(0);
+      }
+
+      setupStageScale() {
+        const scale = () => {
+          const factor = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+          const x = (window.innerWidth - 1920 * factor) / 2;
+          const y = (window.innerHeight - 1080 * factor) / 2;
+          this.stage.style.transform = `translate(${x}px, ${y}px) scale(${factor})`;
+        };
+        scale();
+        window.addEventListener('resize', scale, { passive: true });
+      }
+
+      setupKeyboardNav() {
+        document.addEventListener('keydown', (event) => {
+          if (event.target && event.target.getAttribute('contenteditable') === 'true') return;
+          if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(event.key)) {
+            event.preventDefault();
+            this.next();
+          }
+          if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(event.key)) {
+            event.preventDefault();
+            this.previous();
+          }
+          if (event.key === 'Home') this.showSlide(0);
+          if (event.key === 'End') this.showSlide(this.slides.length - 1);
+        });
+      }
+
+      setupWheelNav() {
+        window.addEventListener('wheel', (event) => {
+          if (this.wheelLocked || Math.abs(event.deltaY) < 24) return;
+          this.wheelLocked = true;
+          event.deltaY > 0 ? this.next() : this.previous();
+          window.setTimeout(() => { this.wheelLocked = false; }, 650);
+        }, { passive: true });
+      }
+
+      setupTouchNav() {
+        window.addEventListener('touchstart', (event) => {
+          const touch = event.changedTouches[0];
+          this.touchStartX = touch.clientX;
+          this.touchStartY = touch.clientY;
+        }, { passive: true });
+        window.addEventListener('touchend', (event) => {
+          if (this.touchStartX === null || this.touchStartY === null) return;
+          const touch = event.changedTouches[0];
+          const dx = touch.clientX - this.touchStartX;
+          const dy = touch.clientY - this.touchStartY;
+          if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) dx < 0 ? this.next() : this.previous();
+          this.touchStartX = null;
+          this.touchStartY = null;
+        }, { passive: true });
+      }
+
+      setupIntersectionObserver() {
+        this.stageObserver = new IntersectionObserver((entries) => {
+          document.body.classList.toggle('stage-in-viewport', entries.some((entry) => entry.isIntersecting));
+        }, { threshold: 0.5 });
+        this.stageObserver.observe(this.stage);
+      }
+
+      showSlide(index) {
+        const nextIndex = Math.max(0, Math.min(index, this.slides.length - 1));
+        this.currentSlide = nextIndex;
+        this.slides.forEach((slide, i) => {
+          const active = i === nextIndex;
+          slide.classList.toggle('active', active);
+          slide.classList.toggle('visible', active);
+          slide.setAttribute('aria-hidden', active ? 'false' : 'true');
+        });
+        const current = String(nextIndex + 1).padStart(2, '0');
+        const total = String(this.slides.length).padStart(2, '0');
+        this.counter.textContent = `${current} / ${total}`;
+        this.progress.style.width = `${((nextIndex + 1) / this.slides.length) * 100}%`;
+        history.replaceState(null, '', `#slide-${nextIndex + 1}`);
+      }
+
+      next() { this.showSlide(this.currentSlide + 1); }
+      previous() { this.showSlide(this.currentSlide - 1); }
+    }
+
+    /* ================================================================
+       INLINE EDITOR
+       Local-only edits persist in localStorage. Ctrl+S exports HTML.
+       ================================================================ */
+    class InlineEditor {
+      constructor(controller) {
+        this.controller = controller;
+        this.isActive = false;
+        this.items = Array.from(document.querySelectorAll('[data-editable]'));
+        this.storageKey = 'topic04-official2-edits-v1';
+        this.restore();
+        this.items.forEach((item, index) => item.addEventListener('input', () => this.save(index, item.innerHTML)));
+      }
+
+      toggleEditMode() {
+        this.isActive = !this.isActive;
+        document.body.classList.toggle('editing', this.isActive);
+        document.getElementById('editToggle').classList.toggle('active', this.isActive);
+        this.items.forEach((item) => item.setAttribute('contenteditable', this.isActive ? 'true' : 'false'));
+      }
+
+      snapshot() {
+        return this.items.map((item) => item.innerHTML);
+      }
+
+      save() {
+        localStorage.setItem(this.storageKey, JSON.stringify(this.snapshot()));
+      }
+
+      restore() {
+        const saved = JSON.parse(localStorage.getItem(this.storageKey) || 'null');
+        if (!Array.isArray(saved)) return;
+        saved.forEach((html, index) => { if (this.items[index] && typeof html === 'string') this.items[index].innerHTML = html; });
+      }
+
+      exportHtml() {
+        this.save();
+        const blob = new Blob(['<!DOCTYPE html>\n' + document.documentElement.outerHTML], { type: 'text/html;charset=utf-8' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'Topic04_Official2_edited.html';
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }
+    }
+
+    const deckController = new SlidePresentation();
+    const editor = new InlineEditor(deckController);
+    window.deckController = deckController;
+    window.deckEditor = editor;
+
+    const hashMatch = location.hash.match(/slide-(\d+)/);
+    if (hashMatch) deckController.showSlide(Number(hashMatch[1]) - 1);
+
+    const hotzone = document.querySelector('.edit-hotzone');
+    const editToggle = document.getElementById('editToggle');
+    let hideTimeout = null;
+    hotzone.addEventListener('mouseenter', () => { clearTimeout(hideTimeout); editToggle.classList.add('show'); });
+    hotzone.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!editor.isActive) editToggle.classList.remove('show'); }, 400); });
+    editToggle.addEventListener('mouseenter', () => clearTimeout(hideTimeout));
+    editToggle.addEventListener('mouseleave', () => { hideTimeout = setTimeout(() => { if (!editor.isActive) editToggle.classList.remove('show'); }, 400); });
+    editToggle.addEventListener('click', () => editor.toggleEditMode());
+    hotzone.addEventListener('click', () => editor.toggleEditMode());
+
+    document.addEventListener('keydown', (event) => {
+      const editingText = event.target && event.target.getAttribute('contenteditable') === 'true';
+      if ((event.key === 'e' || event.key === 'E') && !editingText) editor.toggleEditMode();
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
+        event.preventDefault();
+        editor.exportHtml();
+      }
+    });
+  </script>
+</body>
+</html>

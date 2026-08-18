@@ -1,0 +1,5 @@
+{% extends 'base.html' %}{% block content %}{% set outcome = result|default({}, true) %}
+<section class="result-banner is-denied"><span class="result-icon">403</span><div><span class="eyebrow">Signature rejected</span><h1>{{ outcome.get('title', 'Signed cookie không hợp lệ.')|e }}</h1><p>{{ outcome.get('message', 'Cookie thiếu, sai format, payload bị sửa hoặc signature bị sửa đều bị từ chối trước khi dữ liệu được tin cậy.')|e }}</p></div></section>
+<section class="profile-layout"><div>{% include 'components/signature_inspector.html' %}</div><div>{% include 'components/authorization_inspector.html' %}</div></section>
+{% include 'components/trace_panel.html' %}
+{% endblock %}

@@ -1,0 +1,15 @@
+{
+  "cookie": "(không có)",
+  "flask_route": "/vulnerable/search",
+  "form_body": {},
+  "headers": {
+    "Content-Type": "(không có)",
+    "Host": "localhost",
+    "User-Agent": "Werkzeug/3.1.8"
+  },
+  "method": "GET",
+  "path": "/vulnerable/search",
+  "query_string": "q=%3Cimg%20src=x%20onerror%3Dalert(1)%3E",
+  "sent_at": "2026-07-13T19:56:38.117+00:00",
+  "url": "http://localhost/vulnerable/search?q=<img%20src=x%20onerror%3Dalert(1)>"
+}

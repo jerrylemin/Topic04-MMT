@@ -1,0 +1,4 @@
+{% extends 'base.html' %}{% set trace = trace|default({}, true) %}{% set result = result|default({}, true) %}{% set decision_data = trace.get('decision_inspector', {}) %}{% set decision = decision_data.get('final_decision', 'unknown') %}{% block title %}Kết quả secure login · LAB 5{% endblock %}{% block content %}
+<header class="result-banner secure-result"><div><span class="eyebrow">Secure login result</span><h1>{{ decision|replace('_', ' ')|title|e }}</h1><p>Thông báo chung không tiết lộ user có tồn tại hay không.</p></div><dl><dt>Decision</dt><dd>{{ decision|e }}</dd><dt>PBKDF2 verified</dt><dd>{{ decision_data.get('password_verification_result', false)|string|e }}</dd><dt>Session</dt><dd>{{ decision_data.get('session_created', false)|string|e }}</dd></dl></header>
+{% include 'components/trace_panel.html' %}
+{% endblock %}

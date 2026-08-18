@@ -1,0 +1,243 @@
+{
+  "code_comparison": {
+    "explanation": "Markup bỏ qua autoescape; giá trị thường được Jinja encode theo ngữ cảnh HTML.",
+    "secure": "q = q\n{{ q }}",
+    "vulnerable": "q = Markup(q)\n{{ q }}"
+  },
+  "completed_at": "2026-07-13T19:56:38.135+00:00",
+  "database_inspector": null,
+  "final_result": {
+    "csp_blocked": true,
+    "escaped": true,
+    "impact": "Người mở URL",
+    "remaining_risk": "Thấp trong ngữ cảnh HTML",
+    "sanitized": false,
+    "stored": false,
+    "verdict": "Payload không thực thi"
+  },
+  "input_source": "request.args[\"q\"]",
+  "lab_type": "reflected",
+  "mode": "secure",
+  "request_summary": {
+    "cookie": "(không có)",
+    "flask_route": "/secure/search",
+    "form_body": {},
+    "headers": {
+      "Content-Type": "(không có)",
+      "Host": "localhost",
+      "User-Agent": "Werkzeug/3.1.8"
+    },
+    "method": "GET",
+    "path": "/secure/search",
+    "query_string": "q=%3Cimg%20src=x%20onerror%3Dalert(1)%3E",
+    "sent_at": "2026-07-13T19:56:38.136+00:00",
+    "url": "http://localhost/secure/search?q=<img%20src=x%20onerror%3Dalert(1)>"
+  },
+  "response_summary": {
+    "after_escape": "&lt;img src=x onerror=alert(1)&gt;",
+    "before_escape": "<img src=x onerror=alert(1)>",
+    "content_type": "text/html; charset=utf-8",
+    "headers": {
+      "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+      "X-Lab-Mode": "secure"
+    },
+    "html_snippet": "gt;\" placeholder=\"Tìm sản phẩm\"><button>Tìm kiếm</button></form><section class=\"result\">Payload hiển thị như văn bản: &lt;img src=x onerror=alert(1)&gt;</section><p>Browser tạo text node; không tạo element hay event handler.</p><a class=\"btn danger\" href=\"/vulnerable/search?q=%3Cimg%20src%3Dx%20onerror%3Dalert%281%29%3E\">So sánh bản lỗi</a></section><section class=\"trace-shell\" data-trace-id=\"9618",
+    "length": 20130,
+    "status": 200
+  },
+  "security_controls": [
+    {
+      "enabled": true,
+      "file": "app.py",
+      "limit": "Không chống XSS một mình",
+      "name": "Input validation",
+      "risk": "Giới hạn độ dài"
+    },
+    {
+      "enabled": true,
+      "file": "templates/reflected_secure.html",
+      "limit": "Phải đúng ngữ cảnh",
+      "name": "Jinja autoescape",
+      "risk": "Ngăn HTML injection"
+    },
+    {
+      "enabled": true,
+      "file": "app.py headers()",
+      "limit": "Không thay sửa sink",
+      "name": "CSP",
+      "risk": "Giảm thực thi script"
+    },
+    {
+      "enabled": true,
+      "file": "Thiết kế local",
+      "limit": "Chỉ là phạm vi lab",
+      "name": "External network blocked",
+      "risk": "Không exfiltration"
+    }
+  ],
+  "source_to_sink": [
+    {
+      "file": "app.py",
+      "line": "search()",
+      "name": "request.args[\"q\"]",
+      "risk": "Source",
+      "trust": "Không tin cậy",
+      "value": "<img src=x onerror=alert(1)>"
+    },
+    {
+      "file": "app.py",
+      "line": "validation",
+      "name": "Python string",
+      "risk": "Tainted",
+      "trust": "Không tin cậy",
+      "value": "<img src=x onerror=alert(1)>"
+    },
+    {
+      "file": "templates/reflected_secure.html",
+      "line": "{{ q }}",
+      "name": "Jinja template",
+      "risk": "Safe",
+      "trust": "Đã encode",
+      "value": "&lt;img src=x onerror=alert(1)&gt;"
+    },
+    {
+      "file": "Browser",
+      "line": "HTML parser",
+      "name": "Browser result",
+      "risk": "Blocked",
+      "trust": "Safe",
+      "value": "Text"
+    }
+  ],
+  "started_at": "2026-07-13T19:56:38.135+00:00",
+  "steps": [
+    {
+      "code_reference": "<input name=\"q\">",
+      "description": "28 ký tự; ký tự đặc biệt: ['<', '>']; thẻ: ['img']; event handler: ['onerror=']",
+      "input_data": "<img src=x onerror=alert(1)>",
+      "layer": "Browser UI",
+      "output_data": "<img src=x onerror=alert(1)>",
+      "security_meaning": "Dữ liệu từ người dùng là không tin cậy",
+      "status": "warning",
+      "step_number": 1,
+      "technique": "HTML form",
+      "timestamp": "2026-07-13T19:56:38.136+00:00",
+      "title": "Nhập dữ liệu"
+    },
+    {
+      "code_reference": "GET /search?q=...",
+      "description": "Trình duyệt percent-encode dữ liệu vào query string.",
+      "input_data": "<img src=x onerror=alert(1)>",
+      "layer": "HTTP Request",
+      "output_data": "%3Cimg%20src%3Dx%20onerror%3Dalert%281%29%3E",
+      "security_meaning": "Encoding URL không phải output encoding.",
+      "status": "normal",
+      "step_number": 2,
+      "technique": "URL encoding",
+      "timestamp": "2026-07-13T19:56:38.136+00:00",
+      "title": "Tạo URL"
+    },
+    {
+      "code_reference": "app.add_url_rule(...) ",
+      "description": "Flask khớp method GET với /secure/search.",
+      "input_data": "/secure/search",
+      "layer": "Flask Router",
+      "output_data": "/secure/search",
+      "security_meaning": "Request đi vào đúng bài thử.",
+      "status": "normal",
+      "step_number": 3,
+      "technique": "Route matching",
+      "timestamp": "2026-07-13T19:56:38.136+00:00",
+      "title": "Định tuyến request"
+    },
+    {
+      "code_reference": "request.args.get(\"q\", \"\")",
+      "description": "request.args đã URL-decode; giới hạn 200 ký tự.",
+      "input_data": "%3Cimg%20src%3Dx%20onerror%3Dalert%281%29%3E",
+      "layer": "Server Validation",
+      "output_data": "<img src=x onerror=alert(1)>",
+      "security_meaning": "Validation chỉ hỗ trợ, không thay output encoding.",
+      "status": "safe",
+      "step_number": 4,
+      "technique": "request.args + length check",
+      "timestamp": "2026-07-13T19:56:38.136+00:00",
+      "title": "Đọc và kiểm tra q"
+    },
+    {
+      "code_reference": "{{ q }}",
+      "description": "Jinja nhận dữ liệu tìm kiếm và danh sách kết quả.",
+      "input_data": "<img src=x onerror=alert(1)>",
+      "layer": "Template Engine",
+      "output_data": "&lt;img src=x onerror=alert(1)&gt;",
+      "security_meaning": "Ký tự được escape.",
+      "status": "safe",
+      "step_number": 5,
+      "technique": "Jinja autoescape",
+      "timestamp": "2026-07-13T19:56:38.136+00:00",
+      "title": "Render template"
+    },
+    {
+      "code_reference": "render_template(...) ",
+      "description": "Response chứa vùng kết quả tìm kiếm.",
+      "input_data": "<img src=x onerror=alert(1)>",
+      "layer": "HTTP Response",
+      "output_data": "&lt;img src=x onerror=alert(1)&gt;",
+      "security_meaning": "Dữ liệu đi tới browser dưới dạng text đã escape.",
+      "status": "safe",
+      "step_number": 6,
+      "technique": "HTTP response",
+      "timestamp": "2026-07-13T19:56:38.136+00:00",
+      "title": "Trả HTML"
+    },
+    {
+      "code_reference": "HTML parser",
+      "description": "Browser tạo text node.",
+      "input_data": "&lt;img src=x onerror=alert(1)&gt;",
+      "layer": "Browser HTML Parser",
+      "output_data": "Text node",
+      "security_meaning": "Không có JavaScript chạy.",
+      "status": "safe",
+      "step_number": 7,
+      "technique": "HTML parser",
+      "timestamp": "2026-07-13T19:56:38.136+00:00",
+      "title": "Phân tích HTML"
+    },
+    {
+      "code_reference": "/secure/search",
+      "description": "Payload hiển thị dạng văn bản.",
+      "input_data": "<img src=x onerror=alert(1)>",
+      "layer": "Final Result",
+      "output_data": "rendered_as_text",
+      "security_meaning": "Bản vá chặn XSS.",
+      "status": "safe",
+      "step_number": 8,
+      "technique": "Security verdict",
+      "timestamp": "2026-07-13T19:56:38.136+00:00",
+      "title": "Kết luận"
+    }
+  ],
+  "trace_id": "961831e5c4cd4b44a95fe2375c6f811a",
+  "transformations": [
+    {
+      "label": "Raw input",
+      "value": "<img src=x onerror=alert(1)>"
+    },
+    {
+      "label": "URL encoded",
+      "value": "%3Cimg%20src%3Dx%20onerror%3Dalert%281%29%3E"
+    },
+    {
+      "label": "Server decoded",
+      "value": "<img src=x onerror=alert(1)>"
+    },
+    {
+      "label": "HTML output",
+      "value": "&lt;img src=x onerror=alert(1)&gt;"
+    },
+    {
+      "label": "Browser interpretation",
+      "value": "Text node"
+    }
+  ],
+  "user_action": "Gửi biểu mẫu tìm kiếm"
+}

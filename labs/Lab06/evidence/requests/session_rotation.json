@@ -1,0 +1,13 @@
+{
+  "content_length": 50,
+  "content_type": "application/x-www-form-urlencoded",
+  "form_field_names": [],
+  "form_values": {},
+  "host": "127.0.0.1:5006",
+  "method": "POST",
+  "observed_at": "2026-07-14T20:23:03.231480+00:00",
+  "path": "/login",
+  "query_string": "",
+  "scheme": "http",
+  "trace_id": "203b442fe636c0187d871560"
+}

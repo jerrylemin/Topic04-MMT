@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Tổng quan | Lab 03{% endblock %}
+{% block content %}
+<section class="hero split-hero">
+  <div><p class="eyebrow">Phòng thí nghiệm bảo mật local</p><h1>Đừng tin tham số từ client.</h1><p class="lede">Theo dõi request từ trình duyệt đến quyết định server, dữ liệu SQLite và audit log.</p><div class="button-row"><a class="button" href="/login">Bắt đầu với User A</a><a class="button button-secondary" href="/comparison">Xem bản vá</a></div></div>
+  <aside class="trust-map" aria-label="Mô hình tin cậy"><div><span>Client gửi</span><code>price=1</code><code>id=1002</code><code>role=admin</code></div><b aria-hidden="true">→</b><div><span>Server phải kiểm tra</span><strong>Giá database</strong><strong>Owner + session</strong><strong>Field allowlist</strong></div></aside>
+</section>
+<section class="safety-note"><strong>Phạm vi an toàn:</strong> chỉ thao tác trên ứng dụng giả lập bind 127.0.0.1. Không có thanh toán, email hoặc dữ liệu thật.</section>
+<section aria-labelledby="labs-title"><div class="section-heading"><h2 id="labs-title">Ba bề mặt tampering</h2><p>Mỗi bài có luồng vulnerable, secure, trace thật và kết luận bảo mật.</p></div>
+  <div class="scenario-grid">
+    <article class="scenario scenario-price"><span class="scenario-index">A</span><h3>Thay đổi giá</h3><p>Sửa hidden field <code>price=100000</code> thành <code>price=1</code>.</p><dl><dt>Trusted source</dt><dd>products.price_vnd</dd><dt>Bản vá</dt><dd>Server-side price lookup</dd></dl><div class="button-row"><a class="button button-danger" href="/vulnerable/checkout">Vulnerable</a><a class="button" href="/secure/checkout">Secure</a></div></article>
+    <article class="scenario scenario-idor"><span class="scenario-index">B</span><h3>IDOR hóa đơn</h3><p>Đổi <code>id=1001</code> thành <code>id=1002</code> của User B.</p><dl><dt>Trusted source</dt><dd>Session + ownership</dd><dt>Bản vá</dt><dd>Object-level authorization</dd></dl><div class="button-row"><a class="button button-danger" href="/vulnerable/invoice?id=1001">Vulnerable</a><a class="button" href="/secure/invoice?id=1001">Secure</a></div></article>
+    <article class="scenario scenario-role"><span class="scenario-index">C</span><h3>Nâng quyền</h3><p>Thêm trường nhạy cảm <code>role=admin</code> vào profile request.</p><dl><dt>Trusted source</dt><dd>Server authorization</dd><dt>Bản vá</dt><dd>Field allowlist</dd></dl><div class="button-row"><a class="button button-danger" href="/vulnerable/profile">Vulnerable</a><a class="button" href="/secure/profile">Secure</a></div></article>
+  </div>
+</section>
+<section class="flow-strip" aria-label="Luồng phân tích"><span>Browser UI</span><span>HTTP Request</span><span>Flask</span><span>Validation</span><span>Authorization</span><span>SQLite</span><span>Verdict</span></section>
+{% endblock %}

@@ -1,0 +1,1 @@
+{% extends 'base.html' %}{% block title %}403 CSRF | Lab04{% endblock %}{% block content %}<section class="result rejected"><p class="eyebrow">HTTP 403</p><h1>Request bị từ chối.</h1><p>Lý do: <code>{{ reason }}</code>. State không đổi vì validation chạy trước business logic.</p></section>{% include 'components/trace_panel.html' %}{% endblock %}

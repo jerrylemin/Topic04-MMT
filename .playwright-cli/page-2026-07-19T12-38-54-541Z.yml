@@ -1,0 +1,94 @@
+- generic [ref=f3e1]:
+  - link "Bỏ qua điều hướng" [ref=f3e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - banner [ref=f3e3]:
+    - link "Trang chủ Lab 03" [ref=f3e4] [cursor=pointer]:
+      - /url: /
+      - generic [ref=f3e5]: LAB 03
+      - text: Parameter Tampering
+    - navigation "Điều hướng chính" [ref=f3e6]:
+      - link "Sản phẩm" [ref=f3e7] [cursor=pointer]:
+        - /url: /products
+      - link "Giỏ hàng" [ref=f3e8] [cursor=pointer]:
+        - /url: /cart
+      - link "So sánh mã" [ref=f3e9] [cursor=pointer]:
+        - /url: /comparison
+      - link "Kiểm soát" [ref=f3e10] [cursor=pointer]:
+        - /url: /security-controls
+      - link "Audit log" [ref=f3e11] [cursor=pointer]:
+        - /url: /audit-logs
+    - generic [ref=f3e12]:
+      - generic [ref=f3e13]: user_a
+      - generic [ref=f3e14]: user
+      - button "Đăng xuất" [ref=f3e16] [cursor=pointer]
+  - main [ref=f3e17]:
+    - generic [ref=f3e18]:
+      - generic [ref=f3e19]:
+        - generic [ref=f3e20]: Vulnerable
+        - heading "Checkout tin giá từ client" [level=1] [ref=f3e21]
+        - paragraph [ref=f3e22]: Hidden field chỉ ẩn trên giao diện. Người dùng vẫn có thể sửa trước khi POST.
+      - link "Mở bản secure" [ref=f3e23] [cursor=pointer]:
+        - /url: /secure/checkout
+    - generic [ref=f3e24]:
+      - generic [ref=f3e25]:
+        - heading "Checkout form" [level=2] [ref=f3e26]
+        - paragraph [ref=f3e27]:
+          - text: "Đang đăng nhập:"
+          - strong [ref=f3e28]: user_a
+        - generic [ref=f3e29]:
+          - generic [ref=f3e30]:
+            - text: Product ID
+            - generic [ref=f3e31]: client-controlled
+          - textbox [ref=f3e32]: "5"
+          - generic [ref=f3e33]:
+            - text: Quantity
+            - generic [ref=f3e34]: client-controlled
+          - spinbutton [ref=f3e35]: "1"
+          - generic [ref=f3e36]:
+            - generic [ref=f3e37]: Hidden field trong DOM
+            - code [ref=f3e38]: <input type="hidden" name="price" value="100000">
+          - generic [ref=f3e39]: Sửa trường này bằng DevTools hoặc Request Tampering Console.
+          - button "Gửi checkout vulnerable" [ref=f3e40] [cursor=pointer]
+      - generic [ref=f3e41]:
+        - generic [ref=f3e42]:
+          - generic [ref=f3e43]:
+            - generic [ref=f3e44]: Local-only tool
+            - heading "Request Tampering Console" [level=2] [ref=f3e45]
+          - generic [ref=f3e46]: POST /vulnerable/checkout
+        - paragraph [ref=f3e47]: Route cố định trong Lab03. Không có ô host, URL hoặc header tùy ý.
+        - generic [ref=f3e48]:
+          - generic [ref=f3e49]:
+            - generic [ref=f3e50]:
+              - generic [ref=f3e51]: Parameter
+              - generic [ref=f3e52]: Original
+              - generic [ref=f3e53]: Editable value
+              - generic [ref=f3e54]: Diff
+            - generic [ref=f3e55]:
+              - code [ref=f3e56]: product_id
+              - status "product_id 5" [ref=f3e57]: "5"
+              - textbox "Giá trị product_id" [ref=f3e58]: "5"
+              - status [ref=f3e59]: unchanged
+            - generic [ref=f3e60]:
+              - code [ref=f3e61]: quantity
+              - status "quantity 1" [ref=f3e62]: "1"
+              - textbox "Giá trị quantity" [ref=f3e63]: "1"
+              - status [ref=f3e64]: unchanged
+            - generic [ref=f3e65]:
+              - code [ref=f3e66]: price
+              - status "price 1" [ref=f3e81]: "100000"
+              - textbox "Giá trị price" [ref=f3e68]: "1"
+              - status [ref=f3e69]: 100000 → 1
+          - button "Gửi request cố định" [active] [ref=f3e70] [cursor=pointer]
+        - generic [ref=f3e71]:
+          - generic [ref=f3e72]: "Status: HTTP 200"
+          - generic [ref=f3e73]:
+            - text: "Trace ID:"
+            - code [ref=f3e74]: xem response
+          - link "Mở response" [ref=f3e82] [cursor=pointer]:
+            - /url: http://127.0.0.1:5003/vulnerable/checkout
+  - contentinfo [ref=f3e75]:
+    - generic [ref=f3e76]: Nhóm sinh viên thực hiện
+    - generic [ref=f3e77]: Lê Minh — 21127645
+    - generic [ref=f3e78]: Nguyễn Vũ Bách — 21127224
+    - generic [ref=f3e79]: Chỉ chạy trên 127.0.0.1:5003
+    - generic [ref=f3e80]: Dữ liệu và giao dịch đều là giả lập

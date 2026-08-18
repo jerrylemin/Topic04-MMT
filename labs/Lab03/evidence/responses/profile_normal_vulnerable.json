@@ -1,0 +1,13 @@
+{
+  "status": 200,
+  "trace_id": "715acedeb62747d588c95ba5a3e5f019",
+  "decision": {
+    "tampering_type": "role / mass assignment",
+    "success": false,
+    "privilege_escalated": false,
+    "database_changed": true,
+    "missing_check": "field allowlist and admin authorization",
+    "audit_event": "vulnerable_action_completed"
+  },
+  "content_type": "text/html; charset=utf-8"
+}

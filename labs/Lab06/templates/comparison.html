@@ -1,0 +1,8 @@
+{% extends 'base.html' %}{% block content %}
+<section class="page-header"><div><span class="eyebrow">Trust model matrix</span><h1>Encoding, signing, encryption và session khác nhau ở đâu?</h1><p>So sánh vị trí dữ liệu, khả năng phát hiện sửa đổi, confidentiality, integrity, revocation và nguồn phân quyền.</p></div></section>
+<section class="page-section"><div class="table-scroll"><table class="comparison-table"><thead><tr><th>Tiêu chí</th><th>Plain</th><th>Base64</th><th>Signed</th><th>Encrypted</th><th>Server Session</th></tr></thead><tbody>
+{% for row in [
+('Dữ liệu chính','Client','Client','Client','Client','Server'),('Đọc được','Có','Có','Có','Không trực tiếp','Chỉ ID ngẫu nhiên'),('Sửa được','Có','Có','Có nhưng bị phát hiện','Có nhưng bị từ chối','ID không mang role'),('Phát hiện tamper','Không','Không','Có','Có','Session lookup'),('Confidentiality','Không','Không','Không','Có','Có cho dữ liệu server'),('Integrity','Không','Không','Có','Có','Có qua lookup'),('Revocation','Khó','Khó','Khó','Khó','Trực tiếp'),('Role ở client','Có','Có','Có','Không dùng phân quyền','Không'),('Authorization source','Cookie','Decoded JSON','Signed payload + policy','Không phải nguồn chính','Database')
+] %}<tr><th scope="row">{{ row[0] }}</th>{% for value in row[1:] %}<td>{{ value }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div></section>
+<section class="page-section">{% include 'components/code_comparison.html' %}</section>
+{% endblock %}

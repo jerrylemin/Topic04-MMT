@@ -1,0 +1,209 @@
+{
+  "code_comparison": {
+    "explanation": "innerHTML parse chuỗi thành node; textContent tạo text node.",
+    "secure": "result.textContent = value;",
+    "vulnerable": "result.innerHTML = value;"
+  },
+  "completed_at": "2026-07-13T19:56:38.169+00:00",
+  "database_inspector": null,
+  "final_result": {
+    "csp_blocked": true,
+    "escaped": true,
+    "impact": "Giảm rủi ro",
+    "remaining_risk": "Cấu hình production",
+    "sanitized": false,
+    "stored": false,
+    "verdict": "Đã áp dụng lớp phòng thủ"
+  },
+  "input_source": "location.hash",
+  "lab_type": "dom",
+  "mode": "vulnerable",
+  "request_summary": {
+    "cookie": "(không có)",
+    "flask_route": "/vulnerable/dom-search",
+    "form_body": {},
+    "headers": {
+      "Content-Type": "(không có)",
+      "Host": "localhost",
+      "User-Agent": "Werkzeug/3.1.8"
+    },
+    "method": "GET",
+    "path": "/vulnerable/dom-search",
+    "query_string": "",
+    "sent_at": "2026-07-13T19:56:38.169+00:00",
+    "url": "http://localhost/vulnerable/dom-search"
+  },
+  "response_summary": {
+    "after_escape": "",
+    "before_escape": "",
+    "content_type": "text/html; charset=utf-8",
+    "headers": {
+      "Content-Security-Policy": "(không áp dụng)",
+      "X-Lab-Mode": "vulnerable"
+    },
+    "html_snippet": "button type=\"submit\">Thay fragment không reload</button></form><section id=\"dom-result\"></section><div id=\"dom-inspector\" class=\"inspector-box\"></div><a class=\"btn\" href=\"/secure/dom-search\">So sánh bản vá</a></section><section class=\"trace-shell\" data-trace-id=\"26aaf8cd84374bdf9db020c459554d54\">\n  <div class=\"trace-head\">\n    <div><span class=\"eyebrow\">PHÂN TÍCH LUỒNG HOẠT ĐỘNG</span><h2>Trace DO",
+    "length": 15547,
+    "status": 200
+  },
+  "security_controls": [
+    {
+      "enabled": true,
+      "file": "app.py",
+      "limit": "Không sửa sink",
+      "name": "CSP",
+      "risk": "Script/resource ngoài policy"
+    },
+    {
+      "enabled": true,
+      "file": "config.py",
+      "limit": "Không vá XSS",
+      "name": "HttpOnly",
+      "risk": "JavaScript đọc cookie"
+    },
+    {
+      "enabled": false,
+      "file": "config.py",
+      "limit": "Local HTTP; production bật True",
+      "name": "Secure",
+      "risk": "Cookie qua HTTP"
+    },
+    {
+      "enabled": true,
+      "file": "config.py",
+      "limit": "Không thay CSRF token",
+      "name": "SameSite=Lax",
+      "risk": "Request cross-site"
+    }
+  ],
+  "source_to_sink": [
+    {
+      "file": "static/js/dom_vulnerable.js",
+      "line": "location.hash.slice(1)",
+      "name": "location.hash",
+      "risk": "Source",
+      "trust": "Không tin cậy",
+      "value": "#payload"
+    },
+    {
+      "file": "static/js/dom_vulnerable.js",
+      "line": "try/catch",
+      "name": "decodeURIComponent",
+      "risk": "Transform",
+      "trust": "Không tin cậy",
+      "value": "decoded value"
+    },
+    {
+      "file": "static/js/dom_vulnerable.js",
+      "line": "result.innerHTML",
+      "name": "innerHTML",
+      "risk": "Sink",
+      "trust": "Unsafe",
+      "value": "decoded value"
+    },
+    {
+      "file": "Browser",
+      "line": "DOM parser",
+      "name": "DOM result",
+      "risk": "XSS",
+      "trust": "Executable",
+      "value": "Element/event"
+    }
+  ],
+  "started_at": "2026-07-13T19:56:38.169+00:00",
+  "steps": [
+    {
+      "code_reference": "URL fragment",
+      "description": "Browser giữ fragment phía client.",
+      "input_data": "#payload",
+      "layer": "Browser UI",
+      "output_data": "location.hash",
+      "security_meaning": "Không gửi lên server.",
+      "status": "normal",
+      "step_number": 1,
+      "technique": "hashchange",
+      "timestamp": "2026-07-13T19:56:38.169+00:00",
+      "title": "Thay đổi fragment"
+    },
+    {
+      "code_reference": "request.path",
+      "description": "Request HTTP không chứa fragment.",
+      "input_data": "http://localhost/vulnerable/dom-search",
+      "layer": "HTTP Request",
+      "output_data": "/vulnerable/dom-search",
+      "security_meaning": "Server không thể đọc fragment.",
+      "status": "normal",
+      "step_number": 2,
+      "technique": "HTTP semantics",
+      "timestamp": "2026-07-13T19:56:38.169+00:00",
+      "title": "Server nhận path"
+    },
+    {
+      "code_reference": "location.hash.slice(1)",
+      "description": "Script chạy khi load/hashchange.",
+      "input_data": "location.hash",
+      "layer": "Browser JavaScript",
+      "output_data": "decoded value",
+      "security_meaning": "Dữ liệu vẫn không tin cậy.",
+      "status": "normal",
+      "step_number": 3,
+      "technique": "slice + decodeURIComponent",
+      "timestamp": "2026-07-13T19:56:38.169+00:00",
+      "title": "Đọc location.hash"
+    },
+    {
+      "code_reference": "result.innerHTML = value",
+      "description": "Bản vulnerable dùng innerHTML.",
+      "input_data": "decoded value",
+      "layer": "DOM",
+      "output_data": "DOM",
+      "security_meaning": "Parse chuỗi thành HTML.",
+      "status": "danger",
+      "step_number": 4,
+      "technique": "innerHTML",
+      "timestamp": "2026-07-13T19:56:38.169+00:00",
+      "title": "Gán dữ liệu vào sink"
+    },
+    {
+      "code_reference": "result.outerHTML",
+      "description": "DOM Inspector đọc outerHTML thật.",
+      "input_data": "DOM trước",
+      "layer": "Browser HTML Parser",
+      "output_data": "DOM sau",
+      "security_meaning": "Có thể tạo img/onerror.",
+      "status": "danger",
+      "step_number": 5,
+      "technique": "DOM API",
+      "timestamp": "2026-07-13T19:56:38.169+00:00",
+      "title": "Diễn giải DOM"
+    },
+    {
+      "code_reference": "/vulnerable/dom-search",
+      "description": "Client trace thay giá trị mẫu bằng DOM hiện tại.",
+      "input_data": "innerHTML",
+      "layer": "Final Result",
+      "output_data": "payload_executed",
+      "security_meaning": "Payload có thể chạy.",
+      "status": "danger",
+      "step_number": 6,
+      "technique": "Security verdict",
+      "timestamp": "2026-07-13T19:56:38.169+00:00",
+      "title": "Kết luận"
+    }
+  ],
+  "trace_id": "26aaf8cd84374bdf9db020c459554d54",
+  "transformations": [
+    {
+      "label": "Server path",
+      "value": "/vulnerable/dom-search"
+    },
+    {
+      "label": "Fragment",
+      "value": "chỉ browser biết"
+    },
+    {
+      "label": "Sink",
+      "value": "innerHTML"
+    }
+  ],
+  "user_action": "Mở trang"
+}

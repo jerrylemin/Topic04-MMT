@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% set workbench_title = "Phiên bản có lỗ hổng" %}
+{% set workbench_badge = "STRCPY VÀ NAME[32]" %}
+{% set workbench_tone = "danger" %}
+{% set workbench_summary = "Quan sát strcpy ghi qua ranh giới buffer và AddressSanitizer dừng tiến trình có kiểm soát." %}
+{% set workbench_note = "vulnerable_debug chỉ dành cho GDB local. Dùng vulnerable_asan cho input dài trên giao diện." %}
+{% set workbench_action = "/submit" %}
+{% set workbench_mode = "vulnerable_asan" %}
+{% set workbench_mode_options = [("vulnerable_asan", "Vulnerable + AddressSanitizer"), ("vulnerable_debug", "Vulnerable debug, dành cho GDB")] %}
+{% block title %}Vulnerable - Lab 02{% endblock %}
+{% block content %}{% include "components/workbench.html" %}{% endblock %}

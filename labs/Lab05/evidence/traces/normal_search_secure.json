@@ -1,0 +1,274 @@
+{
+  "trace_id": "c42e4fdffb3642788f68d0ff2d5f77ca",
+  "mode": "secure",
+  "feature": "search",
+  "request_inspector": {
+    "timestamp": "2026-07-14T19:34:20.698266+00:00",
+    "method": "GET",
+    "full_url": "http://127.0.0.1:5005/secure/search?keyword=USB",
+    "path": "/secure/search",
+    "query_string": "keyword=USB",
+    "content_type": null,
+    "content_length": 0,
+    "form_field_names": [],
+    "form_values": {},
+    "session_present": false,
+    "route_handler": "secure_search_route"
+  },
+  "input_inspector": {
+    "raw_input": "USB",
+    "normalized_input": "USB",
+    "source": "request.args",
+    "validation_result": "accepted",
+    "length": 3,
+    "single_quote_detected": false,
+    "comment_marker_detected": false,
+    "boolean_expression_detected": false,
+    "trust_level": "untrusted"
+  },
+  "query_inspector": {
+    "feature": "search",
+    "mode": "secure",
+    "query_template": "SELECT id, name, category, price_vnd, stock FROM products WHERE visible = 1 AND name LIKE ? LIMIT 50",
+    "construction_method": "parameter_binding",
+    "final_query_masked": "SELECT id, name, category, price_vnd, stock FROM products WHERE visible = 1 AND name LIKE ? LIMIT 50",
+    "placeholder_count": 1,
+    "parameters_masked": [
+      "[BOUND VALUE]"
+    ],
+    "prepared": true,
+    "duration_ms": 0.602,
+    "raw_input": "USB",
+    "normalized_input": "USB",
+    "input_interpreted_as": "data",
+    "operation": "SELECT",
+    "read_only": true
+  },
+  "execution_inspector": {
+    "operation": "SELECT",
+    "prepared_statement": true,
+    "parameters_bound": 1,
+    "rows_returned": 2,
+    "rows_changed": 0,
+    "error_category": null,
+    "transaction_status": "read_only",
+    "rollback_status": "not_needed",
+    "database_label": "Lab05 local SQLite"
+  },
+  "decision_inspector": {
+    "mode": "secure",
+    "rows_returned": 2,
+    "session_created": false,
+    "final_decision": "expected_results",
+    "password_verification_executed": false
+  },
+  "database_inspector": {
+    "table": "products",
+    "operation": "SELECT",
+    "rows_returned": 2,
+    "rows_changed": 0,
+    "read_only": true,
+    "result_ids": [
+      1,
+      7
+    ]
+  },
+  "error_inspector": null,
+  "final_verdict": {
+    "feature": "search",
+    "mode": "secure",
+    "input_category": "normal",
+    "query_construction": "parameter_binding",
+    "sql_structure_changed": false,
+    "prepared_statement_used": true,
+    "authentication_bypassed": false,
+    "unexpected_rows_returned": false,
+    "database_error_occurred": false,
+    "database_modified": false,
+    "sensitive_data_exposed": false,
+    "session_created": false,
+    "root_cause": "none observed",
+    "primary_fix": "Parameterized query and PBKDF2 verification",
+    "remaining_risk": "Local educational demonstration only",
+    "audit_event": "secure_search_completed"
+  },
+  "steps": [
+    {
+      "step_number": 1,
+      "layer": "Browser UI",
+      "title": "Keyword submitted",
+      "description": "Browser sent the local search keyword",
+      "technique": "query string submission",
+      "input_data": {
+        "value": "USB"
+      },
+      "output_data": {
+        "decision": "expected_results",
+        "error_category": null
+      },
+      "code_reference": "secure_queries.py",
+      "security_meaning": "Input remains data",
+      "status": "observed",
+      "timestamp": "2026-07-14T19:34:20.698266+00:00"
+    },
+    {
+      "step_number": 2,
+      "layer": "Input Validation",
+      "title": "Keyword validated",
+      "description": "Server normalized whitespace and enforced the length limit",
+      "technique": "trust-boundary validation",
+      "input_data": {
+        "value": "[observed]"
+      },
+      "output_data": {
+        "decision": "expected_results",
+        "error_category": null
+      },
+      "code_reference": "secure_queries.py",
+      "security_meaning": "Input remains data",
+      "status": "observed",
+      "timestamp": "2026-07-14T19:34:20.698266+00:00"
+    },
+    {
+      "step_number": 3,
+      "layer": "Query Construction",
+      "title": "LIKE parameter created",
+      "description": "Server created a percent-wrapped Python value",
+      "technique": "value transformation",
+      "input_data": {
+        "value": "USB"
+      },
+      "output_data": {
+        "decision": "expected_results",
+        "error_category": null
+      },
+      "code_reference": "secure_queries.py",
+      "security_meaning": "Input remains data",
+      "status": "observed",
+      "timestamp": "2026-07-14T19:34:20.698266+00:00"
+    },
+    {
+      "step_number": 4,
+      "layer": "Query Construction",
+      "title": "Parameter bound",
+      "description": "SQLite received SQL template and value separately",
+      "technique": "parameter binding",
+      "input_data": {
+        "value": "USB"
+      },
+      "output_data": {
+        "decision": "expected_results",
+        "error_category": null
+      },
+      "code_reference": "secure_queries.py",
+      "security_meaning": "Input remains data",
+      "status": "observed",
+      "timestamp": "2026-07-14T19:34:20.698266+00:00"
+    },
+    {
+      "step_number": 5,
+      "layer": "SQLite Execution",
+      "title": "Structure preserved",
+      "description": "Parameterized SELECT returned 2 row(s)",
+      "technique": "parameterized SELECT",
+      "input_data": {
+        "value": "[observed]"
+      },
+      "output_data": {
+        "decision": "expected_results",
+        "error_category": null
+      },
+      "code_reference": "secure_queries.py",
+      "security_meaning": "Input remains data",
+      "status": "observed",
+      "timestamp": "2026-07-14T19:34:20.698266+00:00"
+    },
+    {
+      "step_number": 6,
+      "layer": "Result Set",
+      "title": "Expected rows retained",
+      "description": "Rows follow the intended visible-name filter",
+      "technique": "result comparison",
+      "input_data": {
+        "value": "[observed]"
+      },
+      "output_data": {
+        "decision": "expected_results",
+        "error_category": null
+      },
+      "code_reference": "secure_queries.py",
+      "security_meaning": "Input remains data",
+      "status": "observed",
+      "timestamp": "2026-07-14T19:34:20.698266+00:00"
+    },
+    {
+      "step_number": 7,
+      "layer": "Final Result",
+      "title": "Security verdict",
+      "description": "expected_results",
+      "technique": "security verdict",
+      "input_data": {
+        "value": "[observed]"
+      },
+      "output_data": {
+        "decision": "expected_results",
+        "error_category": null
+      },
+      "code_reference": "secure_queries.py",
+      "security_meaning": "Input remains data",
+      "status": "observed",
+      "timestamp": "2026-07-14T19:34:20.698266+00:00"
+    }
+  ],
+  "timestamp": "2026-07-14T19:34:20.698266+00:00",
+  "result_set_inspector": {
+    "expected_filter": "USB",
+    "rows_expected": 2,
+    "rows_returned": 2,
+    "result_ids": [
+      1,
+      7
+    ],
+    "result_names": [
+      "USB Security Key",
+      "Linux Practice USB"
+    ],
+    "unexpected_data": false,
+    "other_table_accessed": false,
+    "database_modified": false,
+    "final_decision": "expected_results"
+  },
+  "code_comparison": {
+    "vulnerable_file": "vulnerable_queries.py",
+    "vulnerable_function": "vulnerable_search",
+    "vulnerable_lines": "38-54",
+    "vulnerable_code": "def vulnerable_search(keyword: str) -> tuple[list, dict]:\n    sql = (\n        \"SELECT id, name, category, price_vnd, stock FROM products \"\n        f\"WHERE visible = 1 AND name LIKE '%{keyword}%'\"\n    )\n    started = perf_counter()\n    try:\n        rows = execute_read_only(sql)\n        error = None\n    except Exception as exc:\n        rows, error = [], exc\n    return rows, {\n        \"feature\": \"search\", \"mode\": \"vulnerable\", \"query_template\": SEARCH_TEMPLATE,\n        \"construction_method\": \"string_concatenation\", \"final_query_masked\": sql,\n        \"placeholder_count\": 0, \"parameters_masked\": [], \"prepared\": False,\n        \"duration_ms\": round((perf_counter() - started) * 1000, 3), \"error\": error,\n    }",
+    "vulnerable_explanation": "Keyword được nối trực tiếp vào LIKE.",
+    "secure_file": "secure_queries.py",
+    "secure_function": "secure_search",
+    "secure_lines": "32-33",
+    "secure_code": "def secure_search(keyword: str) -> tuple[list, dict]:\n    return _run(\"search\", SEARCH_SQL, (f\"%{keyword}%\",))",
+    "secure_explanation": "LIKE dùng placeholder và tuple parameter."
+  },
+  "audit_inspector": {
+    "action": "secure_search_completed",
+    "route": "/secure/search",
+    "mode": "secure",
+    "input_summary": {
+      "signals": {
+        "length": 3,
+        "single_quote_detected": false,
+        "comment_marker_detected": false,
+        "boolean_expression_detected": false,
+        "trust_level": "untrusted"
+      },
+      "feature": "search"
+    },
+    "query_construction": "parameter_binding",
+    "decision": "expected_results",
+    "reason": "parameter_binding_preserved_query_structure",
+    "result_count": 2,
+    "error_category": null,
+    "trace_id": "c42e4fdffb3642788f68d0ff2d5f77ca"
+  }
+}

@@ -1,0 +1,13 @@
+{% extends 'base.html' %}{% block title %}{{ title }} | Lab04{% endblock %}
+{% block content %}
+<header class="scenario-head"><p class="eyebrow">Cross-origin form submission</p><h1>{{ title }}</h1><p>{{ expected }}</p></header>
+<div class="workbench">
+  <form id="attack-form" method="{{ method }}" action="{{ target }}" data-confirm-submit>
+    {% for name,value in fields.items() %}<input type="hidden" name="{{ name }}" value="{{ value }}">{% endfor %}
+    <p>Form chỉ được gửi sau khi bạn chủ động bấm nút và xác nhận.</p>
+    <button type="submit">Gửi form</button>
+  </form>
+  {% include 'components/form_inspector.html' %}
+</div>
+{% include 'components/attacker_timeline.html' %}{% include 'components/origin_comparison.html' %}{% include 'components/sop_inspector.html' %}{% include 'components/final_result.html' %}
+{% endblock %}

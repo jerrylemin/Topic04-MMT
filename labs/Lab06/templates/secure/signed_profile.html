@@ -1,0 +1,5 @@
+{% extends 'base.html' %}{% block content %}{% set current_user = user|default({}, true) %}
+<section class="page-header"><div><span class="eyebrow">Signed Cookie</span><h1>Đọc được payload, phát hiện được tamper.</h1><p>Server chỉ sử dụng payload sau khi xác minh chữ ký thành công. Signed cookie không cung cấp confidentiality.</p></div><span class="mode-label secure">Signature valid</span></section>
+<section class="profile-layout"><article class="profile-card"><div class="avatar">{{ current_user.get('display_name', 'D')[:1]|upper|e }}</div><h2>{{ current_user.get('display_name', 'Demo user')|e }}</h2><dl><dt>User ID</dt><dd>{{ current_user.get('id', '—') }}</dd><dt>Username</dt><dd>{{ current_user.get('username', '—')|e }}</dd><dt>Role signed</dt><dd>{{ current_user.get('role', '—')|e }}</dd></dl><a class="button button-primary" href="/secure/signed/admin">Mở trang admin</a></article><div>{% include 'components/signature_inspector.html' %}</div></section>
+{% if trace|default(false, true) %}{% include 'components/trace_panel.html' %}{% endif %}
+{% endblock %}
