@@ -11,3 +11,7 @@ tmp/
 **/report/tmp/
 .DS_Store
 Thumbs.db
+.codex-sync-backup-20260818/beautiful-html-templates/
+.codex-sync-backup-20260818/frontend-slides/
+presentation/tools/frontend-slides/.claude-plugin/marketplace.json
+presentation/tools/frontend-slides/plugins/frontend-slides/.claude-plugin/plugin.json
