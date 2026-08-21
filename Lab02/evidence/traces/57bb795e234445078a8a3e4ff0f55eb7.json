@@ -1,0 +1,271 @@
+{
+  "asan": {
+    "detected": false
+  },
+  "asan_detected": false,
+  "buffer_size": 32,
+  "build_profile": "Secure snprintf",
+  "compiler_flags": "-Wall -Wextra -Wpedantic -Wformat=2 -Werror=format-security -O2 -g -fstack-protector-strong -D_FORTIFY_SOURCE=2 -fPIE -pie -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack -ffile-prefix-map=$PWD=. -fdebug-prefix-map=$PWD=.",
+  "completed_at": "2026-08-20T20:14:06.660874+00:00",
+  "crash_detected": false,
+  "exit_code": null,
+  "final_result": {
+    "asan": false,
+    "asan_detected": false,
+    "cause": "Tiến trình native chưa hoàn tất.",
+    "crash": false,
+    "exit_code": null,
+    "impact": "Không quan sát memory corruption.",
+    "overflow": false,
+    "rejected": false,
+    "status": "warning",
+    "verdict": "Tiến trình native chưa hoàn tất.",
+    "would_overflow_without_validation": true
+  },
+  "hardening": {
+    "verification": "collected separately from the binary"
+  },
+  "input_length_bytes": 64,
+  "input_length_chars": 64,
+  "input_value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  "lab_type": "buffer_overflow_local",
+  "mode": "secure_snprintf",
+  "native_binary": "secure_snprintf",
+  "native_result": {
+    "asan": {
+      "detected": false
+    },
+    "binary": "secure_snprintf",
+    "build_profile": "Secure snprintf",
+    "crash_detected": false,
+    "duration_ms": 0.642,
+    "exit_code": null,
+    "mode": "secure_snprintf",
+    "pid": null,
+    "signal": null,
+    "status": "unavailable",
+    "stderr": "Không thể chạy binary trong môi trường hiện tại.",
+    "stdout": "",
+    "timeout": false,
+    "timeout_seconds": 2.0
+  },
+  "overflow_bytes": 33,
+  "request_summary": {
+    "content_length": 69,
+    "content_type": "application/x-www-form-urlencoded",
+    "form_field": "name",
+    "method": "POST",
+    "mode": "secure_snprintf",
+    "name_length_bytes": 64,
+    "name_length_chars": 64,
+    "path": "/secure/snprintf/submit",
+    "timestamp": "2026-08-20T20:14:06.660874+00:00",
+    "url": "http://127.0.0.1:5002/secure/snprintf/submit"
+  },
+  "safe_capacity": 31,
+  "security_controls": [
+    {
+      "enabled": true,
+      "file": "config.py / app.py",
+      "limit": "C vẫn phải tự kiểm tra lại input.",
+      "name": "Request body và name limit",
+      "risk": "Giới hạn tài nguyên và payload của lab."
+    },
+    {
+      "enabled": true,
+      "file": "config.py / native_runner.py",
+      "limit": "Chỉ bảo vệ biên subprocess.",
+      "name": "Mode và binary allowlist",
+      "risk": "Ngăn client chọn command hoặc đường dẫn tùy ý."
+    },
+    {
+      "enabled": true,
+      "file": "native/secure_*_processor.c",
+      "limit": "Compiler hardening vẫn cần cho defense in depth.",
+      "name": "Validation trong native C",
+      "risk": "Ngăn copy vượt name[32]."
+    }
+  ],
+  "signal": null,
+  "started_at": "2026-08-20T20:14:06.660874+00:00",
+  "steps": [
+    {
+      "code_reference": "native processor",
+      "description": "Trình duyệt ghi nhận ký tự và byte UTF-8.",
+      "input_data": {
+        "bytes": 64,
+        "chars": 64,
+        "preview": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+      },
+      "layer": "Browser",
+      "output_data": {},
+      "security_meaning": "Trình duyệt ghi nhận ký tự và byte UTF-8.",
+      "status": "completed",
+      "step_number": 1,
+      "technique": "Quan sát luồng dữ liệu",
+      "timestamp": "2026-08-20T20:14:06.660874+00:00",
+      "title": "Browser nhận input"
+    },
+    {
+      "code_reference": "native processor",
+      "description": "POST /secure/snprintf/submit dùng form URL encoded.",
+      "input_data": {},
+      "layer": "HTTP",
+      "output_data": {},
+      "security_meaning": "POST /secure/snprintf/submit dùng form URL encoded.",
+      "status": "completed",
+      "step_number": 2,
+      "technique": "Quan sát luồng dữ liệu",
+      "timestamp": "2026-08-20T20:14:06.660874+00:00",
+      "title": "Browser tạo HTTP request"
+    },
+    {
+      "code_reference": "native processor",
+      "description": "Gateway áp dụng giới hạn request và allowlist mode.",
+      "input_data": {},
+      "layer": "Flask",
+      "output_data": {},
+      "security_meaning": "Gateway áp dụng giới hạn request và allowlist mode.",
+      "status": "completed",
+      "step_number": 3,
+      "technique": "Quan sát luồng dữ liệu",
+      "timestamp": "2026-08-20T20:14:06.660874+00:00",
+      "title": "Flask định tuyến"
+    },
+    {
+      "code_reference": "native processor",
+      "description": "Binary cố định, argument list, shell=False và timeout ngắn.",
+      "input_data": {},
+      "layer": "Flask",
+      "output_data": {},
+      "security_meaning": "Binary cố định, argument list, shell=False và timeout ngắn.",
+      "status": "completed",
+      "step_number": 4,
+      "technique": "Quan sát luồng dữ liệu",
+      "timestamp": "2026-08-20T20:14:06.660874+00:00",
+      "title": "Flask chuẩn bị subprocess"
+    },
+    {
+      "code_reference": "native processor",
+      "description": "Chạy profile Secure snprintf.",
+      "input_data": {},
+      "layer": "OS",
+      "output_data": {},
+      "security_meaning": "Chạy profile Secure snprintf.",
+      "status": "completed",
+      "step_number": 5,
+      "technique": "Quan sát luồng dữ liệu",
+      "timestamp": "2026-08-20T20:14:06.660874+00:00",
+      "title": "Hệ điều hành tạo tiến trình C"
+    },
+    {
+      "code_reference": "native processor",
+      "description": "Biến cục bộ name[32] nằm trong stack frame theo mô hình giáo dục.",
+      "input_data": {},
+      "layer": "C",
+      "output_data": {},
+      "security_meaning": "Biến cục bộ name[32] nằm trong stack frame theo mô hình giáo dục.",
+      "status": "completed",
+      "step_number": 6,
+      "technique": "Quan sát luồng dữ liệu",
+      "timestamp": "2026-08-20T20:14:06.660874+00:00",
+      "title": "process_name tạo stack frame"
+    },
+    {
+      "code_reference": "native processor",
+      "description": "sizeof(name) giới hạn số byte được ghi vào buffer.",
+      "input_data": {},
+      "layer": "C",
+      "output_data": {},
+      "security_meaning": "sizeof(name) giới hạn số byte được ghi vào buffer.",
+      "status": "completed",
+      "step_number": 7,
+      "technique": "Quan sát luồng dữ liệu",
+      "timestamp": "2026-08-20T20:14:06.660874+00:00",
+      "title": "snprintf giới hạn ghi"
+    },
+    {
+      "code_reference": "native processor",
+      "description": "Return value phát hiện truncate và từ chối input quá dài.",
+      "input_data": {},
+      "layer": "Memory",
+      "output_data": {},
+      "security_meaning": "Return value phát hiện truncate và từ chối input quá dài.",
+      "status": "completed",
+      "step_number": 8,
+      "technique": "Quan sát luồng dữ liệu",
+      "timestamp": "2026-08-20T20:14:06.660874+00:00",
+      "title": "Kiểm tra return value"
+    },
+    {
+      "code_reference": "native processor",
+      "description": "Trạng thái: unavailable; exit: None.",
+      "input_data": {},
+      "layer": "Native",
+      "output_data": {
+        "asan": {
+          "detected": false
+        },
+        "binary": "secure_snprintf",
+        "build_profile": "Secure snprintf",
+        "crash_detected": false,
+        "duration_ms": 0.642,
+        "exit_code": null,
+        "mode": "secure_snprintf",
+        "pid": null,
+        "signal": null,
+        "status": "unavailable",
+        "stderr": "Không thể chạy binary trong môi trường hiện tại.",
+        "stdout": "",
+        "timeout": false,
+        "timeout_seconds": 2.0
+      },
+      "security_meaning": "Trạng thái: unavailable; exit: None.",
+      "status": "completed",
+      "step_number": 9,
+      "technique": "Quan sát luồng dữ liệu",
+      "timestamp": "2026-08-20T20:14:06.660874+00:00",
+      "title": "Kết quả native"
+    },
+    {
+      "code_reference": "native processor",
+      "description": "stdout và stderr được giới hạn, chuẩn hóa và che đường dẫn.",
+      "input_data": {},
+      "layer": "Flask",
+      "output_data": {},
+      "security_meaning": "stdout và stderr được giới hạn, chuẩn hóa và che đường dẫn.",
+      "status": "completed",
+      "step_number": 10,
+      "technique": "Quan sát luồng dữ liệu",
+      "timestamp": "2026-08-20T20:14:06.660874+00:00",
+      "title": "Flask thu kết quả"
+    },
+    {
+      "code_reference": "native processor",
+      "description": "Response chứa Trace ID và X-Lab-Mode.",
+      "input_data": {},
+      "layer": "HTTP",
+      "output_data": {},
+      "security_meaning": "Response chứa Trace ID và X-Lab-Mode.",
+      "status": "completed",
+      "step_number": 11,
+      "technique": "Quan sát luồng dữ liệu",
+      "timestamp": "2026-08-20T20:14:06.660874+00:00",
+      "title": "Flask tạo HTTP response"
+    },
+    {
+      "code_reference": "native processor",
+      "description": "Tiến trình native chưa hoàn tất.",
+      "input_data": {},
+      "layer": "Verdict",
+      "output_data": {},
+      "security_meaning": "Tiến trình native chưa hoàn tất.",
+      "status": "warning",
+      "step_number": 12,
+      "technique": "Quan sát luồng dữ liệu",
+      "timestamp": "2026-08-20T20:14:06.660874+00:00",
+      "title": "Final Security Verdict"
+    }
+  ],
+  "trace_id": "57bb795e234445078a8a3e4ff0f55eb7"
+}

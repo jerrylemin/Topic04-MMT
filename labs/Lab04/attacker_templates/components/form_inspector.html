@@ -1,1 +1,0 @@
-<section class="inspector"><h2>Form Inspector</h2><dl><dt>Method</dt><dd><code>{{ method }}</code></dd><dt>Target</dt><dd><code>{{ target }}</code></dd>{% for name,value in fields.items() %}<dt>{{ name }}</dt><dd><code>{{ value if 'password' not in name else '[REDACTED]' }}</code></dd>{% endfor %}</dl></section>

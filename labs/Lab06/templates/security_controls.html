@@ -1,4 +1,0 @@
-{% extends 'base.html' %}{% block content %}
-<section class="page-header"><div><span class="eyebrow">Runtime policy</span><h1>Security Control Panel</h1><p>Trạng thái được cung cấp từ cấu hình, source và dữ liệu runtime của Lab06.</p></div></section>{% include 'components/security_controls.html' %}
-<section class="teaching-note"><div><span class="eyebrow">Defense in depth</span><h2>Cookie flags không ký nội dung cookie</h2></div><p>HttpOnly giảm rủi ro JavaScript đọc cookie, Secure giới hạn vận chuyển qua HTTPS và SameSite giảm một số request cross-site. Không flag nào thay thế kiểm tra toàn vẹn hoặc authorization phía server.</p></section>
-{% endblock %}

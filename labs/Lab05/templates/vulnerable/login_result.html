@@ -1,5 +1,0 @@
-{% extends 'base.html' %}{% set trace = trace|default({}, true) %}{% set result = result|default({}, true) %}{% set decision = trace.get('decision_inspector', {}).get('final_decision', 'unknown') %}{% set session_created = trace.get('decision_inspector', {}).get('session_created', false) %}{% block title %}Kết quả vulnerable login · LAB 5{% endblock %}{% block content %}
-<header class="result-banner result-{{ decision|e }}"><div><span class="eyebrow">Vulnerable login result</span><h1>{{ decision|replace('_', ' ')|title|e }}</h1><p>Xem trace để phân tích quyết định từ query và result set thật.</p></div><dl><dt>Decision</dt><dd>{{ decision|e }}</dd><dt>Session</dt><dd>{{ session_created|string|e }}</dd><dt>User</dt><dd>{{ result.get('username', result.get('display_name', '—'))|e }}</dd></dl></header>
-{% if session_created %}<p class="danger-notice" role="alert"><strong>Session minh họa dễ tổn thương:</strong> <code>authenticated_via=vulnerable_local_demo</code>. Đây không phải cơ chế xác thực hợp lệ.</p>{% endif %}
-{% include 'components/trace_panel.html' %}
-{% endblock %}

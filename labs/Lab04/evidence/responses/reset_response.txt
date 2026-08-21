@@ -1,8 +1,0 @@
-HTTP status: 303
-Location: /login
-Content-Type: text/html; charset=utf-8
-Content-Length: 199
-Trace ID: 08b2417e286b406d94c13d1094401bdc
-Decision: allowed
-CSRF status: valid
-Origin decision: origin_allowed

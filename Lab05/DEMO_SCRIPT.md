@@ -18,72 +18,119 @@
 
 ### F12 cần show
 
-- Nhấn `F12` hoặc `Ctrl+Shift+I`, mở `Network`, bật `Preserve log`/`Disable cache` và bấm `Clear` trước mỗi login/search.
-- Login: `Network → POST` show endpoint, status và username trong `Payload`; không đọc password ra trước lớp. Search: show query parameter `keyword` trong URL/`Headers`.
-- `Response/Preview` show generic error, auth result hoặc số sản phẩm; `Query Trace`/`Database Inspector` của Lab05 show câu SQL, placeholder, result count và read-only scope.
+- Nhấn `F12` hoặc `Ctrl+Shift+I`; bấm `Network`, bật `Preserve log` và `Disable cache`, rồi bấm thùng rác `Clear` trước mỗi login/search.
+- Ở ô `Filter` gõ `/login` hoặc `/search`; bấm dòng vừa phát sinh, rồi vào `Headers` → `General` kiểm tra `Request Method` và URL để phân biệt đúng POST/GET. POST bấm `Payload` → `Form Data`; GET đọc query ở phần sau dấu `?` trên `Request URL`. Chỉ mở `Query String Parameters` nếu Chrome hiển thị mục đó; nếu không, `Request URL` là bằng chứng thay thế.
+- Bấm `Response` hoặc `Preview`; nhấn `Ctrl+F` trong pane và tìm chuỗi đặc trưng đúng scenario: `syntax`/`generic`, `authenticated_via`, tên sản phẩm hoặc `products`. Không tìm `error` một mình nếu có nhiều kết quả; password chỉ được để masked, không đọc ra trước lớp.
+- Sau F12 cuộn tới Trace Panel của Lab05 và bấm đúng tab ứng dụng `Query`, `Parameters`, `Execution`, `Authentication`, `Result Set`, `Error`, `Database`, `Code` hoặc `Verdict`.
+
 
 ## Kịch bản trình bày
 
-*Quy ước bằng chứng: “8 products”, status và auth state là kết quả cần xác nhận live; payload có khoảng trắng cuối phải được nhập nguyên văn.*
+*Quy ước: mỗi mục đọc theo thứ tự **Thao tác → Nói khi demo → F12 show → Quan sát**. Với payload có dấu cách cuối, giữ nguyên dấu cách khi nhập và xác nhận lại bằng Request URL/Payload.*
 
-**Bước 1 — Login bình thường làm baseline**
+### Bước 1 — Baseline login vulnerable và secure
 
-* Thao tác:
-  1. Mở `http://127.0.0.1:5005`, bấm card `Login · vulnerable` hoặc bấm menu `Đăng nhập yếu`.
-  2. Bấm nút mẫu `Dữ liệu bình thường` để điền form; kiểm tra ô `Username` và `Password`, rồi bấm `Chạy vulnerable login`.
-  3. Trên thanh menu bấm `Đăng nhập an toàn`; bấm `Dữ liệu bình thường` và bấm `Chạy secure login`.
-  4. Giữ hai kết quả/trace đủ gần nhau để đối chiếu status và query.
-* Nói: “Tôi chứng minh chức năng hợp lệ trước khi đưa SQL syntax vào. Cùng một tài khoản phải được xử lý ở cả hai route.”
-* Quan sát: login vulnerable và secure kỳ vọng thành công với account thật; trace cho thấy vulnerable query là string-built còn secure query có placeholder, nhưng phải lấy query/status từ live trace.
-* F12 show: chọn `POST /vulnerable/login` rồi `POST /secure/login`; `Payload` chỉ show username, `Headers/Response` show status; panel `Query Trace` show string-built đối chiếu placeholder.
-* Kết luận: lỗi không phải do mọi login đều hỏng; nó xuất hiện khi input được ghép vào SQL.
+1. **Thao tác:** Mở `http://127.0.0.1:5005` và chọn menu/flow `Vulnerable login`.
+   - **Nói khi demo:** “Tôi tạo baseline vulnerable trước để so sánh request, query và kết quả xác thực với secure.”
+   - **F12 show:** Nhấn `F12` → `Network` → bấm `Clear`; tích `Preserve log` và `Disable cache`. Trong ô `Filter` nhập `/login`.
+   - **Quan sát:** Đúng form vulnerable xuất hiện; chưa chọn request cũ trong Network.
+2. **Thao tác:** Nhập dữ liệu đăng nhập bình thường theo lab, giữ username `admin_lab`, rồi bấm `Run`/`Đăng nhập`.
+   - **Nói khi demo:** “Tôi dùng dữ liệu bình thường làm mốc, không đưa payload SQL ở bước baseline.”
+   - **F12 show:** Chọn dòng mới nhất có URL chứa `/vulnerable/login` → `Headers` → `General` kiểm tra `POST` và status → `Payload` → `Form Data` chỉ vào `username=admin_lab`; che hoặc không mở trường password.
+   - **Quan sát:** Ghi status và response thật; không gọi là authenticated chỉ vì request trả 200.
+3. **Thao tác:** Chọn menu/flow `Secure login`, nhập lại cùng dữ liệu bình thường và bấm `Run`/`Đăng nhập`.
+   - **Nói khi demo:** “Tôi gửi cùng dữ liệu qua secure endpoint để baseline có thể so sánh từng field.”
+   - **F12 show:** Network → chọn dòng mới nhất có URL chứa `/secure/login` → `Headers` → `General` kiểm tra method/status → `Payload` → `Form Data` xác nhận username giống bước trước, vẫn che password.
+   - **Quan sát:** Giữ hai request riêng biệt theo URL; không chọn nhầm dòng vulnerable có cùng tên login.
+4. **Thao tác:** Mở `Trace Panel` và lần lượt bấm `Query`, `Parameters`, `Authentication`, `Verdict` nếu có.
+   - **Nói khi demo:** “Trace baseline cho thấy query/parameters và quyết định xác thực trước khi đưa chuỗi đặc biệt.”
+   - **F12 show:** Chọn từng request login → `Response` → `Ctrl+F` tìm `authenticated_via`; nếu không có, tìm `success`. Nếu nhiều occurrence, chọn object/message của lần login, không chọn chữ trong HTML hướng dẫn.
+   - **Quan sát:** Ghi kết quả live của vulnerable và secure, kể cả khi cả hai đều từ chối dữ liệu bình thường.
+**Kết luận:** Baseline phải được lưu theo từng endpoint trước khi kiểm tra lỗi SQL injection.
 
-**Bước 2 — Quote input tạo SQL error có kiểm soát**
+### Bước 2 — Dấu nháy tạo lỗi SQL
 
-* Thao tác:
-  1. Bấm menu `Đăng nhập yếu`; bấm `Ký tự dấu nháy đơn` để điền nhanh, hoặc bấm ô `Username`, nhấn `Ctrl+A`, nhập đúng `'`; bấm ô `Password`, nhập `x`.
-  2. Bấm `Chạy vulnerable login`.
-  3. Bấm menu `Đăng nhập an toàn`; bấm `Ký tự dấu nháy đơn`, kiểm tra lại username là `'` và password là `x`, rồi bấm `Chạy secure login`.
-* Nói: “Một dấu quote đủ phá cú pháp câu SQL nối chuỗi. Error Inspector phải redacted lỗi chi tiết, không đưa raw SQL cho người dùng.”
-* Quan sát: vulnerable kỳ vọng nhận handled SQLite syntax error/decision error; secure coi `'` là literal và reject generic, không thực thi SQL syntax. Chỉ ghi trạng thái thật từ response.
-* F12 show: `Network → POST /vulnerable/login` và `/secure/login`, `Payload` show username `'`/password được che, `Response` show status/error generic; panel `Error Inspector` show lỗi đã redacted.
-* Kết luận: escaping thủ công không phải prepared statement; lỗi phải được xử lý mà không lộ thông tin nội bộ.
+1. **Thao tác:** Quay lại `Vulnerable login` và nhập username chỉ là `'`, password là `x` rồi bấm chạy.
+   - **Nói khi demo:** “Tôi dùng một dấu nháy đơn tối thiểu để xem đầu vào có đi vào câu SQL chưa được xử lý hay không.”
+   - **F12 show:** Network → Filter `/vulnerable/login` → chọn request mới nhất sau click → `Headers` → `General` kiểm tra URL/status → `Payload` → `Form Data` xác nhận username đúng một ký tự `'` và password không cần trình bày.
+   - **Quan sát:** Nếu Payload không có dấu nháy, kiểm tra lại ô nhập hoặc URL encode; không suy luận từ text hiển thị trên form.
+2. **Thao tác:** Mở response vulnerable và panel lỗi/trace.
+   - **Nói khi demo:** “Tôi tìm marker lỗi SQL trong response nhưng chỉ kết luận nếu nó thuộc request vừa gửi.”
+   - **F12 show:** Request vulnerable → `Response` → nhấn `Ctrl+F` tìm `syntax`. Nếu không có, tìm `generic`. Nếu từ khóa xuất hiện nhiều lần, bấm Enter để chuyển occurrence và chọn đoạn gần object/error message của login; bỏ qua chữ trong menu, script mẫu hoặc phần giải thích.
+   - **Quan sát:** Ghi thông báo lỗi/ẩn lỗi và status thật; không đọc stack trace dài nếu lab đã redacted.
+3. **Thao tác:** Chọn `Secure login`, gửi lại username `'` và password `x`.
+   - **Nói khi demo:** “Tôi gửi cùng dấu nháy qua secure endpoint để xem lỗi có bị lộ và query có được xử lý an toàn hơn không.”
+   - **F12 show:** Network → Filter `/secure/login` → chọn request mới nhất → `Headers` → `General` kiểm tra method/status → `Payload` → `Form Data` xác nhận username là `'` → `Response` → `Ctrl+F` tìm `generic`; nếu không có, đọc thông báo hiện tại, không tự đi tìm stack trace.
+   - **Quan sát:** So sánh response secure với vulnerable: status, thông báo và việc có/không có chi tiết SQL.
+4. **Thao tác:** Mở `Trace Panel → Error` của hai lần chạy.
+   - **Nói khi demo:** “Trace cho thấy server đã redacted lỗi hay để lộ chi tiết, còn F12 xác nhận payload thực sự đi qua HTTP.”
+   - **F12 show:** Chọn từng request → `Response` → tìm `trace_id` hoặc `error`; chọn occurrence trong kết quả request và đối chiếu với Error trace. Không chọn error của request khác.
+   - **Quan sát:** Chỉ kết luận theo lỗi/trace thật; nếu không có SQL marker, ghi rõ hệ thống đã ẩn hoặc không phát sinh marker.
+**Kết luận:** Dấu nháy là phép thử lỗi đầu vào; lỗi chi tiết hay generic phải được xác nhận từ response của đúng request.
 
-**Bước 3 — Auth bypass với input cố định**
+### Bước 3 — Auth bypass bằng comment SQL
 
-* Thao tác:
-  1. Bấm menu `Đăng nhập yếu`. Bấm ô `Username`, nhấn `Ctrl+A`, nhập chính xác `admin_lab' -- ` với một khoảng trắng ở cuối; bấm ô `Password`, nhập `x`.
-  2. Bấm `Chạy vulnerable login`. Không dùng nút mẫu `Điều kiện đăng nhập local` nếu nút đó tự điền chuỗi khác; input source/config yêu cầu phải nhập thủ công.
-  3. Bấm menu `Đăng nhập an toàn`. Nhập lại đúng username/password ở trên, rồi bấm `Chạy secure login`; không dùng nút `Cùng input logic` nếu nó tự điền chuỗi khác.
-* Nói: “Payload đóng quote, comment phần kiểm tra password trong câu vulnerable. Tôi giữ password sai để chứng minh bypass không đến từ credential hợp lệ.”
-* Quan sát: vulnerable kỳ vọng thành công với session marker `authenticated_via=vulnerable_local_demo`; secure phải reject cùng username như literal và không tạo bypass session. Xác nhận marker/status live.
-* F12 show: `Payload` phải giữ nguyên username có khoảng trắng cuối; `Response/Headers` show auth result/status; panel `Query Trace` show comment trong vulnerable và parameter binding ở secure, không đọc password ra.
-* Kết luận: nối chuỗi cho phép input đổi cấu trúc authentication query; parameter binding giữ input là giá trị.
+1. **Thao tác:** Mở `Vulnerable login`, nhập username chính xác `admin_lab' -- ` trong đó ký tự cuối cùng là một dấu cách, nhập password `x` rồi bấm chạy.
+   - **Nói khi demo:** “Payload này đóng chuỗi và dùng comment SQL; dấu cách sau hai dấu gạch rất quan trọng để phần còn lại thành comment.”
+   - **F12 show:** Network → Filter `/vulnerable/login` → chọn request mới nhất → `Headers` → `General` nhìn `Request URL` nếu username được encode trên URL, hoặc bấm `Payload` → `Form Data`. Dùng `Ctrl+A` trong field username nếu cần, rồi xác nhận chuỗi kết thúc bằng `--` và một dấu cách trước khi submit.
+   - **Quan sát:** Nếu Network encode dấu cách thành `%20` ở URL hoặc hiển thị khoảng trắng trong Payload, đó là cùng một ký tự; nếu mất dấu cách cuối, gửi lại.
+2. **Thao tác:** Mở response vulnerable và trace authentication.
+   - **Nói khi demo:** “Tôi kiểm tra server có trả authenticated bằng nhánh vulnerable hay không.”
+   - **F12 show:** Request vừa chọn → `Response` → nhấn `Ctrl+F` tìm chính xác `authenticated_via=vulnerable_local_demo`. Nếu không có, tìm `bypass`. Với nhiều occurrence, chọn dòng JSON/message có username hoặc verdict của request này; không chọn label trong HTML.
+   - **Quan sát:** Ghi verdict/authenticated và status thật. Đây là bước xác định kết quả bypass, không chỉ xác định payload đã gửi.
+3. **Thao tác:** Gửi cùng username `admin_lab' -- ` và password `x` qua `Secure login`.
+   - **Nói khi demo:** “Secure endpoint nhận cùng dữ liệu độc hại nhưng không được coi phần còn lại là câu lệnh.”
+   - **F12 show:** Network → Filter `/secure/login` → chọn row mới nhất → `Headers` → `General` kiểm tra status → `Payload` xác nhận username còn dấu cách cuối → `Response` đọc reject/generic message. Nếu cần, nhấn `Ctrl+F` tìm `bypass` nhưng chọn occurrence trong kết quả secure.
+   - **Quan sát:** So sánh hai verdict theo endpoint; không gọi secure pass nếu chỉ thấy request 200 mà không có authentication result.
+4. **Thao tác:** Bấm `Trace Panel → Query`, `Parameters` và `Authentication` để đối chiếu hai flow.
+   - **Nói khi demo:** “Trace cho thấy sự khác nhau nằm ở cách query/parameter được xử lý, không phải ở giao diện form.”
+   - **F12 show:** Với từng request, `Payload` là bằng chứng input; `Response` → `Ctrl+F` tìm `trace_id`/`verdict` để chọn đúng trace. Không dùng Elements để suy luận câu SQL phía server.
+   - **Quan sát:** Chỉ vào nhánh authenticated/rejected thật sự và giữ nguyên dấu cách trong mô tả payload.
+**Kết luận:** Vulnerable query cho phép comment làm thay đổi logic; secure flow phải từ chối hoặc xử lý input như dữ liệu.
 
-**Bước 4 — Search bình thường và expanded result**
+### Bước 4 — Search vulnerable/secure với keyword mở rộng
 
-* Thao tác:
-  1. Bấm menu `Tìm kiếm`; nếu trang mở bản vulnerable, bấm ô `Từ khóa`, nhập `USB`, rồi bấm `Chạy vulnerable search` và ghi số result.
-  2. Bấm ô `Từ khóa` lần nữa, nhấn `Ctrl+A`, nhập chính xác `%' OR 1=1 -- ` với khoảng trắng cuối, rồi bấm `Chạy vulnerable search`.
-  3. Sau khi có kết quả vulnerable, ở đầu trang bấm nút `Thử cùng input ở secure mode`; nếu đã rời trang kết quả, nhấn `Ctrl+L` mở `http://127.0.0.1:5005/secure/search`.
-  4. Bấm ô `Từ khóa`, nhấn `Ctrl+A`, nhập lại đúng keyword, rồi bấm `Chạy secure search`.
-  5. Nếu nút `Cùng input mở rộng` tự điền thiếu khoảng trắng cuối, không dùng nguyên giá trị đó; hãy sửa trực tiếp trong ô `Từ khóa` trước khi submit.
-* Nói: “Tôi dùng SELECT read-only và cùng keyword ở hai bản. Khoảng trắng cuối sau `--` là một phần payload.”
-* Quan sát: `USB` cho kết quả sản phẩm bình thường; vulnerable với expanded input kỳ vọng trả 8 products theo seed hiện tại, query trace là nối chuỗi; secure dùng `LIKE ?` và kỳ vọng 0 result cho cùng input. Xác nhận count live.
-* F12 show: chọn từng `GET /vulnerable/search` và `GET /secure/search`; `Headers/Query String Parameters` show nguyên keyword và khoảng trắng cuối; `Response/Preview` show result count; panel `Database Inspector` show read-only result.
-* Kết luận: parameter binding giữ keyword nguyên văn, không cho nó trở thành toán tử SQL.
+1. **Thao tác:** Mở menu search và gửi keyword bình thường `USB` trước.
+   - **Nói khi demo:** “Tôi chạy một keyword bình thường để biết endpoint và kết quả baseline.”
+   - **F12 show:** Network → bấm `Clear` → Filter `/search` → chọn request GET mới nhất → `Headers` → `General` → nhìn `Request URL` đầy đủ, đặc biệt phần sau dấu `?`. Nếu phiên bản Chrome có mục `Query String Parameters`, có thể mở mục đó; nếu không thấy, chỉ dùng `Request URL`, không cần tìm mục này.
+   - **Quan sát:** Xác nhận keyword và kết quả bình thường trước khi dùng chuỗi mở rộng.
+2. **Thao tác:** Ở search vulnerable, thay keyword bằng chính xác `%' OR 1=1 -- `, trong đó ký tự cuối là một dấu cách, rồi bấm tìm.
+   - **Nói khi demo:** “Tôi mở rộng điều kiện bằng payload có comment SQL; dấu cách cuối giúp comment phần còn lại.”
+   - **F12 show:** Chọn request GET mới nhất có tên/URL `/search`. Bấm `Headers` → `General` → đọc `Request URL` để xác nhận phần query; nếu URL dài, click/double-click vào giá trị hoặc chọn toàn bộ để copy, không cần nhìn cột Name. Kiểm tra dấu cách cuối được encode thành `%20` nếu browser encode URL.
+   - **Quan sát:** Nếu Request URL không chứa keyword mong muốn, request vừa chọn không phải lần thử này; chọn row khác bằng timestamp và URL.
+3. **Thao tác:** Mở response vulnerable và `Trace Panel → Query`/`Parameters`/`Result Set`/`Database`.
+   - **Nói khi demo:** “Tôi xem số lượng/kết quả trả về và trace query để phân biệt input đã làm rộng result set hay chỉ lỗi.”
+   - **F12 show:** Request vulnerable → `Response` hoặc `Preview` → `Ctrl+F` tìm `USB Security Key`; nếu không có, tìm `products`. Nếu nhiều occurrence, chọn object product trong response, không chọn tên sản phẩm ở menu/sidebar.
+   - **Quan sát:** Ghi số result/record thực tế và marker trace; không suy ra 1=1 chỉ từ việc có nhiều dòng trên giao diện.
+4. **Thao tác:** Gửi cùng keyword qua `Secure search`.
+   - **Nói khi demo:** “Tôi giữ nguyên payload và so sánh kết quả secure, nơi input phải được bind như parameter.”
+   - **F12 show:** Network → chọn request mới nhất `/search` thuộc secure flow → `Headers` → `General` xác nhận URL/status → dùng `Request URL` làm bằng chứng query; nếu có Query String Parameters thì mở thêm, nhưng không bắt buộc → `Response` → tìm `USB Security Key` hoặc `products` trong đoạn kết quả secure.
+   - **Quan sát:** So sánh status, số result và trace giữa vulnerable/secure; chọn đúng response của secure bằng URL đầy đủ.
+5. **Thao tác:** Mở `Trace Panel → Query`, `Parameters`, `Result Set` và `Database` của hai lần search.
+   - **Nói khi demo:** “Tôi kết thúc bằng bằng chứng server-side: query parameter và result set, không chỉ nhìn URL.”
+   - **F12 show:** Từng request → `Headers` → `General` → `Request URL`; `Response` → `Ctrl+F` tìm `trace_id` hoặc marker result; chọn occurrence gần object kết quả rồi đối chiếu trace.
+   - **Quan sát:** Ghi rõ flow nào trả nhiều result, flow nào reject/giới hạn, và dữ liệu đó đến từ response nào.
+**Kết luận:** Search vulnerable có thể nối input vào SQL; secure search phải truyền keyword như parameter và kiểm soát result set.
 
-**Bước 5 — Đối chiếu prepared statement và error boundary**
+### Bước 5 — Comparison và ranh giới lỗi
 
-* Thao tác:
-  1. Trên thanh menu bấm `So sánh mã`; nếu cần bấm `Kiểm soát` để mở trang controls.
-  2. Nếu trace login không còn do đã chuyển trang, bấm menu `Đăng nhập yếu`, bấm `Dữ liệu bình thường`, bấm `Chạy vulnerable login`, rồi cuộn tới Trace Panel; bấm lần lượt các tab `Query`, `Parameters`, `Execution`, `Authentication` và `Verdict`.
-  3. Bấm menu `Tìm kiếm`, nhập `USB`, bấm `Chạy vulnerable search`, rồi trong trace kết quả bấm các tab `Query`, `Parameters`, `Result Set`, `Error`, `Code` và `Verdict`.
-  4. Ở footer trace, bấm `Mở Query` hoặc `Mở Verdict` để phóng to đúng bằng chứng cần trình bày; không chạy thêm payload ngoài kịch bản.
-* Nói: “Prepared statement tách query structure khỏi value. Password hashing và thông báo lỗi redacted là lớp bổ sung, không phải primary SQLi fix.”
-* Quan sát: trang/trace hiện read-only scope, placeholder secure, error detail không trả raw SQL; không chạy `UNION`, `UPDATE`, `DROP` hoặc DDL.
-* F12 show: `Network → GET /comparison` và `/security-controls` chỉ để xác nhận trang/response; phần query/placeholder phải show ở `Query Trace` và `Database Inspector`, không dùng Network để kết luận đã chạy câu write.
-* Kết luận: primary fix là parameterized query ở mọi value boundary, kèm xử lý lỗi không lộ schema/query.
+1. **Thao tác:** Mở menu `Comparison` và nếu cần chạy lại một login/search ngắn để bảng so sánh có dữ liệu.
+   - **Nói khi demo:** “Comparison dùng để tóm tắt hành vi đã quan sát; tôi không coi bảng tóm tắt là bằng chứng thay thế request.”
+   - **F12 show:** Network → bấm `Clear` → Filter `/comparison` → mở trang comparison. Sau đó nếu chạy lại login/search, đổi filter tương ứng và giữ request mới nhất.
+   - **Quan sát:** Bảng comparison hiển thị đúng lab/flow; ghi lại timestamp hoặc trace ID nếu có.
+2. **Thao tác:** Bấm các tab/section `Vulnerable` và `Secure` trong comparison, rồi chỉ vào các ô khác biệt.
+   - **Nói khi demo:** “Tôi đọc từng khác biệt theo endpoint và verdict, không suy luận thêm những gì bảng không hiển thị.”
+   - **F12 show:** Chọn request GET mới nhất có URL `/comparison` → `Headers` → `General` kiểm tra URL/status → `Response` → nhấn `Ctrl+F` tìm `prepared`. Nếu không có, tìm `placeholder`; chỉ tìm `SELECT` nếu response thật sự chứa câu SQL đã redacted.
+   - **Quan sát:** Chỉ vào marker đang có trong response. Nếu không có marker, nói “comparison không hiển thị chi tiết này” thay vì kết luận đã dùng prepared statement.
+3. **Thao tác:** Mở `Trace Panel` và bấm `Verdict`/`Query`/`Parameters` tương ứng với bảng comparison.
+   - **Nói khi demo:** “Trace là nơi tôi chốt hành vi từng flow; comparison chỉ là bản trình bày ngắn.”
+   - **F12 show:** Network → request comparison hoặc request login/search liên quan → `Response` → `Ctrl+F` tìm `trace_id`; chọn occurrence nằm trong response của request đó và đối chiếu với trace panel.
+   - **Quan sát:** Chốt các điểm đã có bằng chứng: payload, status, response, query/parameter và verdict; không thêm claim về write SQL nếu không có evidence.
+4. **Thao tác:** Quay lại trang chính và nhấn `Ctrl+R` để dọn trạng thái UI trước khi kết thúc demo.
+   - **Nói khi demo:** “Tôi kết thúc ở trạng thái sạch để không để payload/response của demo ảnh hưởng lần chạy tiếp theo.”
+   - **F12 show:** Network → bấm `Clear`; đặt Filter rỗng hoặc filter phù hợp; không cần mở Elements để tìm payload cũ.
+   - **Quan sát:** Trang trở về trạng thái ban đầu và các request cũ đã được loại khỏi bảng Network hiện tại.
+**Kết luận:** Comparison giúp trình bày kết quả, còn request/response/trace mới là bằng chứng cho từng kết luận SQL injection.
 
 ## Demo Vulnerable → Secure
 

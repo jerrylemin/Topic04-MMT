@@ -1,5 +1,0 @@
-{% extends 'base.html' %}{% block content %}{% set outcome = result|default({}, true) %}{% set current_user = user|default({}, true) %}
-<section class="result-banner is-allowed"><span class="result-icon">✓</span><div><span class="eyebrow">Verified signed payload</span><h1>{{ outcome.get('title', 'Signed admin request được chấp nhận.')|e }}</h1><p>{{ outcome.get('message', 'Chữ ký hợp lệ chứng minh payload không bị sửa sau khi server ký. Policy authorization vẫn kiểm tra role trước khi cấp quyền.')|e }}</p></div></section>
-<section class="profile-layout"><article class="admin-panel"><span class="mode-label secure">Allowed</span><h2>Khu vực quản trị Lab06</h2><p>Signed subject: <strong>{{ current_user.get('username', 'admin_lab')|e }}</strong></p><p>Signed role: <strong>{{ current_user.get('role', 'admin')|e }}</strong></p><p>Signed cookie bảo vệ tính toàn vẹn nhưng khó thu hồi tức thời hơn server-side session.</p></article><div>{% include 'components/authorization_inspector.html' %}</div></section>
-{% include 'components/trace_panel.html' %}
-{% endblock %}

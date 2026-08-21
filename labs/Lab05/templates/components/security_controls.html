@@ -1,8 +1,0 @@
-{% set controls = security_controls|default([], true) %}
-<section class="control-panel" aria-labelledby="controls-title"><header class="section-heading"><span class="eyebrow">Defense in Depth</span><h2 id="controls-title">Security Control Panel</h2><p>Trạng thái lấy từ cấu hình runtime và source đang chạy.</p></header>
-  <div class="table-scroll"><table><thead><tr><th scope="col">Control</th><th scope="col">Runtime</th><th scope="col">Nguồn</th><th scope="col">Route</th><th scope="col">Rủi ro giảm</th><th scope="col">Giới hạn</th></tr></thead><tbody>
-  {% for control in controls %}<tr><th scope="row">{{ control.get('name', control.get('control', '—'))|e }}</th><td><span class="control-state state-{{ control.get('status', 'unknown')|string|lower|replace(' ', '-')|e }}">{{ control.get('status', control.get('enabled', '—'))|string|e }}</span></td><td><code>{{ control.get('source', control.get('config_file', '—'))|e }} · {{ control.get('file', '')|e }}</code></td><td>{{ control.get('routes', control.get('route', control.get('applies_to', '—')))|e }}</td><td>{{ control.get('risk', control.get('risk_reduced', '—'))|e }}</td><td>{{ control.get('limitation', '—')|e }}</td></tr>
-  {% else %}<tr><td colspan="6" class="empty-cell">Chưa có snapshot control runtime.</td></tr>{% endfor %}
-  </tbody></table></div>
-  <div class="callout-grid"><p><strong>Prepared statement là bản vá chính.</strong> Input validation không thay thế parameter binding.</p><p><strong>WAF chỉ hỗ trợ.</strong> Không thay thế sửa code tại SQL sink.</p><p><strong>ORM cần dùng đúng.</strong> Raw SQL ghép chuỗi vẫn có thể tạo SQL Injection.</p><p><strong>Least privilege là mô phỏng local.</strong> SQLite không có database user riêng.</p></div>
-</section>

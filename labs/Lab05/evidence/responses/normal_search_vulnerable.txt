@@ -1,8 +1,0 @@
-HTTP status: 200
-Content-Type: text/html; charset=utf-8
-Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'; connect-src 'self'
-Trace ID: a2c1d998c8ec47c7b3814cf74704f91b
-Decision: expected_results
-Result count: 2
-Error category: none
-Prepared statement: false

@@ -1,3 +1,0 @@
-{% extends 'base.html' %}{% set trace = trace|default({}, true) %}{% block title %}Vulnerable error demo · LAB 5{% endblock %}{% block content %}
-<header class="page-header vulnerable-header"><div><span class="eyebrow">Error handling · vulnerable</span><h1>Diagnostic local có giới hạn</h1><p>Category phục vụ học tập được hiển thị, nhưng traceback, absolute path và dữ liệu nhạy cảm vẫn bị che.</p></div><span class="mode-seal">VULNERABLE</span></header><section class="page-section">{% include 'components/error_inspector.html' %}</section>{% include 'components/trace_panel.html' %}
-{% endblock %}

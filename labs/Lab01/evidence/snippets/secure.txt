@@ -1,3 +1,0 @@
-Reflected: Jinja autoescape
-Stored: bleach.clean allowlist
-DOM: element.textContent = value

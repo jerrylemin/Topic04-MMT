@@ -1,8 +1,0 @@
-HTTP status: 303
-Location: /dashboard
-Content-Type: text/html; charset=utf-8
-Content-Length: 207
-Trace ID: e5d30761c8a14e159f561eceab8c3933
-Decision: allowed
-CSRF status: not_required
-Origin decision: not_checked

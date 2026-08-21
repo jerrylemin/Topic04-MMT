@@ -18,84 +18,127 @@
 
 ### F12 cần show
 
-- Nhấn `F12` hoặc `Ctrl+Shift+I`, mở `Network`, bật `Preserve log`/`Disable cache` và lọc `change-email`; trước mỗi flow bấm `Clear`.
-- `Network → Headers`: show Request URL/method, `Origin`, `Referer`, `Cookie` và status; `Payload/Form Data` chỉ ra `email` và sự có mặt/vắng mặt của `csrf_token`, không đọc full session/token ra trước lớp.
-- `Application → Storage → Cookies → http://127.0.0.1:5004`: show tên `lab04_session` và flags `HttpOnly/SameSite/Path`; không copy hoặc phát tán giá trị cookie.
-- Sau request, show `Response/Preview` và quay lại `/profile` để chứng minh before/after; trace/audit của Lab04 là panel ứng dụng, không phải tab F12.
+- Mở F12 riêng ở tab Victim và tab Attacker: nhấn `F12`/`Ctrl+Shift+I` → bấm `Network` → bật `Preserve log` và `Disable cache` → bấm thùng rác `Clear`. Luôn kiểm tra đúng tab browser trước khi đọc request.
+- Trong ô `Filter` gõ `change-email` hoặc `/profile`; bấm dòng vừa phát sinh sau click gửi. Trong pane phải bấm `Headers` → mở `General` để kiểm tra `Request Method`, URL và status; mở `Request Headers` rồi cuộn tới `Origin`, `Referer`, `Cookie` nếu các header đó có mặt; POST mới bấm `Payload` → `Form Data`; bấm `Response` để chỉ status/body.
+- Để xem cookie, ở tab Victim bấm `Application` → bên trái mở `Storage` → `Cookies` → bấm đúng `http://127.0.0.1:5004` (không chọn `localhost` hoặc port khác) → click row `lab04_session`. Chỉ vào Name/Path/HttpOnly/SameSite/Secure và che Value.
+- Trace/audit của Lab04 là panel ứng dụng trên trang, không phải F12: sau request cuộn xuống và bấm `Request`, `Cookie`, `CSRF`, `Origin`, `State`, `Audit` hoặc `Verdict`.
+
 
 ## Kịch bản trình bày
 
-*Quy ước bằng chứng: cookie/header/status/email dưới đây phải được xác nhận trong browser live; “same-site” của `127.0.0.1:9004` và `127.0.0.1:5004` không được đồng nhất với “same-origin”.*
+*Quy ước: mỗi bước đọc theo thứ tự **Thao tác → Nói khi demo → F12 show → Quan sát**. Cookie/token chỉ hiển thị tên, thuộc tính và trạng thái; không đọc nguyên giá trị trên màn hình.*
 
-**Bước 1 — Đăng nhập victim và ghi before state**
+### Bước 1 — Login victim và xác lập cookie trước khi thử CSRF
 
-* Thao tác:
-  1. Mở `http://127.0.0.1:5004/login`. Bấm ô `Username`, nhập `victim`; bấm ô `Password`, nhập `Victim123!`; bấm `Đăng nhập`.
-  2. Ở dashboard, nhìn card email để ghi lại giá trị ban đầu; bấm `Mở form` trong card `Đổi email vulnerable` hoặc nhấn `Ctrl+L` mở `http://127.0.0.1:5004/profile`.
-  3. Giữ tab Victim này mở. Nhấn `F12`, chọn `Application → Storage → Cookies → http://127.0.0.1:5004`, tìm cookie `lab04_session` và chỉ vào flags; không copy giá trị cookie ra màn hình.
-* Nói: “Victim đã có session cookie. Attacker không cần biết mật khẩu nếu browser tự gửi cookie phù hợp với request.”
-* Quan sát: profile hiển thị email ban đầu; cookie có tên `lab04_session`, `HttpOnly`, `SameSite=Lax` theo cấu hình local; ghi flags thực tế của browser.
-* F12 show: `Network → POST /login` và `GET /profile` chỉ ra status; `Application → Cookies` show tên/flags của `lab04_session`, che value khi trình bày.
-* Kết luận: cookie là credential tự động đi theo policy trình duyệt, không phải bằng chứng attacker biết password.
+1. **Thao tác:** Mở tab Victim tại `http://127.0.0.1:5004`.
+   - **Nói khi demo:** “Tôi bắt đầu ở origin Victim để xác lập session trước khi mở origin Attacker.”
+   - **F12 show:** Nhấn `F12` → bấm `Network` → `Clear`; tích `Preserve log` và `Disable cache`. Ở ô `Filter` nhập `/login`.
+   - **Quan sát:** Đúng trang Lab04 Victim xuất hiện; Network chỉ chờ request login mới.
+2. **Thao tác:** Nhập username `victim`, password `Victim123!` rồi bấm nút đăng nhập.
+   - **Nói khi demo:** “Tôi đăng nhập tài khoản victim và không thay đổi origin.”
+   - **F12 show:** Chọn dòng mới nhất có tên `login` → `Headers` → mở `General` → chỉ vào `Request Method: POST` và status. Bấm `Payload` → `Form Data`; chỉ vào username nếu cần, không trình bày password.
+   - **Quan sát:** Ghi status/redirect thật. Nếu login thất bại, dừng để đăng nhập lại; không tiếp tục CSRF với session rỗng.
+3. **Thao tác:** Bấm `Profile` hoặc mở trang profile của Victim.
+   - **Nói khi demo:** “Tôi tải một trang cần session để xác nhận cookie đang được dùng.”
+   - **F12 show:** Đổi Filter thành `/profile` → chọn request GET mới nhất → `Headers` → `General` kiểm tra URL/status → bấm `Response` và nhấn `Ctrl+F` tìm `victim` hoặc tiêu đề profile. Nếu nhiều kết quả, chọn đoạn nội dung profile, không chọn chữ trong menu.
+   - **Quan sát:** Profile Victim hiển thị đúng trước khi gửi thay đổi email.
+4. **Thao tác:** Trong DevTools, bấm tab `Application` → ở cây bên trái mở `Storage` → `Cookies` → bấm đúng host `http://127.0.0.1:5004`.
+   - **Nói khi demo:** “Tôi kiểm tra thuộc tính bảo vệ của cookie, không cần đọc giá trị session.”
+   - **F12 show:** Trong bảng cookie, tìm đúng hàng có cột `Name = lab04_session`. Chỉ vào các cột `Path`, `HttpOnly`, `SameSite` và `Secure`; nếu cần mở rộng bảng thì kéo ngang. Không bấm vào/không đọc cột Value.
+   - **Quan sát:** Ghi tên cookie và các cờ đang hiển thị; đây là baseline trước khi so sánh vulnerable/secure.
+**Kết luận:** Victim đã có session hợp lệ và ta biết thuộc tính cookie trước khi kiểm tra cross-origin request.
 
-**Bước 2 — Vulnerable cross-origin email change**
+### Bước 2 — Vulnerable cross-origin change email
 
-* Thao tác:
-  1. Mở tab mới tới `http://127.0.0.1:9004`. Trên trang attacker, bấm trực tiếp vào card `Đổi email vulnerable` để mở attack page.
-  2. Trên attack page bấm nút `Gửi form`; khi browser hiện hộp xác nhận, bấm `OK`.
-  3. Chuyển ngay sang F12 của tab attacker, chọn `Network`, bấm request POST tới Victim; mở `Headers` và `Payload`.
-  4. Quay lại tab Victim, nhấn `Ctrl+L` mở `http://127.0.0.1:5004/profile`, nhấn `Enter`, rồi chỉ vào email before/after.
-* Nói: “Demo page khác origin nhưng cùng site theo hostname này. Form hiện tại yêu cầu người trình bày click và xác nhận; source vulnerable không gọi `_secure_checks`.”
-* Quan sát: kết quả kỳ vọng theo source là POST tới `http://127.0.0.1:5004/vulnerable/change-email` với email `demo_changed@lab.local`; nếu browser gửi session cookie, email before/after đổi và server ghi trace/audit. Chỉ gọi cookie đã được gửi khi Network live hiển thị nó.
-* F12 show: chọn request `POST /vulnerable/change-email`; `Headers` show Origin/Referer/Cookie, `Payload` show email, `Response` show status; nếu Cookie không có thì chỉ ghi nhận browser policy chưa cho flow thành công.
-* Kết luận: thiếu CSRF token và origin validation cho phép cross-origin form kích hoạt mutation khi cookie được browser đính kèm.
+1. **Thao tác:** Giữ tab Victim không đăng xuất, mở tab mới tại `http://127.0.0.1:9004` và chọn flow vulnerable change-email.
+   - **Nói khi demo:** “Tôi mở origin Attacker khác port nhưng giữ nguyên session ở tab Victim.”
+   - **F12 show:** Trong tab Attacker nhấn `F12` → `Network` → `Clear`; tích `Preserve log`; ô `Filter` nhập `vulnerable/change-email`. DevTools của tab Attacker chỉ quan sát request do Attacker phát ra.
+   - **Quan sát:** Attacker page hiển thị đúng flow vulnerable; không xóa cookie của tab Victim.
+2. **Thao tác:** Trong form vulnerable, nhập email `demo_changed@lab.local` rồi bấm nút gửi/thay đổi email.
+   - **Nói khi demo:** “Attacker cố tạo request thay đổi trạng thái mà không cung cấp CSRF token.”
+   - **F12 show:** Ngay sau khi click, chọn dòng mới nhất có URL chứa `/vulnerable/change-email` → `Headers` → `General` kiểm tra method/status. Bấm `Payload` → `Form Data` và chỉ vào `email=demo_changed@lab.local`; kiểm tra không có `csrf_token`.
+   - **Quan sát:** Nếu không có request, ghi rõ client không phát request; không tự gọi đó là server reject. Nếu có request, giữ lại status/URL để đối chiếu.
+3. **Thao tác:** Nếu trang hiện hộp xác nhận, bấm đúng nút `Confirm`/`Xác nhận`; nếu không hiện, giữ nguyên kết quả click ở bước trước.
+   - **Nói khi demo:** “Tôi xác nhận thao tác thủ công để loại bỏ nhầm lẫn giữa popup của demo và request thật.”
+   - **F12 show:** Network → chọn request có timestamp mới nhất sau lần xác nhận → `Headers` → `General` → `Request URL` và status; `Request Headers` tìm `Origin`/`Referer`, chỉ vào tên header và che giá trị cookie nếu có. `Payload` vẫn phải kiểm tra email và sự vắng mặt của csrf_token.
+   - **Quan sát:** Chỉ coi request sau Confirm là kết quả thử nghiệm; nếu có hai request, chọn request mới nhất và giải thích request nào là preflight hay submit.
+4. **Thao tác:** Quay tab Victim, tải lại profile bằng `Ctrl+R` hoặc bấm lại `Profile`.
+   - **Nói khi demo:** “Tôi kiểm tra tác động ở origin Victim, vì Attacker không cần đọc response để tạo thay đổi.”
+   - **F12 show:** Mở DevTools của tab Victim → `Network` → Filter `/profile` → chọn GET mới nhất → `Headers` → `General` kiểm tra URL/status → `Response`/`Preview` nhấn `Ctrl+F` tìm `demo_changed@lab.local`. Nếu nhiều email, chọn field email trong object/profile.
+   - **Quan sát:** Email Victim đổi hay không đổi theo response thực tế; không suy luận từ trang Attacker.
+**Kết luận:** Vulnerable endpoint không yêu cầu token nên request cross-origin có thể gây thay đổi nếu browser gửi session phù hợp.
 
-**Bước 3 — Secure attacker page thiếu token bị từ chối**
+### Bước 3 — Secure attacker không có token
 
-* Thao tác:
-  1. Quay về trang attacker `http://127.0.0.1:9004`, bấm card `Secure thiếu token`.
-  2. Bấm `Gửi form`, rồi bấm `OK` trong hộp xác nhận.
-  3. Trong Network chọn POST tới `/secure/change-email`, mở `Response` để chỉ status/lý do thiếu token.
-  4. Chuyển sang tab Victim, nhấn `Ctrl+R` hoặc mở lại `/profile` và xác nhận email không đổi.
-* Nói: “Payload nghiệp vụ vẫn là đổi email, nhưng request không có token hợp lệ. Secure kiểm tra trước khi update database.”
-* Quan sát: kỳ vọng status `403`, trace reason missing CSRF token và email không đổi; xác nhận status/body live, không suy ra từ màu giao diện.
-* F12 show: chọn `POST /secure/change-email`; `Payload` show không có hoặc không có token hợp lệ, `Headers` show Origin/Referer, `Response` show `403`; reload `/profile` để show email không đổi.
-* Kết luận: token server-side là điều kiện bắt buộc trước state change.
+1. **Thao tác:** Ở tab Attacker, mở flow secure change-email và giữ email `demo_changed@lab.local` hoặc nhập lại email đó.
+   - **Nói khi demo:** “Tôi giữ nguyên origin Attacker và payload để chỉ thay đổi endpoint vulnerable thành secure.”
+   - **F12 show:** DevTools Attacker → `Network` → `Clear` → Filter `secure/change-email`. Nếu trang có hidden token nhưng Attacker form không điền, chưa submit vội; nhìn tên field, không đọc giá trị.
+   - **Quan sát:** Đúng secure form xuất hiện và không có token hợp lệ do Victim cấp.
+2. **Thao tác:** Bấm submit secure; nếu hiện confirm thì bấm `Confirm`.
+   - **Nói khi demo:** “Request secure thiếu token phải bị chặn hoặc không được server chấp nhận.”
+   - **F12 show:** Chọn request mới nhất chứa `/secure/change-email` → `Headers` → `General` xem status → `Request Headers` xem `Origin`/`Referer` nếu có → `Payload` → `Form Data` kiểm tra không có csrf_token hoặc token đang thiếu. Nếu không có request, giữ Network trống và mở `Console` để chỉ ra lỗi client-side, không bịa response.
+   - **Quan sát:** Ghi status/message thực tế. Nếu có 403, chỉ vào status và response; nếu không phát request, nói đúng “client không gửi request”.
+3. **Thao tác:** Quay tab Victim, reload profile và kiểm tra email vẫn ở trạng thái trước phép thử secure.
+   - **Nói khi demo:** “Tôi xác nhận secure request không tạo thay đổi ngoài ý muốn.”
+   - **F12 show:** Victim DevTools → `Network` → Filter `/profile` → chọn GET sau reload → `Response`/`Preview` → `Ctrl+F` tìm email hiện tại. Trong `Application` → Cookies chỉ kiểm tra hàng `lab04_session` còn tồn tại, không đọc Value.
+   - **Quan sát:** Profile không đổi do request secure thiếu token; kết luận dựa vào GET profile mới.
+**Kết luận:** Secure endpoint yêu cầu CSRF token; thiếu token dẫn đến reject hoặc không có request hợp lệ.
 
-**Bước 4 — Secure attacker page có token giả vẫn bị từ chối**
+### Bước 4 — Secure attacker dùng token giả
 
-* Thao tác:
-  1. Ở trang attacker, quay về home nếu cần, bấm card `Secure token giả`.
-  2. Bấm `Gửi form`, rồi bấm `OK` trong confirm.
-  3. Mở F12 → `Network`, chọn POST tới `/secure/change-email`, bấm `Payload` để chỉ field token giả và bấm `Response` để chỉ 403/invalid token.
-  4. Quay lại Victim và tải lại profile để chứng minh database không bị mutation.
-* Nói: “Biết tên field chưa đủ; token phải gắn với session victim và còn hợp lệ. Tôi dùng đúng payload cố định `fake_token_for_local_lab` để chứng minh token giả không được chấp nhận.”
-* Quan sát: kỳ vọng status `403`, response ghi bad/invalid token và email vẫn giữ before state; xem trace/audit để phân biệt reject trước mutation.
-* F12 show: `Payload/Form Data` show field `csrf_token` với giá trị giả (không đọc token thật), `Response` show `403`/reason; `Network` không có request update thứ hai.
-* Kết luận: CSRF defense không chỉ kiểm tra token có tồn tại mà phải xác minh giá trị server-issued.
+1. **Thao tác:** Trên Attacker secure form, nhập email `fake_token_test@lab.local` và điền token giả `fake_token_for_local_lab` nếu form có ô token.
+   - **Nói khi demo:** “Có một chuỗi tên giống token không có nghĩa là token được server cấp cho session này.”
+   - **F12 show:** DevTools Attacker → `Network` → `Clear` → Filter `secure/change-email`. Trước khi submit, nếu cần dùng `Elements` → `Ctrl+F` tìm `csrf_token` để xác nhận đang sửa đúng ô token; không chọn hidden token trong phần mẫu.
+   - **Quan sát:** Form có email và token giả, chưa có request mới.
+2. **Thao tác:** Bấm submit và xác nhận popup nếu có.
+   - **Nói khi demo:** “Tôi gửi token giả để kiểm tra server xác thực token với session và origin.”
+   - **F12 show:** Network → chọn request mới nhất `/secure/change-email` → `Headers` → `General` kiểm tra method/status → `Payload` → `Form Data` xác nhận email và `csrf_token=fake_token_for_local_lab`. Bấm `Response` → `Ctrl+F` tìm `invalid` hoặc `token`; nếu không có, đọc status 403 ở `General`.
+   - **Quan sát:** Nếu nhiều chữ token, chọn occurrence trong message/JSON kết quả submit, không chọn label của input hay script mẫu.
+3. **Thao tác:** Quay Victim và reload profile.
+   - **Nói khi demo:** “Tôi kiểm tra token giả không tạo được thay đổi.”
+   - **F12 show:** Victim → `Network` → Filter `/profile` → chọn GET mới nhất → `Response`/`Preview` → `Ctrl+F` tìm `fake_token_test@lab.local` và email hiện tại. Chỉ vào field email trong profile object.
+   - **Quan sát:** Email vẫn không đổi sau request token giả; nếu có đổi, dừng và báo đó là kết quả trái với kỳ vọng của lab.
+**Kết luận:** Token phải hợp lệ với session/flow; chỉ gửi một chuỗi có tên csrf_token không đủ để vượt kiểm tra.
 
-**Bước 5 — Secure same-origin submission với token thật**
+### Bước 5 — Same-origin có token thật
 
-* Thao tác:
-  1. Trong tab Victim, quay về dashboard bằng `Ctrl+L` mở `http://127.0.0.1:5004/dashboard` nếu chưa thấy dashboard.
-  2. Trong card `Đổi email secure`, bấm `Mở form`.
-  3. Bấm ô `Email mới`, nhấn `Ctrl+A`, nhập `victim_secure@lab.local`, rồi bấm `Đổi email an toàn`.
-  4. Mở F12 → `Network`, chọn POST secure vừa gửi, mở `Headers` để chỉ Origin/Referer và mở `Payload` chỉ để xác nhận có field token; không đọc nguyên token ra khi trình bày.
-* Nói: “Đây là request same-origin có token thật. Secure yêu cầu exact allowed Origin/Referer, update trong transaction rồi rotate token.”
-* Quan sát: kỳ vọng response thành công, before `victim_old@lab.local` hoặc state hiện tại → `victim_secure@lab.local`; trace cho thấy token valid, Origin/Referer hợp lệ và token mới sau mutation.
-* F12 show: `Network → POST /secure/change-email → Headers` show exact Origin/Referer; `Payload` show email và sự có mặt của `csrf_token` (che giá trị); `Response` show success, rồi `GET /profile` show email after.
-* Kết luận: primary fix là token gắn session kết hợp kiểm tra Origin/Referer trước thao tác đổi trạng thái.
+1. **Thao tác:** Quay tab Victim, mở form secure change-email và nhập `victim_secure@lab.local`.
+   - **Nói khi demo:** “Bây giờ tôi gửi từ đúng origin Victim với token do server cấp.”
+   - **F12 show:** Victim DevTools → `Network` → `Clear` → Filter `secure/change-email`. Nếu muốn chỉ rõ token field, bấm `Elements` → `Ctrl+F` → `csrf_token`, chọn hidden input thuộc form secure Victim; không đọc giá trị token.
+   - **Quan sát:** Đúng form secure và token thật của form đang tồn tại.
+2. **Thao tác:** Bấm nút secure change-email và xác nhận nếu có.
+   - **Nói khi demo:** “Request này cùng origin, có session và token thật nên là baseline hợp lệ của secure flow.”
+   - **F12 show:** Chọn request mới nhất → `Headers` → `General` kiểm tra `POST` và status → mở `Request Headers`, tìm `Origin` và `Referer`, chỉ vào tên header → `Payload` → `Form Data` xác nhận có email và csrf_token nhưng che giá trị token.
+   - **Quan sát:** Ghi status/response thật. Không trình bày nguyên token, kể cả trong screenshot.
+3. **Thao tác:** Reload profile Victim để xác nhận email mới.
+   - **Nói khi demo:** “Tôi dùng GET profile sau POST để chứng minh thay đổi hợp lệ đã được lưu.”
+   - **F12 show:** Network → đổi Filter thành `/profile` → chọn GET mới nhất sau POST → `Headers` → `General` → `Response`/`Preview` → `Ctrl+F` tìm `victim_secure@lab.local`. Nếu nhiều occurrence, chọn field email trong object/profile.
+   - **Quan sát:** Email mới xuất hiện trong response/profile; đây là kết quả same-origin có token thật.
+4. **Thao tác:** Mở `Trace Panel` và lần lượt bấm tab `CSRF Token Inspector`, `CSRF` và `Origin` nếu có.
+   - **Nói khi demo:** “Trace panel cho thấy server kiểm tra token và origin, còn F12 cho thấy request đã mang các thành phần đó.”
+   - **F12 show:** Chọn lại POST secure → `Response` → `Ctrl+F` tìm `trace_id` hoặc `csrf`; chọn occurrence trong kết quả request rồi đối chiếu với các tab trace. Không chọn chữ csrf trong menu hướng dẫn.
+   - **Quan sát:** Chỉ vào trạng thái token/origin được trace thật sự báo.
+**Kết luận:** Cùng endpoint secure hoạt động khi request đi từ origin hợp lệ và mang token do server cấp.
 
-**Bước 6 — Chốt SameSite và giới hạn của CSRF**
+### Bước 6 — So sánh SameSite và giới hạn bảo vệ
 
-* Thao tác:
-  1. Trong F12 của từng tab, bấm `Network`; nếu log cũ không còn, bật `Preserve log` rồi bấm biểu tượng xóa log.
-  2. Lần lượt bấm request của Bước 2, 3, 4 và 5; trong mỗi request mở `Headers`, cuộn tới `Request Headers`, chỉ vào `Origin`, `Referer`, `Cookie` và status.
-  3. Với Bước 2–4 bấm thêm `Response` để đối chiếu reject/allow; với Bước 5 bấm `Payload` để chỉ token tồn tại, không dùng Console đọc response cross-origin.
-* Nói: “SameSite là lớp giảm rủi ro theo browser policy; Origin/Referer và CSRF token là kiểm tra server. CSRF không tự cho attacker đọc response cross-origin.”
-* Quan sát: ghi header/status thực tế của từng request; current attacker page chỉ có manual click/confirm, không auto-submit.
-* F12 show: đặt hai request vulnerable/secure cạnh nhau trong Network, so sánh Cookie/token/Origin/Referer/status; Application Cookies show flags, còn trace/audit show mutation decision.
-* Kết luận: phải tách fact live của browser khỏi expected cookie policy; authorization/mutation vẫn phải được bảo vệ ở server.
+1. **Thao tác:** Mở song song tab Victim và Attacker, giữ nguyên session Victim, rồi chuẩn bị hai flow vulnerable/secure change-email.
+   - **Nói khi demo:** “Tôi đặt hai origin cạnh nhau để so sánh request, cookie và token theo cùng một quy trình.”
+   - **F12 show:** Ở từng tab bấm `Network` → `Clear` → Filter `change-email`. Trên Victim mở thêm `Application` → `Storage` → `Cookies` → `http://127.0.0.1:5004`; trên Attacker không chọn nhầm cookie của host Victim.
+   - **Quan sát:** Hai tab có origin khác nhau; chỉ Victim mới là nơi xem cookie session của Lab04.
+2. **Thao tác:** Thực hiện một lần vulnerable từ Attacker và một lần secure từ Attacker bằng payload khác nhau để nhận diện request.
+   - **Nói khi demo:** “Tôi tạo hai request có thể phân biệt bằng endpoint và payload, không so sánh hai dòng chỉ dựa vào vị trí.”
+   - **F12 show:** Mỗi tab Network → chọn row có Request URL tương ứng → `Headers` → `General` kiểm tra method/status → `Request Headers` tìm `Origin`, `Referer` và `Cookie` nếu browser hiển thị; chỉ đọc tên header, che giá trị. `Payload` kiểm tra email và sự có/không có csrf_token.
+   - **Quan sát:** Có thể browser không gửi Cookie hoặc không cho response cross-origin đọc được; đó là kết quả cần ghi, không được tự khẳng định cookie đã gửi.
+3. **Thao tác:** Trên Application → Cookies, chọn hàng `lab04_session` và đọc các cột bảo vệ; không sửa cookie.
+   - **Nói khi demo:** “Cookie flags là một lớp kiểm soát, nhưng chúng không thay thế CSRF token và kiểm tra origin.”
+   - **F12 show:** Application → Storage → Cookies → đúng host → hàng `lab04_session`; chỉ vào `Path`, `HttpOnly`, `SameSite`, `Secure`. Nếu không thấy cột do cửa sổ hẹp, kéo ngang bảng hoặc phóng to DevTools; không cần mở Value.
+   - **Quan sát:** Ghi đúng giá trị cờ đang hiển thị và giới hạn của chúng trong flow này.
+4. **Thao tác:** Mở `Trace Panel → State` và `Audit` để chốt kết quả của các request.
+   - **Nói khi demo:** “Tôi dùng trace để tách rõ cookie/session, CSRF token và authorization thay vì gộp tất cả thành một nguyên nhân.”
+   - **F12 show:** Chọn từng POST trong Network → `Response` → `Ctrl+F` tìm `trace_id` hoặc `status`; với nhiều occurrence, chọn object kết quả submit. Đối chiếu đúng trace ID với State/Audit.
+   - **Quan sát:** Chỉ kết luận về tác động khi profile GET hoặc audit record xác nhận.
+**Kết luận:** Cookie flags, same-origin và CSRF token là các lớp khác nhau; secure flow cần chứng minh đúng lớp đã chặn hoặc cho phép request.
 
 ## Demo Vulnerable → Secure
 

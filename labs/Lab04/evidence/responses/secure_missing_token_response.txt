@@ -1,8 +1,0 @@
-HTTP status: 403
-Location: -
-Content-Type: text/html; charset=utf-8
-Content-Length: 42796
-Trace ID: f926c4d308f649078b68148cbe1fd6c9
-Decision: denied
-CSRF status: missing
-Origin decision: origin_allowed

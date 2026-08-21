@@ -12,100 +12,139 @@
 - Thư mục làm việc: `cd Lab03`
 - Khởi động: `scripts\run_lab.bat`
 - URL: `http://127.0.0.1:5003`
-- Reset khi cần: `python seed.py` tại `Lab03`; hoặc gửi `POST /reset-lab` từ flow local.
+- Trước mỗi buổi demo, reset bắt buộc bằng `python -X utf8 seed.py` tại `Lab03`; launcher chỉ seed khi `lab03.db` chưa tồn tại. `POST /reset-lab` là route POST cần session, không thay cho việc chuẩn bị seed sạch.
 - Tài khoản: `user_a / UserA123!`, `user_b / UserB123!`, `admin / Admin123!`; invoice `1001, 1003` thuộc User A, `1002` thuộc User B.
 - Dùng các panel của Lab03: `Action Timeline`, `Database Inspector`, `Authorization Inspector`, `Audit`.
 
 ### F12 cần show
 
-- Nhấn `F12` hoặc `Ctrl+Shift+I`, mở `Network`, bật `Preserve log` và `Disable cache`; dùng bộ lọc `Doc`/`Fetch/XHR` và bấm `Clear` trước mỗi scenario.
-- `Network`: show method, URL/query, `Payload/Form Data`, status và `Response/Preview`; khi login chỉ show endpoint/status, không đọc mật khẩu ra trước lớp.
-- Với tampering, giữ request vulnerable và secure cạnh nhau để chỉ ra cùng field/input; panel của Lab03 dùng để show giá database, authorization decision, before/after và audit.
+- Nhấn `F12` hoặc `Ctrl+Shift+I`; bấm `Network`, bật `Preserve log` và `Disable cache`, rồi bấm thùng rác `Clear` trước scenario mới.
+- Ở ô `Filter` gõ một phần route như `/login`, `/products`, `/checkout`, `/invoice` hoặc `/profile/update`. Bấm đúng dòng request trong bảng, không chỉ nhìn URL trên thanh địa chỉ.
+- Trong pane phải bấm `Headers` → mở `General` để chỉ URL/method/status. Với GET, query chính là phần sau dấu `?` trên dòng `Request URL`; chỉ mở `Query String Parameters` nếu Chrome có hiển thị mục này. Với POST, bấm `Payload` → `Form Data`; bấm `Response` hoặc `Preview` để chỉ kết quả.
+- Chỉ checkout/profile vulnerable có hidden field cần sửa: dùng `Elements` → `Ctrl+F` → chọn input nằm trong form có đúng `action`, rồi sửa `value` và kiểm tra lại `Payload`. Secure checkout có ô `price` dạng text trong `<details>`, còn secure profile có ô `role` dạng text trong `<details>`; không gọi hai ô này là hidden.
+- Nếu có nhiều form/occurrence, chọn theo `form[action="..."]`, tên field và giá trị trong form đang trình bày; không sửa dòng chữ mẫu hoặc Request Tampering Console khác.
+- Trace panel trên trang Lab03 là panel ứng dụng, không phải F12. Sau request, các tab đúng là `Timeline`, `Request`, `Session`, `Database`, `Authorization`, `Audit`, `Code`, `Verdict`; tiêu đề pane gồm `Action Timeline`, `Database Inspector` và `Authorization Inspector`. Trang `/products` không tạo trace panel hoặc `trace_id`.
+
 
 ## Kịch bản trình bày
 
-*Quy ước bằng chứng: số tiền/status/role dưới đây là kết quả cần xác nhận ở lần chạy live; source hiện tại là căn cứ để chọn route và input.*
+*Quy ước: đọc từng mục theo thứ tự **Thao tác → Nói khi demo → F12 show → Quan sát**. Khi có nhiều kết quả giống nhau, luôn chọn request/element bằng URL, tên field và giá trị cụ thể.*
 
-**Bước 1 — Đăng nhập và xác lập giá server**
+### Bước 1 — Đăng nhập và xác lập giá server
 
-* Thao tác:
-  1. Mở `http://127.0.0.1:5003`, bấm `Bắt đầu với User A`.
-  2. Ở form login, bấm ô `Tên đăng nhập`, nhập `user_a`; bấm ô `Mật khẩu`, nhập `UserA123!`; bấm `Đăng nhập`.
-  3. Trên thanh đầu trang bấm `Sản phẩm`. Tìm card có dòng `ID 5` và tiêu đề `USB Security Key`, giữ ô `Số lượng` là `1`, rồi bấm `Thêm vào giỏ`.
-  4. Bấm `Giỏ hàng` trên thanh đầu trang, kiểm tra sản phẩm trong giỏ, rồi bấm link `Checkout vulnerable`.
-* Nói: “Giá hiển thị đến từ SQLite. Tôi dùng product 5 để so sánh giá client gửi với giá server đọc lại.”
-* Quan sát: session có user A; product ID 5 có `price_vnd=100000` trong database/trace.
-* F12 show: `Network → POST /login` chỉ ra status/Set-Cookie (không show password); `GET /products` mở `Response/Preview` để chỉ product `5` và giá `100000`.
-* Kết luận: giá database là trusted source; hidden field chỉ là dữ liệu gửi từ client.
+1. **Thao tác:** Mở `http://127.0.0.1:5003`, bấm link `Bắt đầu với User A`, rồi tại form `Đăng nhập` nhập username/password.
+   - **Nói khi demo:** “Tôi bắt đầu với User A để mọi phép thử checkout và authorization có cùng một session.”
+   - **F12 show:** Nhấn `F12` → `Network` → bấm `Clear`; tích `Preserve log` và `Disable cache`. Trong ô `Filter` nhập `/login`.
+   - **Quan sát:** Trang `Đăng nhập vào dữ liệu mẫu` xuất hiện; không có control chọn User A, username chỉ được điền trong form.
+2. **Thao tác:** Nhập username `user_a`, password `UserA123!` rồi bấm nút đăng nhập.
+   - **Nói khi demo:** “Tôi đăng nhập bằng tài khoản lab cố định; password chỉ dùng để nhập, không trình bày ra DevTools.”
+   - **F12 show:** Trong Network bấm dòng mới nhất có tên `login` → `Headers` → mở `General`, kiểm tra `Request Method: POST` và status. Bấm `Payload` → `Form Data`, chỉ vào `username=user_a`; che hoặc không mở trường password khi trình bày.
+   - **Quan sát:** Ghi status thực tế và session/redirect nếu UI trả về; không kết luận đăng nhập thành công chỉ vì request có status 200.
+3. **Thao tác:** Bấm menu `Sản phẩm` để mở trang danh sách sản phẩm.
+   - **Nói khi demo:** “Trước khi checkout, tôi lấy giá hiện tại từ response sản phẩm để đối chiếu với giá gửi lên form.”
+   - **F12 show:** Đổi ô `Filter` thành `/products` → chọn request GET mới nhất → `Headers` → `General` kiểm tra `Request URL` và status → bấm `Response` hoặc `Preview` → nhấn `Ctrl+F` tìm `USB Security Key` và `ID 5`.
+   - **Quan sát:** Chỉ vào sản phẩm ID 5 và giá hiển thị `100,000 VND`. `/products` không có Trace Panel; không tìm `trace_id` ở baseline này.
+**Kết luận:** Giá chuẩn phải được xác lập từ dữ liệu server/product response trước khi kiểm tra checkout.
 
-**Bước 2 — Vulnerable checkout nhận `price=1`**
+### Bước 2 — Vulnerable checkout nhận `price=1`
 
-* Thao tác:
-  1. Ở trang checkout, giữ `Product ID=5` và `Quantity=1`.
-  2. Nhấn `F12`, chọn tab `Elements`, nhấn `Ctrl+F`, tìm `name="price"`, rồi bấm đúp vào giá trị `100000` của hidden field và sửa thành `1`; nhấn `Enter` để lưu DOM.
-  3. Quay lại form, bấm `Gửi checkout vulnerable`. Nếu trang cuộn lên đầu, cuộn xuống phần invoice/trace để chỉ vào giá đã gửi.
-* Nói: “Tôi không đổi sản phẩm hay số lượng; chỉ sửa giá trước POST. Route vulnerable dùng giá client để tính hóa đơn.”
-* Quan sát: response/Database Inspector kỳ vọng ghi unit price và total `1 VND`; trace chỉ ra `submitted_price=1`, route `/vulnerable/checkout`, và audit có thay đổi giá.
-* F12 show: `Network → POST /vulnerable/checkout → Payload/Form Data` với `product_id=5`, `quantity=1`, `price=1`; `Response/Preview` show invoice result; panel `Database Inspector` show stored price/total.
-* Kết luận: parameter tampering qua hidden field làm sai logic nghiệp vụ dù cú pháp request hoàn toàn hợp lệ.
+1. **Thao tác:** Mở trang checkout vulnerable, chọn sản phẩm ID 5 và để Quantity là 1.
+   - **Nói khi demo:** “Tôi mở checkout vulnerable và giữ product_id=5, quantity=1 để chỉ thay đổi trường price.”
+   - **F12 show:** Nhấn `F12` → `Elements` → nhấn `Ctrl+F` → nhập chính xác `name="price"`. Nếu có nhiều kết quả, bấm Enter để chuyển từng kết quả và chọn dòng trong form checkout có dạng input hidden với `name="price"` và `value="100000"`; bỏ qua ô hiển thị giá, ví dụ mẫu trong script và các form khác.
+   - **Quan sát:** Trước khi sửa phải nhìn thấy đúng giá trị hidden là 100000; nếu không thấy, quay lại đúng form checkout.
+2. **Thao tác:** Trong dòng DOM vừa chọn, bấm đúp vào giá trị của thuộc tính `value`, nhấn `Ctrl+A`, nhập `1` rồi nhấn `Enter`.
+   - **Nói khi demo:** “Tôi chỉ sửa giá trị hidden trong DOM của request hiện tại; đây là bằng chứng client có thể gửi giá giả, chưa phải server đã chấp nhận.”
+   - **F12 show:** Vẫn ở `Elements`, nhìn ngay trên dòng input đã chọn để xác nhận `name="price" value="1"`. Không sửa dòng có giá hiển thị hoặc kết quả mẫu khác; nếu mất node, nhấn `Ctrl+F` tìm lại `name="price"` và chọn occurrence có `value="1"` trong form checkout.
+   - **Quan sát:** UI có thể vẫn hiển thị giá 100000 dù hidden value đã là 1; đó là lý do phải kiểm tra Payload sau submit.
+3. **Thao tác:** Bấm nút checkout vulnerable/submit đơn hàng.
+   - **Nói khi demo:** “Bây giờ tôi gửi request với price=1 và kiểm tra server dùng giá nào để tính.”
+   - **F12 show:** Bấm `Network` → trong ô `Filter` nhập `/vulnerable/checkout` → chọn request mới nhất có tên/URL chứa endpoint. Bấm `Headers` → `General` kiểm tra `POST` và status → `Payload` → `Form Data`, chỉ vào `product_id=5`, `quantity=1` và `price=1`.
+   - **Quan sát:** Nếu Payload không có price=1, thao tác sửa DOM chưa áp dụng hoặc chọn nhầm form; không kết luận từ màn hình checkout.
+4. **Thao tác:** Mở `Response`/`Preview` của request và cuộn `Trace Panel` đến `Database Inspector`/`Audit`.
+   - **Nói khi demo:** “Tôi đối chiếu input client với phép tính và bản ghi server để xem giá có bị tin tưởng hay không.”
+   - **F12 show:** Trong `Response` nhấn `Ctrl+F` tìm `price`, `total` hoặc `accepted`; nếu nhiều occurrence, chọn đoạn gần object/order vừa tạo, có cả product ID hoặc order ID. Không chọn chữ `price` trong menu/hướng dẫn HTML.
+   - **Quan sát:** Ghi giá/total và bản ghi Database/Audit thật sự hiển thị.
+**Kết luận:** Vulnerable checkout nhận giá từ client; hidden field không phải ranh giới tin cậy.
 
-**Bước 3 — Secure checkout dùng lại đúng `price=1`**
+### Bước 3 — Secure checkout với cùng `price=1`
 
-* Thao tác:
-  1. Trên trang vulnerable checkout bấm link `Mở bản secure`.
-  2. Bấm dòng mở rộng `Thử thêm giá client`; trong ô `Untrusted price` nhấn `Ctrl+A`, nhập `1`.
-  3. Kiểm tra `Product ID=5` và `Quantity=1`, rồi bấm `Gửi checkout secure`.
-  4. Cuộn tới kết quả và giữ trace panel mở để đối chiếu giá client với giá database.
-* Nói: “Cùng input nhưng secure không tin giá từ form. Server query `products.price_vnd` rồi ghi mismatch để audit.”
-* Quan sát: kỳ vọng `Giá client gửi=1`, `Giá database=100000`, total lưu là `100000 VND`, decision allow nhưng audit ghi mismatch; xác nhận các con số live.
-* F12 show: `Network → POST /secure/checkout → Payload` vẫn có `price=1`; `Response` show secure result; panel `Database Inspector`/`Audit` show database price, total và mismatch.
-* Kết luận: primary fix là server-side price lookup, không phải chỉ ẩn hoặc validate hidden field.
+1. **Thao tác:** Mở checkout secure, chọn lại sản phẩm ID 5 và Quantity là 1.
+   - **Nói khi demo:** “Tôi lặp lại đúng dữ liệu để phép so sánh chỉ khác ở server-side validation.”
+   - **F12 show:** `Network` → bấm `Clear` → ô `Filter` tạm nhập `/secure/checkout`. Trong `Elements`, nhấn `Ctrl+F` tìm `name="price"`; chọn đúng input hidden trong form secure có value 100000, không chọn hidden input của form vulnerable còn trong DOM.
+   - **Quan sát:** Đúng form secure và đúng product ID 5 được chọn.
+2. **Thao tác:** Sửa đúng thuộc tính `value` của input hidden từ `100000` thành `1` rồi nhấn `Enter`.
+   - **Nói khi demo:** “Client vẫn có thể gửi price=1, nên secure không được chứng minh bằng việc ẩn field.”
+   - **F12 show:** Ngay trên dòng Elements đã chọn, xác nhận `name="price" value="1"`. Nếu có nhiều kết quả, dùng vị trí trong form secure và tên action/form để phân biệt; không dùng occurrence ở phần template mẫu.
+   - **Quan sát:** Giá hiển thị và hidden value có thể khác nhau; đây là trạng thái trước submit.
+3. **Thao tác:** Bấm submit secure, sau đó mở response và trace.
+   - **Nói khi demo:** “Tôi xem server có tính lại giá từ product_id hay từ chối mismatch.”
+   - **F12 show:** Network → chọn request mới nhất có URL `/secure/checkout` → `Headers` → `General` kiểm tra method/status → `Payload` → `Form Data` xác nhận `product_id=5`, `quantity=1`, `price=1` → `Response` → `Ctrl+F` tìm `mismatch`; nếu không có, tìm `100000`. Nếu nhiều occurrence, chọn đoạn JSON/message của checkout secure.
+   - **Quan sát:** Đối chiếu status, thông báo mismatch/total và tab `Database`/`Audit`. Không gọi secure nếu request thực tế không chứa price=1.
+**Kết luận:** Secure checkout không tin giá hidden từ client; server phải lấy giá chuẩn và kiểm tra mismatch.
 
-**Bước 4 — Vulnerable IDOR đọc invoice của user khác**
+### Bước 4 — Vulnerable IDOR invoice
 
-* Thao tác:
-  1. Giữ session `user_a`, nhấn `Ctrl+L`, nhập `http://127.0.0.1:5003/vulnerable/invoice?id=1001`, nhấn `Enter`.
-  2. Sau khi trang hiện invoice 1001, nhấn `Ctrl+L`, đổi riêng số cuối thành `http://127.0.0.1:5003/vulnerable/invoice?id=1002`, rồi nhấn `Enter`.
-  3. Không đăng xuất hoặc đổi tài khoản giữa hai lần tải; đây là bước chứng minh chỉ sửa object ID trên thanh địa chỉ.
-* Nói: “Invoice 1001 là object của subject hiện tại; 1002 thuộc user B. Tôi đổi object ID mà không đổi session.”
-* Quan sát: route vulnerable kỳ vọng vẫn trả invoice `1002` và owner ID của user B; trace cho thấy lookup theo ID nhưng không có object authorization.
-* F12 show: `Network → GET /vulnerable/invoice?id=1001` rồi `id=1002`; so sánh status và `Response/Preview` của hai invoice; panel `Database Inspector` show owner ID.
-* Kết luận: IDOR là lỗi kiểm soát truy cập object, không phải lỗi đoán ID.
+1. **Thao tác:** Mở menu invoice vulnerable và tải invoice với ID `1001`.
+   - **Nói khi demo:** “Tôi bắt đầu bằng invoice thuộc phạm vi được mong đợi để có baseline quyền truy cập.”
+   - **F12 show:** `Network` → `Clear` → ô `Filter` nhập `/vulnerable/invoice`. Chọn request mới nhất sau khi tải invoice → `Headers` → `General` kiểm tra `Request URL` có `id=1001` và status. Nếu không thấy mục Query String Parameters, dùng chính `Request URL` trong General làm bằng chứng.
+   - **Quan sát:** Invoice 1001 và thông tin user/owner hiển thị theo response thực tế.
+2. **Thao tác:** Trên thanh địa chỉ, giữ nguyên session rồi thay duy nhất `id=1001` thành `id=1002` và nhấn `Enter`.
+   - **Nói khi demo:** “Tôi không đổi cookie hay đăng nhập lại; chỉ đổi object ID để kiểm tra IDOR.”
+   - **F12 show:** Trong Network chọn dòng mới nhất có URL chứa `/vulnerable/invoice` và `id=1002` → `Headers` → `General` → nhìn `Request URL` đầy đủ. Chỉ mở Query String Parameters nếu phiên bản Chrome đang hiển thị; đây là mục tùy chọn, không phải nơi bắt buộc phải có.
+   - **Quan sát:** So sánh response của 1001 và 1002; nếu invoice 1002 trả về mà không có kiểm tra owner, đó là dấu hiệu vulnerable.
+3. **Thao tác:** Mở `Response`/`Preview` và `Trace Panel → Database` để đối chiếu owner của invoice 1002.
+   - **Nói khi demo:** “Tôi chứng minh object khác đã được đọc, không chỉ chứng minh URL đã đổi.”
+   - **F12 show:** Request 1002 → `Response` → `Ctrl+F` tìm `invoice_id` hoặc `1002`; nếu nhiều occurrence, chọn object JSON/HTML có tên invoice, owner và amount. Sau đó đối chiếu tab Database trên trang.
+   - **Quan sát:** Chỉ vào dữ liệu invoice 1002 thực sự trả về; không lấy số 1002 trong URL làm bằng chứng duy nhất.
+**Kết luận:** Vulnerable invoice dùng object ID từ client mà thiếu kiểm tra quyền sở hữu.
 
-**Bước 5 — Secure IDOR kiểm tra owner/admin**
+### Bước 5 — Secure IDOR kiểm tra owner/admin
 
-* Thao tác:
-  1. Khi vẫn là user A, nhấn `Ctrl+L`, mở `http://127.0.0.1:5003/secure/invoice?id=1002`, rồi giữ nguyên trang lỗi/403 để chỉ vào bằng chứng.
-  2. Bấm `Đăng xuất` trên thanh đầu trang; sau đó bấm `Đăng nhập`, nhập `admin` và `Admin123!`, bấm `Đăng nhập`.
-  3. Nhấn `Ctrl+L`, mở lại đúng URL secure ở trên, nhấn `Enter`, rồi kiểm tra kết quả với session admin.
-* Nói: “User A phải bị từ chối; admin chỉ được phép nếu policy hiện tại cho phép owner hoặc admin. Tôi tách hai subject để chứng minh authorization.”
-* Quan sát: user A kỳ vọng nhận `403` và Authorization Inspector ghi owner mismatch; admin kỳ vọng được phép nếu live session là admin, với query/scoping và audit tương ứng.
-* F12 show: `Network → GET /secure/invoice?id=1002` với session user A, show status `403`/response; sau khi đổi admin show cùng URL; panel `Authorization Inspector` chỉ subject, owner, policy và decision.
-* Kết luận: secure route ràng buộc object với session subject và policy, thay vì chỉ kiểm tra invoice ID tồn tại.
+1. **Thao tác:** Với session User A, gửi request secure invoice tới `id=1002`.
+   - **Nói khi demo:** “Tôi giữ User A và thử cùng object ID đã đọc được ở vulnerable.”
+   - **F12 show:** `Network` → `Clear` → Filter `/secure/invoice` → chọn request mới nhất → `Headers` → `General` kiểm tra URL có `id=1002` và status. Nếu URL dài, dùng `Request URL` đầy đủ; không dựa vào tên rút gọn trong cột Name.
+   - **Quan sát:** Ghi status và response của User A; không đổi session trước khi chụp bằng chứng.
+2. **Thao tác:** Đăng xuất/đổi sang session Admin theo flow của lab, rồi gửi lại secure invoice với `id=1002`.
+   - **Nói khi demo:** “Tôi lặp lại bằng admin để phân biệt bị chặn do owner hay do mọi tài khoản đều không được xem.”
+   - **F12 show:** Network vẫn bật `Preserve log`; chọn request secure mới nhất sau khi đổi session → `Headers` → `General` kiểm tra status → `Response`. Nếu có cookie, chỉ nói session User A/Admin, không đọc giá trị cookie.
+   - **Quan sát:** Hai kết quả phải được ghi riêng theo session; không gộp request User A và Admin vì chúng có cùng URL.
+3. **Thao tác:** Mở `Trace Panel → Database` và `Authorization Inspector/Audit` nếu có.
+   - **Nói khi demo:** “Bằng chứng secure nằm ở bước kiểm tra owner/role trước khi trả object.”
+   - **F12 show:** Chọn từng request trong Network → `Response` → `Ctrl+F` tìm `owner`, `forbidden` hoặc `authorized`; chọn occurrence nằm trong kết quả request, sau đó đối chiếu Authorization Inspector.
+   - **Quan sát:** Chỉ kết luận theo status/message và trace thật: User A bị từ chối hay Admin được phép phải nhìn thấy rõ.
+**Kết luận:** Secure IDOR phải kiểm tra owner hoặc role trước khi trả invoice, dù ID hợp lệ.
 
-**Bước 6 — Vulnerable mass assignment nhận role từ form**
+### Bước 6 — Vulnerable mass assignment role
 
-* Thao tác:
-  1. Bấm `Đăng xuất`, rồi bấm `Đăng nhập`; nhập `user_a` / `UserA123!` và bấm `Đăng nhập`.
-  2. Nhấn `Ctrl+L`, mở `http://127.0.0.1:5003/vulnerable/profile`, nhấn `Enter`.
-  3. Nhấn `F12`, chọn `Elements`, nhấn `Ctrl+F` tìm `name="role"`; bấm đúp value `user` và sửa thành `admin`, giữ nguyên `user_id` và email.
-  4. Quay lại form, bấm `Cập nhật vulnerable`, rồi cuộn tới Database Inspector để chỉ vào before/after role.
-* Nói: “Hidden không phải secret: người dùng sửa được DOM/request. Vulnerable update lấy cả `user_id` và `role` từ form.”
-* Quan sát: response/Database Inspector kỳ vọng before `user`, after `admin`; trace route là `/vulnerable/profile/update`, audit ghi `role=admin`.
-* F12 show: `Network → POST /vulnerable/profile/update → Payload/Form Data` với `user_id` và `role=admin`; `Response` show result; panel `Database Inspector` show role before/after và `Audit` show accepted update.
-* Kết luận: mass assignment xảy ra khi server bind field nhạy cảm mà không có allowlist/authorization.
+1. **Thao tác:** Mở `/vulnerable/profile` và chuẩn bị form profile hiện tại.
+   - **Nói khi demo:** “Tôi kiểm tra mass assignment bằng cách đưa role vào form mà người dùng bình thường không nên điều khiển.”
+   - **F12 show:** F12 → `Elements` → `Ctrl+F` nhập chính xác `name="role"`. Nếu có nhiều kết quả, chọn input trong form profile vulnerable có value `user`; bỏ qua text mẫu, form secure hoặc node trong script.
+   - **Quan sát:** Xác nhận field role thật sự nằm trong form gửi đi và giá trị ban đầu là user.
+2. **Thao tác:** Sửa value của input role từ `user` thành `admin`, giữ nguyên `user_id` và email, rồi bấm nút cập nhật vulnerable.
+   - **Nói khi demo:** “Tôi chỉ đổi role, giữ các field khác để cô lập tác động của mass assignment.”
+   - **F12 show:** Trong `Elements` xác nhận đúng dòng có `name="role" value="admin"`. Sau khi submit, Network → Filter `/vulnerable/profile/update` → chọn request mới nhất → `Headers` → `General` kiểm tra POST/status → `Payload` → `Form Data`, chỉ vào `role=admin` và các field profile.
+   - **Quan sát:** Nếu Payload không có role=admin, đã sửa nhầm node hoặc form đã render lại; kiểm tra Payload trước khi xem kết quả.
+3. **Thao tác:** Mở response và `Trace Panel → Database/Audit`.
+   - **Nói khi demo:** “Tôi kiểm tra role được bind và lưu ở server, không chỉ nhìn field đã sửa trên browser.”
+   - **F12 show:** Request vulnerable → `Response` → `Ctrl+F` tìm `accepted`; nếu không có, tìm `role`. Khi có nhiều occurrence, chọn object/message của profile update có role=admin, không chọn HTML label.
+   - **Quan sát:** Ghi role sau update và bản ghi Database/Audit thật tế.
+**Kết luận:** Vulnerable profile bind field role từ client vào model mà không allowlist field.
 
-**Bước 7 — Secure profile giữ role và chỉ nhận email**
+### Bước 7 — Secure profile allowlist field
 
-* Thao tác:
-  1. Nếu cần làm sạch state, mở terminal tại thư mục Lab03 và chạy `python seed.py`; sau đó mở lại `http://127.0.0.1:5003`.
-  2. Bấm `Đăng nhập`, nhập `user_a` / `UserA123!`, bấm `Đăng nhập`; nhấn `Ctrl+L` mở `http://127.0.0.1:5003/secure/profile`.
-  3. Bấm dòng mở rộng `Thử thêm trường role`; giữ ô `Rejected role` là `admin`.
-  4. Bấm `Cập nhật secure`, rồi đọc thông báo `Trường role đã bị từ chối` và mở Authorization/Audit Inspector để chỉ vào field bị reject.
-* Nói: “Cùng trường nhạy cảm được gửi lại. Secure lấy user ID từ session, allowlist chỉ có `email` và từ chối role.”
-* Quan sát: kỳ vọng response báo `Trường role đã bị từ chối`, `Fields accepted=email`, `Fields rejected=role`, role database vẫn `user`.
-* F12 show: `Network → POST /secure/profile/update → Payload` vẫn có `role=admin`; `Response` show reject/result; panel `Database Inspector` show role không đổi và fields rejected là `role`.
-* Kết luận: primary fix là session-based identity và field allowlist; validation hình thức không thay thế authorization.
+1. **Thao tác:** Mở profile secure và tìm input role trong đúng form secure.
+   - **Nói khi demo:** “Tôi dùng lại thao tác client giống vulnerable để kiểm tra server secure có bỏ qua field role hay không.”
+   - **F12 show:** `Elements` → `Ctrl+F` → `name="role"`. Nếu có nhiều kết quả, chọn node thuộc form secure dựa vào form/action gần node; xác nhận value ban đầu. Không chọn node của form vulnerable còn ở trang.
+   - **Quan sát:** Đúng form secure đã được nhận diện trước khi sửa.
+2. **Thao tác:** Đổi value role thành `admin`, giữ email/username, rồi bấm cập nhật secure.
+   - **Nói khi demo:** “Request vẫn có role=admin ở phía client; secure phải quyết định ở server, không dựa vào việc ẩn field.”
+   - **F12 show:** Sau submit, Network → Filter `/secure/profile/update` → chọn request mới nhất → `Headers` → `General` kiểm tra POST/status → `Payload` → `Form Data` xác nhận có `role=admin` và email. Nếu không có role trong Payload, phép thử chưa đúng.
+   - **Quan sát:** Ghi status/response trước khi mở trace; không suy ra reject từ việc UI vẫn hiển thị role cũ.
+3. **Thao tác:** Mở response và các tab `Database`, `Authorization`, `Audit` trong Trace Panel.
+   - **Nói khi demo:** “Tôi tìm thông báo server đã loại field ngoài allowlist và kiểm tra role lưu cuối cùng.”
+   - **F12 show:** Request secure → `Response` → `Ctrl+F` tìm chính xác `Fields rejected`; nếu không có, tìm `role`. Nếu nhiều occurrence, chọn message/object của response update secure, rồi đối chiếu Database/Authorization/Audit.
+   - **Quan sát:** Role cuối cùng vẫn là user hoặc response báo field bị loại; chỉ kết luận theo dữ liệu trace/response đang có.
+**Kết luận:** Secure profile chỉ bind các field được allowlist; role do client gửi không được phép nâng quyền.
 
 ## Demo Vulnerable → Secure
 

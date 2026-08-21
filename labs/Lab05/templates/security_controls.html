@@ -1,4 +1,0 @@
-{% extends 'base.html' %}{% block title %}Kiểm soát bảo mật · LAB 5{% endblock %}{% block content %}
-<header class="page-header"><div><span class="eyebrow">Runtime truth</span><h1>Security Controls</h1><p>Bản vá chính ở query construction; các lớp còn lại giảm rủi ro và tăng khả năng phát hiện.</p></div></header>{% include 'components/security_controls.html' %}
-<section class="page-section privilege-note"><span class="eyebrow">Least privilege</span><h2>Giới hạn đúng của SQLite local</h2><p>SQLite không có database user permission model. Lab mô phỏng least privilege bằng file database nằm trong Lab05, process Docker không chạy root, route chỉ dùng query định nghĩa sẵn, không có raw SQL, không mở mạng và input scenario không thể ghi dữ liệu.</p></section>
-{% endblock %}

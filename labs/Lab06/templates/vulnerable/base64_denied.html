@@ -1,5 +1,0 @@
-{% extends 'base.html' %}{% block content %}{% set outcome = result|default({}, true) %}{% set demos = demo_values|default({}, true) %}
-<section class="result-banner is-denied"><span class="result-icon">403</span><div><span class="eyebrow">Base64 original state</span><h1>{{ outcome.get('title', 'role=user chưa được phép vào admin.')|e }}</h1><p>{{ outcome.get('message', 'Cookie gốc decode thành role=user nên route từ chối. Server vẫn đang dùng dữ liệu client-controlled làm nguồn quyết định.')|e }}</p></div></section>
-<section class="manual-note"><h2>Thao tác học tập thủ công</h2><p>Trong DevTools của chính <code>127.0.0.1:5006</code>, thay giá trị <code>lab06_profile_b64</code> bằng chuỗi demo cố định rồi tải lại trang. Giao diện này không tự đặt cookie.</p><p>Demo cố định: <code>{{ demos.get('base64_admin_encoded', 'xem README/HUONG_DAN_CHUP_ANH.md')|e }}</code></p></section>
-{% include 'components/trace_panel.html' %}
-{% endblock %}

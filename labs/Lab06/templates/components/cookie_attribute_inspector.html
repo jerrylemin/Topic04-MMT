@@ -1,4 +1,0 @@
-{% set trace_data = trace|default({}, true) %}{% set inspector_data = inspector|default({}, true) %}{% set data = trace_data.get('cookie_attribute_inspector', inspector_data.get('cookie_attributes', {})) %}
-<article class="inspector" aria-labelledby="cookie-attributes-title"><header><span class="eyebrow">Set-Cookie policy</span><h3 id="cookie-attributes-title">Cookie Attribute Inspector</h3><p>Thuộc tính lấy từ cấu hình hoặc response thật, không phải nhãn trang trí.</p></header>
-  <dl class="data-grid"><dt>Path</dt><dd><code>{{ data.get('path', '/')|e }}</code></dd><dt>Domain</dt><dd>{{ data.get('domain', 'host-only')|e }}</dd><dt>HttpOnly</dt><dd>{{ data.get('httponly', data.get('http_only', false))|string|e }}</dd><dt>Secure</dt><dd>{{ data.get('secure', false)|string|e }}</dd><dt>SameSite</dt><dd>{{ data.get('samesite', data.get('same_site', 'Lax'))|e }}</dd><dt>Max-Age</dt><dd>{{ data.get('max_age', 'session')|string|e }}</dd></dl>
-</article>

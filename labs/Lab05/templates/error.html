@@ -1,4 +1,0 @@
-{% extends 'base.html' %}{% set trace = trace|default({}, true) %}{% block title %}Không thể xử lý yêu cầu · LAB 5{% endblock %}{% block content %}
-<section class="error-page"><span class="error-code">{{ status_code|default(500, true) }}</span><div><span class="eyebrow">Safe error response</span><h1>{{ title|default('Không thể xử lý yêu cầu.', true)|e }}</h1><p>{{ message|default('Yêu cầu đã được dừng an toàn. Dùng Error ID để đối chiếu audit log.', true)|e }}</p><div class="button-row"><a class="button button-primary" href="/dashboard">Về dashboard</a><a class="button button-secondary" href="/audit-logs">Mở audit log</a></div></div></section>
-<section class="page-section">{% include 'components/error_inspector.html' %}</section>{% if trace %}{% include 'components/trace_panel.html' %}{% endif %}
-{% endblock %}
